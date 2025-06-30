@@ -3,7 +3,7 @@ node_modules/
 .pnpm-store/
 .pnp.*
 *.log
-
+.DS_Store
 # Build outputs
 dist/
 .next/
