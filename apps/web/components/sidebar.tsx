@@ -3,13 +3,26 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { MessageSquare, FileText, Upload, Settings, LayoutDashboard, Shield } from "lucide-react"
+import {
+  MessageSquare,
+  FileText,
+  Upload,
+  Settings,
+  LayoutDashboard,
+  Shield,
+  GitBranch,
+  Calendar,
+  Users,
+} from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Chat Assistant", href: "/chat", icon: MessageSquare },
+  { name: "Upload Documents", href: "/upload", icon: Upload },
   { name: "Policies", href: "/policies", icon: FileText },
-  { name: "Upload", href: "/upload", icon: Upload },
+  { name: "Control Mapping", href: "/mapping", icon: GitBranch },
+  { name: "Audit Planner", href: "/audit", icon: Calendar },
+  { name: "Team Management", href: "/team", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },
 ]
 

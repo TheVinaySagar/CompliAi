@@ -2,13 +2,13 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import type { AuthUser, LoginCredentials, RegisterData } from "@/lib/dummy"
-import { dummyUsers } from "@/lib/dummy"
+import { useRouter } from "next/navigation"
+import { dummyUsers, type AuthUser, type LoginCredentials, type RegisterData } from "@/lib/dummy"
 
 interface AuthContextType {
   user: AuthUser | null
-  login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>
-  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>
+  login: (credentials: LoginCredentials) => Promise<boolean>
+  register: (data: RegisterData) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }
@@ -18,17 +18,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    // Check for stored auth on mount
+    // Check for stored auth data on mount
     const storedUser = localStorage.getItem("compliai-user")
     if (storedUser) {
-      setUser(JSON.parse(storedUser))
+      try {
+        const userData = JSON.parse(storedUser)
+        setUser(userData)
+      } catch (error) {
+        localStorage.removeItem("compliai-user")
+      }
     }
     setIsLoading(false)
   }, [])
 
-  const login = async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
+  const login = async (credentials: LoginCredentials): Promise<boolean> => {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -42,26 +48,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: foundUser.role,
         isAuthenticated: true,
       }
+
       setUser(authUser)
       localStorage.setItem("compliai-user", JSON.stringify(authUser))
-      return { success: true }
-    } else {
-      return { success: false, error: "Invalid email or password" }
+      router.push("/dashboard")
+      return true
     }
+
+    return false
   }
 
-  const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
+  const register = async (data: RegisterData): Promise<boolean> => {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Check if user already exists
     const existingUser = dummyUsers.find((u) => u.email === data.email)
     if (existingUser) {
-      return { success: false, error: "User with this email already exists" }
-    }
-
-    if (data.password !== data.confirmPassword) {
-      return { success: false, error: "Passwords do not match" }
+      return false
     }
 
     // Create new user
@@ -69,20 +73,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: Date.now().toString(),
       name: data.name,
       email: data.email,
-      role: "Viewer",
+      role: "Viewer", // Default role for new users
       isAuthenticated: true,
     }
 
     setUser(newUser)
     localStorage.setItem("compliai-user", JSON.stringify(newUser))
-    return { success: true }
+    router.push("/dashboard")
+    return true
   }
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("compliai-user")
-    // Redirect to login will be handled by the root page component
-    window.location.href = "/login"
+    router.push("/login")
   }
 
   return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>

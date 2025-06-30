@@ -2,7 +2,7 @@ export interface AuthUser {
   id: string
   name: string
   email: string
-  role: "Viewer" | "Admin"
+  role: "Viewer" | "Editor" | "Admin"
   isAuthenticated: boolean
 }
 
@@ -32,6 +32,13 @@ export const dummyUsers = [
     name: "John Smith",
     email: "john@company.com",
     password: "password123",
+    role: "Editor" as const,
+  },
+  {
+    id: "3",
+    name: "Alice Brown",
+    email: "alice@company.com",
+    password: "password123",
     role: "Viewer" as const,
   },
 ]
@@ -40,7 +47,7 @@ export interface User {
   id: string
   name: string
   email: string
-  role: "Viewer" | "Admin"
+  role: "Viewer" | "Editor" | "Admin"
 }
 
 export interface Message {
@@ -48,6 +55,8 @@ export interface Message {
   content: string
   sender: "user" | "assistant"
   timestamp: Date
+  hasGenerateButton?: boolean
+  suggestedAction?: string
 }
 
 export interface Policy {
@@ -58,6 +67,7 @@ export interface Policy {
   status: "Draft" | "Active" | "Under Review"
   lastUpdated: Date
   content: string
+  type: string
 }
 
 export interface SummaryCard {
@@ -65,6 +75,8 @@ export interface SummaryCard {
   value: string
   description: string
   icon: string
+  trend?: "up" | "down" | "stable"
+  trendValue?: string
 }
 
 export interface UploadedFile {
@@ -74,6 +86,47 @@ export interface UploadedFile {
   uploadDate: Date
   extractedPolicies: number
   mappedControls: number
+  status: "Processing" | "Completed" | "Failed"
+}
+
+export interface ControlMapping {
+  id: string
+  section: string
+  mappedTo: string
+  framework: string
+  confidence: "High" | "Medium" | "Low"
+  status: "Mapped" | "Gap" | "Needs Review"
+  description: string
+}
+
+export interface AuditTask {
+  id: string
+  title: string
+  description: string
+  framework: string
+  priority: "High" | "Medium" | "Low"
+  status: "Not Started" | "In Progress" | "Completed"
+  assignee?: string
+  dueDate: Date
+  category: string
+}
+
+export interface TeamMember {
+  id: string
+  name: string
+  email: string
+  role: "Viewer" | "Editor" | "Admin"
+  status: "Active" | "Pending" | "Inactive"
+  joinDate: Date
+}
+
+export interface ComplianceFramework {
+  id: string
+  name: string
+  description: string
+  totalControls: number
+  mappedControls: number
+  coverage: number
 }
 
 // Dummy data
@@ -87,56 +140,87 @@ export const dummyUser: User = {
 export const dummyMessages: Message[] = [
   {
     id: "1",
-    content: "What is ISO 27001 A.9.4.1?",
+    content: "What does ISO 27001 A.9.4.1 mean?",
     sender: "user",
     timestamp: new Date("2024-01-15T10:30:00"),
   },
   {
     id: "2",
-    content:
-      'ISO 27001 A.9.4.1 relates to "Information access restriction" control. It requires organizations to restrict access to information and application system functions based on the access control policy. This includes implementing proper authentication mechanisms, authorization procedures, and ensuring that access rights are regularly reviewed and updated.',
+    content: `ISO 27001 A.9.4.1 relates to "Information access restriction" control. It requires organizations to restrict access to information and application system functions based on the access control policy.
+
+**Key Requirements:**
+- Implement proper authentication mechanisms
+- Authorization procedures based on business needs
+- Regular review and update of access rights
+- Principle of least privilege
+
+**Real-world Example:**
+A company should ensure that HR staff can only access employee records, while IT staff have access to system configurations but not sensitive business data.`,
     sender: "assistant",
     timestamp: new Date("2024-01-15T10:30:15"),
+    hasGenerateButton: true,
+    suggestedAction: "Generate Access Control Policy",
   },
   {
     id: "3",
-    content: "Can you help me create a data retention policy?",
+    content: "Do I need a BYOD policy for SOC 2?",
     sender: "user",
     timestamp: new Date("2024-01-15T10:35:00"),
   },
   {
     id: "4",
-    content:
-      "I'd be happy to help you create a data retention policy. A comprehensive data retention policy should include: 1) Data classification and categories, 2) Retention periods for different data types, 3) Disposal procedures, 4) Legal and regulatory requirements, 5) Roles and responsibilities. Would you like me to generate a template based on a specific compliance framework?",
+    content: `Yes, a BYOD (Bring Your Own Device) policy is essential for SOC 2 compliance, particularly for the Security and Confidentiality criteria.
+
+**SOC 2 Requirements:**
+- CC6.1: Logical and physical access controls
+- CC6.7: Data transmission controls
+- CC7.1: Data classification and handling
+
+**Your BYOD policy should include:**
+- Device registration and approval process
+- Security requirements (encryption, passcodes)
+- Remote wipe capabilities
+- Acceptable use guidelines
+- Data segregation requirements`,
     sender: "assistant",
     timestamp: new Date("2024-01-15T10:35:20"),
+    hasGenerateButton: true,
+    suggestedAction: "Generate BYOD Policy",
   },
 ]
 
 export const dummySummaryCards: SummaryCard[] = [
   {
     title: "Policies Uploaded",
-    value: "2",
+    value: "12",
     description: "Documents processed this month",
     icon: "📄",
+    trend: "up",
+    trendValue: "+3",
   },
   {
     title: "Controls Mapped",
-    value: "5",
+    value: "87",
     description: "Compliance controls identified",
     icon: "🎯",
+    trend: "up",
+    trendValue: "+12",
   },
   {
-    title: "Compliance Score",
-    value: "87%",
-    description: "Overall compliance rating",
+    title: "Audit Progress",
+    value: "73%",
+    description: "ISO 27001 readiness",
     icon: "📊",
+    trend: "up",
+    trendValue: "+8%",
   },
   {
     title: "Active Policies",
-    value: "12",
+    value: "24",
     description: "Currently enforced policies",
     icon: "✅",
+    trend: "stable",
+    trendValue: "0",
   },
 ]
 
@@ -148,6 +232,7 @@ export const dummyPolicies: Policy[] = [
     framework: "ISO 27001",
     status: "Active",
     lastUpdated: new Date("2024-01-10"),
+    type: "Security Policy",
     content: `# Access Control Policy
 
 ## Purpose
@@ -175,6 +260,7 @@ This policy supports compliance with ISO 27001 controls A.9.1.1, A.9.2.1, and A.
     framework: "GDPR",
     status: "Draft",
     lastUpdated: new Date("2024-01-12"),
+    type: "Data Management",
     content: `# Data Retention Policy
 
 ## Purpose
@@ -199,36 +285,42 @@ This policy ensures compliance with GDPR Article 5(1)(e) and supports data minim
   },
   {
     id: "3",
-    title: "Incident Response Policy",
-    description: "Procedures for handling security incidents and breaches",
-    framework: "NIST",
-    status: "Under Review",
-    lastUpdated: new Date("2024-01-08"),
-    content: `# Incident Response Policy
+    title: "BYOD Policy",
+    description: "Bring Your Own Device security requirements and procedures",
+    framework: "SOC 2",
+    status: "Active",
+    lastUpdated: new Date("2024-01-14"),
+    type: "Security Policy",
+    content: `# Bring Your Own Device (BYOD) Policy
 
 ## Purpose
-This policy establishes procedures for detecting, responding to, and recovering from security incidents.
+This policy establishes security requirements for personal devices used to access company data and systems.
 
-## Incident Classification
-- Low: Minor security events with minimal impact
-- Medium: Events that could affect business operations
-- High: Critical incidents requiring immediate response
-- Critical: Major breaches affecting customer data
+## Scope
+This policy applies to all employees, contractors, and authorized third parties using personal devices for business purposes.
 
-## Response Team
-- Incident Commander: CISO
-- Technical Lead: IT Security Manager
-- Communications Lead: Legal Counsel
-- Business Lead: Operations Manager
+## Device Requirements
+- Device registration through IT department
+- Minimum OS version requirements
+- Mandatory encryption for data storage
+- Strong authentication (PIN, biometric, or password)
+- Automatic screen lock after 5 minutes of inactivity
 
-## Response Procedures
-1. Detection and Analysis
-2. Containment and Eradication
-3. Recovery and Post-Incident Activities
-4. Documentation and Lessons Learned
+## Security Controls
+- Mobile Device Management (MDM) enrollment
+- Remote wipe capability
+- Prohibited applications list
+- Regular security updates
+- Network access restrictions
+
+## Data Handling
+- Company data must be stored in approved applications only
+- No local storage of sensitive data
+- Automatic backup to company-approved cloud services
+- Data segregation between personal and business use
 
 ## Compliance
-Aligns with NIST SP 800-61 incident handling guidelines.`,
+Supports SOC 2 Type II controls CC6.1, CC6.7, and CC7.1.`,
   },
 ]
 
@@ -240,6 +332,7 @@ export const dummyUploadedFiles: UploadedFile[] = [
     uploadDate: new Date("2024-01-15"),
     extractedPolicies: 8,
     mappedControls: 15,
+    status: "Completed",
   },
   {
     id: "2",
@@ -248,5 +341,179 @@ export const dummyUploadedFiles: UploadedFile[] = [
     uploadDate: new Date("2024-01-14"),
     extractedPolicies: 5,
     mappedControls: 8,
+    status: "Completed",
+  },
+  {
+    id: "3",
+    name: "Incident_Response_Plan.pdf",
+    size: "1.2 MB",
+    uploadDate: new Date("2024-01-13"),
+    extractedPolicies: 3,
+    mappedControls: 12,
+    status: "Processing",
+  },
+]
+
+export const dummyControlMappings: ControlMapping[] = [
+  {
+    id: "1",
+    section: "User Access Management",
+    mappedTo: "ISO 27001 A.9.2.1",
+    framework: "ISO 27001",
+    confidence: "High",
+    status: "Mapped",
+    description: "User registration and de-registration procedures",
+  },
+  {
+    id: "2",
+    section: "Password Policy",
+    mappedTo: "ISO 27001 A.9.4.3",
+    framework: "ISO 27001",
+    confidence: "High",
+    status: "Mapped",
+    description: "Password management system requirements",
+  },
+  {
+    id: "3",
+    section: "Data Backup Procedures",
+    mappedTo: "ISO 27001 A.12.3.1",
+    framework: "ISO 27001",
+    confidence: "Medium",
+    status: "Needs Review",
+    description: "Information backup procedures need enhancement",
+  },
+  {
+    id: "4",
+    section: "Mobile Device Security",
+    mappedTo: "SOC 2 CC6.1",
+    framework: "SOC 2",
+    confidence: "High",
+    status: "Mapped",
+    description: "Logical and physical access controls for mobile devices",
+  },
+  {
+    id: "5",
+    section: "Vendor Management",
+    mappedTo: "ISO 27001 A.15.1.1",
+    framework: "ISO 27001",
+    confidence: "Low",
+    status: "Gap",
+    description: "Information security policy for supplier relationships missing",
+  },
+]
+
+export const dummyAuditTasks: AuditTask[] = [
+  {
+    id: "1",
+    title: "Complete Risk Assessment Documentation",
+    description: "Document and update the information security risk assessment process",
+    framework: "ISO 27001",
+    priority: "High",
+    status: "In Progress",
+    assignee: "Sarah Johnson",
+    dueDate: new Date("2024-02-15"),
+    category: "Risk Management",
+  },
+  {
+    id: "2",
+    title: "Implement Access Review Process",
+    description: "Establish quarterly access rights review procedures",
+    framework: "ISO 27001",
+    priority: "High",
+    status: "Not Started",
+    assignee: "John Smith",
+    dueDate: new Date("2024-02-20"),
+    category: "Access Control",
+  },
+  {
+    id: "3",
+    title: "Update Incident Response Plan",
+    description: "Review and update incident response procedures with recent changes",
+    framework: "ISO 27001",
+    priority: "Medium",
+    status: "Completed",
+    assignee: "Alice Brown",
+    dueDate: new Date("2024-01-30"),
+    category: "Incident Management",
+  },
+  {
+    id: "4",
+    title: "Vendor Security Assessment",
+    description: "Conduct security assessments for all critical vendors",
+    framework: "SOC 2",
+    priority: "Medium",
+    status: "Not Started",
+    dueDate: new Date("2024-03-01"),
+    category: "Vendor Management",
+  },
+]
+
+export const dummyTeamMembers: TeamMember[] = [
+  {
+    id: "1",
+    name: "Sarah Johnson",
+    email: "sarah@company.com",
+    role: "Admin",
+    status: "Active",
+    joinDate: new Date("2023-06-15"),
+  },
+  {
+    id: "2",
+    name: "John Smith",
+    email: "john@company.com",
+    role: "Editor",
+    status: "Active",
+    joinDate: new Date("2023-08-20"),
+  },
+  {
+    id: "3",
+    name: "Alice Brown",
+    email: "alice@company.com",
+    role: "Viewer",
+    status: "Active",
+    joinDate: new Date("2023-11-10"),
+  },
+  {
+    id: "4",
+    name: "Mike Wilson",
+    email: "mike@company.com",
+    role: "Editor",
+    status: "Pending",
+    joinDate: new Date("2024-01-15"),
+  },
+]
+
+export const dummyFrameworks: ComplianceFramework[] = [
+  {
+    id: "1",
+    name: "ISO 27001",
+    description: "Information Security Management System",
+    totalControls: 114,
+    mappedControls: 87,
+    coverage: 76,
+  },
+  {
+    id: "2",
+    name: "SOC 2 Type II",
+    description: "Service Organization Control 2",
+    totalControls: 64,
+    mappedControls: 45,
+    coverage: 70,
+  },
+  {
+    id: "3",
+    name: "GDPR",
+    description: "General Data Protection Regulation",
+    totalControls: 47,
+    mappedControls: 32,
+    coverage: 68,
+  },
+  {
+    id: "4",
+    name: "NIST CSF",
+    description: "Cybersecurity Framework",
+    totalControls: 108,
+    mappedControls: 54,
+    coverage: 50,
   },
 ]

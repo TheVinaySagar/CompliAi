@@ -1,14 +1,14 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { AuthProvider } from "@/contexts/auth-context"
 import "./globals.css"
+import { AuthProvider } from "@/contexts/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "CompliAI - AI-Powered Compliance Assistant",
-  description: "AI-Powered Compliance, From Policy to Audit.",
+  title: "CompliAI - AI-Powered Compliance Management",
+  description: "AI-Powered Compliance, From Policy to Audit",
     generator: 'v0.dev'
 }
 
