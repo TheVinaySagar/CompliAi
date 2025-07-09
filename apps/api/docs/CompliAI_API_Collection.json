@@ -1,0 +1,375 @@
+{
+  "info": {
+    "name": "CompliAI API Collection",
+    "description": "Complete API collection for CompliAI GRC Assistant",
+    "version": "2.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8001",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@compliai.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register User (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@company.com\",\n  \"full_name\": \"New User\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"user\",\n  \"department\": \"Security\",\n  \"permissions\": [\"chat_access\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Basic Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is GRC compliance and why is it important?\",\n  \"conversation_id\": \"general-inquiry-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ISO 27001 Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What are the key requirements for ISO 27001 A.9 Access control?\",\n  \"framework_context\": \"ISO 27001\",\n  \"conversation_id\": \"iso27001-consultation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SOC 2 Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What are the SOC 2 Type II requirements for monitoring controls?\",\n  \"framework_context\": \"SOC 2\",\n  \"conversation_id\": \"soc2-preparation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "conversations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/conversations/{{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "conversations", "{{conversationId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Document Management",
+      "item": [
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/your/document.pdf"
+                },
+                {
+                  "key": "document_name",
+                  "value": "Security Policy v2.1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/documents/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "documents", "upload"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Document-Specific Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What are the access control requirements in this document?\",\n  \"document_id\": \"doc_12345\",\n  \"mode\": \"document\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Administration",
+      "item": [
+        {
+          "name": "System Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Frameworks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/frameworks",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "frameworks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Framework Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/frameworks/ISO27001",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "frameworks", "ISO27001"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Information",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["info"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
