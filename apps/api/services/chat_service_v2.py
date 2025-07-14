@@ -1,6 +1,7 @@
 """
 Refactored Unified Chat Service
 Clean, modular implementation of the chat service with proper separation of concerns.
+Now includes database persistence for conversations and messages.
 """
 
 import uuid
@@ -8,6 +9,8 @@ from typing import Dict, List, Optional
 from datetime import datetime
 
 from models.chatModels import ChatRequest, ChatResponse
+from models.conversation_models import ConversationCreate, MessageCreate
+from database.conversation_repository import conversation_repository
 from services.grc.knowledge_base import grc_knowledge
 from services.grc.llm_manager import llm_manager
 from services.grc.document_processor import document_processor
@@ -18,10 +21,10 @@ class ChatService:
     """
     Unified chat service that handles both general GRC queries and document-based queries.
     Uses modular components for better maintainability and testing.
+    Now includes database persistence.
     """
     
     def __init__(self):
-        self.conversations: Dict[str, List[Dict]] = {}
         self.max_conversation_history = 10
     
     async def process_chat(self, request: ChatRequest, current_user: dict) -> ChatResponse:
@@ -67,7 +70,7 @@ class ChatService:
         """Process general GRC queries using built-in knowledge base"""
         try:
             # Build enhanced prompt with conversation history
-            prompt = self._build_general_prompt(request, conversation_id)
+            prompt = await self._build_general_prompt(request, conversation_id, user_id)
             
             # Generate response using LLM
             llm = llm_manager.get_primary_llm()
@@ -86,7 +89,7 @@ class ChatService:
             sources = response_formatter.generate_sources(clause_refs, control_ids)
             
             # Save conversation
-            self._save_conversation(conversation_id, request.message, formatted_response, user_id)
+            await self._save_conversation(conversation_id, request.message, formatted_response, user_id, request)
             
             return ChatResponse(
                 response=formatted_response,
@@ -124,7 +127,7 @@ class ChatService:
             confidence_score = response_formatter.calculate_confidence_score(formatted_answer, request.message)
             
             # Save conversation
-            self._save_conversation(conversation_id, request.message, formatted_answer, user_id)
+            await self._save_conversation(conversation_id, request.message, formatted_answer, user_id, request)
             
             return ChatResponse(
                 response=formatted_answer,
@@ -141,7 +144,7 @@ class ChatService:
         except Exception as e:
             raise LLMServiceError(f"Error processing document query: {str(e)}")
     
-    def _build_general_prompt(self, request: ChatRequest, conversation_id: str) -> str:
+    async def _build_general_prompt(self, request: ChatRequest, conversation_id: str, user_id: str) -> str:
         """Build comprehensive prompt for general queries"""
         
         # Base system prompt
@@ -151,7 +154,7 @@ class ChatService:
         knowledge_context = self._get_relevant_knowledge_context(request.message, request.framework_context)
         
         # Build conversation history
-        conversation_history = self._get_conversation_history(conversation_id)
+        conversation_history = await self._get_conversation_history(conversation_id, user_id)
         
         # Construct full prompt
         full_prompt = f"{system_prompt}\n\n"
@@ -235,94 +238,125 @@ Always maintain accuracy and provide practical, implementable advice."""
         
         return context
     
-    def _get_conversation_history(self, conversation_id: str) -> str:
-        """Get formatted conversation history"""
-        
-        if conversation_id not in self.conversations:
+    async def _get_conversation_history(self, conversation_id: str, user_id: str) -> str:
+        """Get formatted conversation history from database"""
+        try:
+            messages = await conversation_repository.get_conversation_messages(
+                conversation_id, user_id, limit=6  # Last 6 messages (3 exchanges)
+            )
+            
+            if not messages:
+                return ""
+            
+            # Format the recent messages for context
+            formatted_history = ""
+            for i in range(0, len(messages), 2):  # Process in pairs (user + assistant)
+                if i < len(messages):
+                    user_msg = messages[i]
+                    formatted_history += f"User: {user_msg.content}\n"
+                
+                if i + 1 < len(messages):
+                    assistant_msg = messages[i + 1]
+                    content = assistant_msg.content[:200] + "..." if len(assistant_msg.content) > 200 else assistant_msg.content
+                    formatted_history += f"Assistant: {content}\n\n"
+            
+            return formatted_history
+            
+        except Exception as e:
+            print(f"Failed to get conversation history: {e}")
             return ""
-        
-        history = self.conversations[conversation_id]
-        if not history:
-            return ""
-        
-        # Get last few exchanges for context
-        recent_history = history[-3:]  # Last 3 exchanges
-        
-        formatted_history = ""
-        for exchange in recent_history:
-            formatted_history += f"User: {exchange['user']}\n"
-            formatted_history += f"Assistant: {exchange['assistant'][:200]}...\n\n"
-        
-        return formatted_history
     
-    def _save_conversation(self, conversation_id: str, user_message: str, assistant_response: str, user_id: str):
-        """Save conversation exchange to memory"""
-        
-        if conversation_id not in self.conversations:
-            self.conversations[conversation_id] = []
-        
-        # Add new exchange
-        self.conversations[conversation_id].append({
-            "user": user_message,
-            "assistant": assistant_response,
-            "timestamp": datetime.utcnow().isoformat(),
-            "user_id": user_id,
-            "response_length": len(assistant_response)
-        })
-        
-        # Trim conversation history if too long
-        if len(self.conversations[conversation_id]) > self.max_conversation_history:
-            self.conversations[conversation_id] = self.conversations[conversation_id][-self.max_conversation_history:]
-    
-    def get_conversation_history(self, conversation_id: str, user_id: str = None) -> List[Dict]:
-        """Get conversation history for a specific conversation"""
-        
-        if conversation_id not in self.conversations:
+    async def _save_conversation(self, conversation_id: str, user_message: str, assistant_response: str, user_id: str, request: ChatRequest = None):
+        """Save conversation exchange to database"""
+        try:
+            # Get or create conversation
+            conversation = await conversation_repository.get_or_create_conversation(
+                conversation_id, user_id
+            )
+            
+            # Save user message
+            user_message_data = MessageCreate(
+                conversation_id=conversation_id,
+                user_id=user_id,
+                content=user_message,
+                sender="user",
+                framework_context=request.framework_context if request else None,
+                mode=request.mode if request else None,
+                document_id=request.document_id if request else None
+            )
+            await conversation_repository.add_message(user_message_data)
+            
+            # Save assistant response
+            assistant_message_data = MessageCreate(
+                conversation_id=conversation_id,
+                user_id=user_id,
+                content=assistant_response,
+                sender="assistant",
+                framework_context=request.framework_context if request else None,
+                mode=request.mode if request else None,
+                document_id=request.document_id if request else None
+            )
+            await conversation_repository.add_message(assistant_message_data)
+            
+        except Exception as e:
+            # Log error but don't fail the response
+            print(f"Failed to save conversation to database: {e}")
+
+    async def get_conversation_history(self, conversation_id: str, user_id: str) -> List[Dict]:
+        """Get conversation history for a specific conversation from database"""
+        try:
+            messages = await conversation_repository.get_conversation_messages(
+                conversation_id, user_id
+            )
+            
+            return [
+                {
+                    "id": str(message.id),
+                    "content": message.content,
+                    "sender": message.sender,
+                    "timestamp": message.timestamp.isoformat(),
+                    "confidence_score": message.confidence_score,
+                    "sources": message.sources,
+                    "clause_references": message.clause_references,
+                    "control_ids": message.control_ids,
+                    "framework_context": message.framework_context,
+                    "mode": message.mode,
+                    "document_id": message.document_id
+                }
+                for message in messages
+            ]
+        except Exception as e:
+            print(f"Failed to get conversation history: {e}")
             return []
-        
-        history = self.conversations[conversation_id]
-        
-        # Filter by user_id if provided (for security)
-        if user_id:
-            history = [exchange for exchange in history if exchange.get('user_id') == user_id]
-        
-        return history
-    
-    def delete_conversation(self, conversation_id: str, user_id: str = None) -> bool:
-        """Delete a conversation"""
-        
-        if conversation_id not in self.conversations:
-            return False
-        
-        # Additional security check - ensure user owns the conversation
-        if user_id:
-            history = self.conversations[conversation_id]
-            if history and history[0].get('user_id') != user_id:
-                return False
-        
-        del self.conversations[conversation_id]
-        return True
-    
-    def list_conversations(self, user_id: str) -> List[Dict]:
+
+    async def list_conversations(self, user_id: str) -> List[Dict]:
         """List all conversations for a user"""
-        
-        user_conversations = []
-        
-        for conv_id, history in self.conversations.items():
-            if history and history[0].get('user_id') == user_id:
-                last_exchange = history[-1]
-                user_conversations.append({
-                    "conversation_id": conv_id,
-                    "last_message": last_exchange.get('user', '')[:100],
-                    "last_response": last_exchange.get('assistant', '')[:100],
-                    "timestamp": last_exchange.get('timestamp'),
-                    "message_count": len(history)
-                })
-        
-        # Sort by timestamp (most recent first)
-        user_conversations.sort(key=lambda x: x['timestamp'], reverse=True)
-        
-        return user_conversations
+        try:
+            conversations = await conversation_repository.list_conversations(user_id)
+            
+            return [
+                {
+                    "conversation_id": conv.conversation_id,
+                    "title": conv.title or f"Chat {conv.created_at.strftime('%Y-%m-%d %H:%M')}",
+                    "last_message": conv.last_message or "",
+                    "created_at": conv.created_at.isoformat(),
+                    "updated_at": conv.updated_at.isoformat(),
+                    "message_count": conv.message_count,
+                    "framework_context": conv.framework_context
+                }
+                for conv in conversations
+            ]
+        except Exception as e:
+            print(f"Failed to list conversations: {e}")
+            return []
+
+    async def delete_conversation(self, conversation_id: str, user_id: str) -> bool:
+        """Delete a conversation"""
+        try:
+            return await conversation_repository.delete_conversation(conversation_id, user_id)
+        except Exception as e:
+            print(f"Failed to delete conversation: {e}")
+            return False
 
 # Global instance
 chat_service = ChatService()

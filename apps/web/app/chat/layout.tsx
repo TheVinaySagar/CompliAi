@@ -1,7 +1,5 @@
 import type React from "react"
-import Sidebar from "@/components/sidebar"
-import Header from "@/components/header"
-import AuthGuard from "@/components/auth-guard"
+import AppLayout from "@/components/app-layout"
 
 export default function ChatLayout({
   children,
@@ -9,14 +7,8 @@ export default function ChatLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthGuard>
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-hidden">{children}</main>
-        </div>
-      </div>
-    </AuthGuard>
+    <AppLayout className="overflow-hidden">
+      {children}
+    </AppLayout>
   )
 }

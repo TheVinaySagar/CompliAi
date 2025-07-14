@@ -83,7 +83,7 @@ async def list_conversations(
     Get all conversations for the current user.
     """
     try:
-        conversations = chat_service.list_conversations(str(current_user.id))
+        conversations = await chat_service.list_conversations(str(current_user.id))
         return conversations
         
     except Exception as e:
@@ -99,7 +99,7 @@ async def get_conversation_history(
     Users can only access their own conversations.
     """
     try:
-        history = chat_service.get_conversation_history(
+        history = await chat_service.get_conversation_history(
             conversation_id, 
             str(current_user.id)
         )
@@ -125,7 +125,7 @@ async def delete_conversation(
     Users can only delete their own conversations.
     """
     try:
-        success = chat_service.delete_conversation(
+        success = await chat_service.delete_conversation(
             conversation_id, 
             str(current_user.id)
         )

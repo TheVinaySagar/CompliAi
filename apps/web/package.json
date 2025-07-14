@@ -51,8 +51,12 @@
     "react-day-picker": "latest",
     "react-dom": "^19",
     "react-hook-form": "latest",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "latest",
     "recharts": "latest",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
@@ -60,6 +64,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

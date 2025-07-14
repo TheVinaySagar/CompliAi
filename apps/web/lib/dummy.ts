@@ -18,30 +18,7 @@ export interface RegisterData {
   confirmPassword: string
 }
 
-// Dummy users for authentication
-export const dummyUsers = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah@company.com",
-    password: "password123",
-    role: "Admin" as const,
-  },
-  {
-    id: "2",
-    name: "John Smith",
-    email: "john@company.com",
-    password: "password123",
-    role: "Editor" as const,
-  },
-  {
-    id: "3",
-    name: "Alice Brown",
-    email: "alice@company.com",
-    password: "password123",
-    role: "Viewer" as const,
-  },
-]
+
 
 export interface User {
   id: string
@@ -129,13 +106,6 @@ export interface ComplianceFramework {
   coverage: number
 }
 
-// Dummy data
-export const dummyUser: User = {
-  id: "1",
-  name: "Sarah Johnson",
-  email: "sarah.johnson@company.com",
-  role: "Admin",
-}
 
 export const dummyMessages: Message[] = [
   {

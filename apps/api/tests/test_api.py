@@ -6,7 +6,7 @@ import requests
 import json
 import sys
 
-BASE_URL = "http://localhost:8001"
+BASE_URL = "http://localhost:8000"
 
 def test_health():
     """Test the health endpoint"""

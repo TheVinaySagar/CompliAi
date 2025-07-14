@@ -123,30 +123,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Demo Credentials</span>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-2 text-sm text-gray-600">
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="font-medium">Admin User:</p>
-                  <p>Email: sarah@company.com</p>
-                  <p>Password: password123</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="font-medium">Editor User:</p>
-                  <p>Email: john@company.com</p>
-                  <p>Password: password123</p>
-                </div>
-              </div>
-            </div>
-
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
