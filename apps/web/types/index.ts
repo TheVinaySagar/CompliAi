@@ -90,12 +90,15 @@ export type PolicyStatus = "Draft" | "Active" | "Under Review" | "Archived"
 export interface ComplianceFramework {
   id: string
   name: string
-  version: string
+  version?: string
   description: string
-  category: string
-  status: "Active" | "Deprecated"
-  requirements_count: number
-  last_updated: Date
+  category?: string
+  status?: "Active" | "Deprecated"
+  requirements_count?: number
+  last_updated?: Date
+  totalControls: number
+  mappedControls: number
+  coverage: number
 }
 
 // Control Mapping Types

@@ -40,6 +40,10 @@ async def lifespan(app: FastAPI):
             logger.info(f"Default admin created: {admin_user.email}")
             logger.warning("Default admin password is 'admin123' - CHANGE THIS IMMEDIATELY!")
         
+        # Initialize document processor with existing documents
+        from services.grc.document_processor import document_processor
+        await document_processor.initialize_documents()
+        
         logger.info("CompliAI API started successfully")
         
     except Exception as e:

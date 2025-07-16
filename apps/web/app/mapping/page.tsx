@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { dummyControlMappings, dummyFrameworks, type ControlMapping } from "@/lib/dummy"
+import { type ControlMapping, type ComplianceFramework } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,8 @@ import { CheckCircle, AlertTriangle, XCircle, Eye, Download, Filter } from "luci
 
 export default function MappingPage() {
   const [selectedFramework, setSelectedFramework] = useState("all")
-  const [mappings] = useState<ControlMapping[]>(dummyControlMappings)
+  const [mappings] = useState<ControlMapping[]>([])
+  const [frameworks] = useState<ComplianceFramework[]>([])
 
   const getStatusIcon = (status: ControlMapping["status"]) => {
     switch (status) {
@@ -64,29 +65,41 @@ export default function MappingPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {dummyFrameworks.map((framework) => (
-              <Card key={framework.id}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{framework.name}</CardTitle>
-                  <CardDescription className="text-sm">{framework.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Coverage</span>
-                      <span className="font-medium">{framework.coverage}%</span>
+          {frameworks.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto h-12 w-12 text-gray-400">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No frameworks configured</h3>
+              <p className="mt-1 text-sm text-gray-500">Upload documents and start mapping controls to compliance frameworks.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {frameworks.map((framework) => (
+                <Card key={framework.id}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">{framework.name}</CardTitle>
+                    <CardDescription className="text-sm">{framework.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>Coverage</span>
+                        <span className="font-medium">{framework.coverage}%</span>
+                      </div>
+                      <Progress value={framework.coverage} className="h-2" />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>{framework.mappedControls} mapped</span>
+                        <span>{framework.totalControls} total</span>
+                      </div>
                     </div>
-                    <Progress value={framework.coverage} className="h-2" />
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>{framework.mappedControls} mapped</span>
-                      <span>{framework.totalControls} total</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="mappings" className="space-y-6">
