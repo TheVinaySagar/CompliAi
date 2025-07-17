@@ -83,7 +83,7 @@ async def list_conversations(
     Get all conversations for the current user.
     """
     try:
-        conversations = chat_service.list_conversations(str(current_user.id))
+        conversations = await chat_service.list_conversations(str(current_user.id))
         return conversations
         
     except Exception as e:
@@ -99,7 +99,7 @@ async def get_conversation_history(
     Users can only access their own conversations.
     """
     try:
-        history = chat_service.get_conversation_history(
+        history = await chat_service.get_conversation_history(
             conversation_id, 
             str(current_user.id)
         )
@@ -125,7 +125,7 @@ async def delete_conversation(
     Users can only delete their own conversations.
     """
     try:
-        success = chat_service.delete_conversation(
+        success = await chat_service.delete_conversation(
             conversation_id, 
             str(current_user.id)
         )
@@ -249,7 +249,7 @@ async def list_documents(
     List all documents uploaded by the current user.
     """
     try:
-        documents = document_processor.list_documents(str(current_user.id))
+        documents = await document_processor.list_documents(str(current_user.id))
         return documents
         
     except Exception as e:
@@ -265,9 +265,10 @@ async def get_document_info(
     Users can only access their own documents.
     """
     try:
-        doc_info = document_processor.get_document_info(document_id)
+        # Pass user_id to enforce ownership check at the service level
+        doc_info = await document_processor.get_document_info(document_id, str(current_user.id))
         
-        # Check if user owns the document
+        # Additional ownership check for admin users
         if doc_info.get('user_id') != str(current_user.id) and current_user.role != "admin":
             raise HTTPException(
                 status_code=404, 
@@ -293,16 +294,17 @@ async def delete_document(
     Users can only delete their own documents.
     """
     try:
-        doc_info = document_processor.get_document_info(document_id)
+        # Pass user_id to enforce ownership check at the service level
+        doc_info = await document_processor.get_document_info(document_id, str(current_user.id))
         
-        # Check if user owns the document
+        # Additional ownership check for admin users
         if doc_info.get('user_id') != str(current_user.id) and current_user.role != "admin":
             raise HTTPException(
                 status_code=404, 
                 detail="Document not found or access denied"
             )
         
-        success = document_processor.delete_document(document_id)
+        success = await document_processor.delete_document(document_id, str(current_user.id))
         
         if not success:
             raise HTTPException(status_code=500, detail="Failed to delete document")
@@ -327,9 +329,10 @@ async def query_document(
     Users can only query their own documents.
     """
     try:
-        doc_info = document_processor.get_document_info(document_id)
+        # Pass user_id to enforce ownership check at the service level
+        doc_info = await document_processor.get_document_info(document_id, str(current_user.id))
         
-        # Check if user owns the document
+        # Additional ownership check for admin users
         if doc_info.get('user_id') != str(current_user.id) and current_user.role != "admin":
             raise HTTPException(
                 status_code=404, 

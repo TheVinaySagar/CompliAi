@@ -17,6 +17,7 @@ from langchain.prompts import PromptTemplate
 
 from services.grc.llm_manager import llm_manager
 from utils.exceptions import DocumentNotFoundError, LLMServiceError
+from database.document_repository import document_repository
 
 class DocumentProcessor:
     """Handles document processing and RAG operations"""
@@ -26,6 +27,56 @@ class DocumentProcessor:
         self.qa_chains: Dict[str, RetrievalQA] = {}
         self.document_metadata: Dict[str, Dict] = {}
     
+    async def initialize_documents(self):
+        """Load existing documents from database on startup"""
+        try:
+            print("Loading existing documents from database...")
+            
+            # Get all documents from database
+            all_documents = await document_repository.list_all_documents()
+            
+            loaded_count = 0
+            for doc in all_documents:
+                document_id = doc.get("document_id")
+                if document_id:
+                    # Store metadata in memory
+                    self.document_metadata[document_id] = {
+                        "document_id": document_id,
+                        "name": doc.get("name"),
+                        "file_path": doc.get("file_path"),
+                        "user_id": doc.get("user_id"),
+                        "uploaded_at": doc.get("uploaded_at"),
+                        "chunks_count": doc.get("chunks_count", 0),
+                        "controls_identified": doc.get("controls_identified", 0),
+                        "status": doc.get("status", "unknown"),
+                        "file_type": doc.get("file_type")
+                    }
+                    
+                    # Try to restore vector store if it exists
+                    db_path = f"./vector_stores/{document_id}"
+                    if os.path.exists(db_path):
+                        try:
+                            embeddings = llm_manager.get_embedding_model()
+                            vector_store = Chroma(
+                                persist_directory=db_path,
+                                embedding_function=embeddings
+                            )
+                            self.vector_stores[document_id] = vector_store
+                            
+                            # Recreate QA chain
+                            qa_chain = self._create_qa_chain(vector_store)
+                            self.qa_chains[document_id] = qa_chain
+                            
+                        except Exception as vs_error:
+                            print(f"Warning: Failed to restore vector store for {document_id}: {vs_error}")
+                    
+                    loaded_count += 1
+            
+            print(f"Successfully loaded {loaded_count} documents from database")
+            
+        except Exception as e:
+            print(f"Warning: Failed to load documents from database: {e}")
+
     async def upload_and_process_document(
         self, 
         file_path: str, 
@@ -34,7 +85,11 @@ class DocumentProcessor:
     ) -> Dict:
         """Upload and process a document for RAG queries"""
         try:
-            document_id = document_name or str(uuid.uuid4())
+            # Always generate a unique document ID
+            document_id = str(uuid.uuid4())
+            
+            # Use document_name for display, fallback to filename
+            display_name = document_name or os.path.basename(file_path)
             
             # Load document based on file type
             documents = self._load_document_by_type(file_path)
@@ -72,25 +127,50 @@ class DocumentProcessor:
             qa_chain = self._create_qa_chain(vector_store)
             self.qa_chains[document_id] = qa_chain
             
-            # Store document metadata
-            self.document_metadata[document_id] = {
-                "name": document_name or os.path.basename(file_path),
+            # Store document metadata (both in memory and database)
+            metadata = {
+                "document_id": document_id,
+                "name": display_name,  # Use the display name from parameter or filename
                 "file_path": file_path,
                 "user_id": user_id,
                 "uploaded_at": datetime.utcnow(),
                 "chunks_count": len(chunks),
-                "status": "processed"
+                "status": "processed",
+                "file_type": os.path.splitext(file_path)[1].lower(),
+                "controls_identified": 0  # Will be updated after control identification
             }
+            
+            # Store in memory for immediate access
+            self.document_metadata[document_id] = metadata
+            
+            # Save to database for persistence
+            try:
+                await document_repository.save_document_metadata(metadata)
+            except Exception as db_error:
+                print(f"Warning: Failed to save document metadata to database: {db_error}")
             
             # Identify controls in document
             controls = await self._identify_controls_in_document(document_id, qa_chain)
+            
+            # Update control count in metadata
+            self.document_metadata[document_id]["controls_identified"] = len(controls)
+            
+            # Update database with control count
+            try:
+                await document_repository.update_document_metadata(
+                    document_id, 
+                    user_id, 
+                    {"controls_identified": len(controls)}
+                )
+            except Exception as db_error:
+                print(f"Warning: Failed to update control count in database: {db_error}")
             
             return {
                 "document_id": document_id,
                 "status": "success",
                 "chunks_created": len(chunks),
                 "controls_identified": len(controls),
-                "message": f"Document {document_name or 'uploaded'} processed successfully"
+                "message": f"Document '{display_name}' processed successfully"
             }
             
         except Exception as e:
@@ -252,32 +332,132 @@ class DocumentProcessor:
         
         return controls
     
-    def get_document_info(self, document_id: str) -> Dict:
+    async def get_document_info(self, document_id: str, user_id: str = None) -> Dict:
         """Get document information"""
+        # First try to get from database
+        try:
+            db_document = await document_repository.get_document_by_id(document_id, user_id)
+            if db_document:
+                # Convert MongoDB document to dict and return
+                doc_info = {
+                    "document_id": db_document.get("document_id"),
+                    "name": db_document.get("name"),
+                    "file_path": db_document.get("file_path"),
+                    "user_id": db_document.get("user_id"),
+                    "uploaded_at": db_document.get("uploaded_at"),
+                    "chunks_count": db_document.get("chunks_count", 0),
+                    "controls_identified": db_document.get("controls_identified", 0),
+                    "status": db_document.get("status", "unknown"),
+                    "file_type": db_document.get("file_type")
+                }
+                
+                # Also store in memory for faster future access
+                self.document_metadata[document_id] = doc_info
+                return doc_info
+                
+        except Exception as db_error:
+            print(f"Warning: Failed to retrieve document from database: {db_error}")
+        
+        # Fallback to in-memory data
         if document_id not in self.document_metadata:
             raise DocumentNotFoundError(f"Document {document_id} not found")
         
-        return self.document_metadata[document_id]
-    
-    def list_documents(self, user_id: str = None) -> List[Dict]:
-        """List all documents or documents for specific user"""
-        documents = []
+        # Check user ownership if user_id is provided
+        metadata = self.document_metadata[document_id]
+        if user_id and metadata.get('user_id') != user_id:
+            raise DocumentNotFoundError(f"Document {document_id} not found")
         
-        for doc_id, metadata in self.document_metadata.items():
-            if user_id is None or metadata.get('user_id') == user_id:
+        return metadata
+    
+    async def list_documents(self, user_id: str = None) -> List[Dict]:
+        """List documents for specific user"""
+        if not user_id:
+            raise ValueError("user_id is required for security - cannot list all documents without user context")
+        
+        try:
+            # Get user's documents from database first
+            db_documents = await document_repository.list_documents_by_user(user_id)
+            
+            documents = []
+            for doc in db_documents:
+                documents.append({
+                    "document_id": doc.get("document_id"),
+                    "name": doc.get("name"),
+                    "uploaded_at": doc.get("uploaded_at"),
+                    "chunks_count": doc.get("chunks_count", 0),
+                    "controls_identified": doc.get("controls_identified", 0),
+                    "status": doc.get("status", "unknown"),
+                    "file_type": doc.get("file_type")
+                })
+            
+            return documents
+            
+        except Exception as db_error:
+            print(f"Warning: Failed to retrieve documents from database: {db_error}")
+            # Fallback to in-memory data filtered by user
+            documents = []
+            
+            for doc_id, metadata in self.document_metadata.items():
+                if metadata.get('user_id') == user_id:
+                    documents.append({
+                        "document_id": doc_id,
+                        "name": metadata.get('name'),
+                        "uploaded_at": metadata.get('uploaded_at'),
+                        "chunks_count": metadata.get('chunks_count'),
+                        "controls_identified": metadata.get('controls_identified', 0),
+                        "status": metadata.get('status')
+                    })
+            
+            return documents
+    
+    async def list_all_documents_admin(self) -> List[Dict]:
+        """List all documents across all users (ADMIN ONLY)"""
+        try:
+            db_documents = await document_repository.list_all_documents()
+            
+            documents = []
+            for doc in db_documents:
+                documents.append({
+                    "document_id": doc.get("document_id"),
+                    "name": doc.get("name"),
+                    "user_id": doc.get("user_id"),  # Include user_id for admin visibility
+                    "uploaded_at": doc.get("uploaded_at"),
+                    "chunks_count": doc.get("chunks_count", 0),
+                    "controls_identified": doc.get("controls_identified", 0),
+                    "status": doc.get("status", "unknown"),
+                    "file_type": doc.get("file_type")
+                })
+            
+            return documents
+            
+        except Exception as db_error:
+            print(f"Warning: Failed to retrieve documents from database: {db_error}")
+            # Fallback to in-memory data
+            documents = []
+            
+            for doc_id, metadata in self.document_metadata.items():
                 documents.append({
                     "document_id": doc_id,
                     "name": metadata.get('name'),
+                    "user_id": metadata.get('user_id'),
                     "uploaded_at": metadata.get('uploaded_at'),
                     "chunks_count": metadata.get('chunks_count'),
+                    "controls_identified": metadata.get('controls_identified', 0),
                     "status": metadata.get('status')
                 })
-        
-        return documents
-    
-    def delete_document(self, document_id: str) -> bool:
+            
+            return documents
+
+    async def delete_document(self, document_id: str, user_id: str = None) -> bool:
         """Delete document and cleanup resources"""
         try:
+            # Remove from database first
+            if user_id:
+                try:
+                    await document_repository.delete_document_metadata(document_id, user_id)
+                except Exception as db_error:
+                    print(f"Warning: Failed to delete document metadata from database: {db_error}")
+            
             # Remove from memory
             if document_id in self.vector_stores:
                 del self.vector_stores[document_id]
@@ -298,6 +478,51 @@ class DocumentProcessor:
         except Exception as e:
             print(f"Error deleting document: {e}")
             return False
+    
+    async def load_documents_from_database(self):
+        """Load document metadata from database on startup"""
+        try:
+            db_documents = await document_repository.list_all_documents()
+            
+            for doc in db_documents:
+                document_id = doc.get("document_id")
+                if document_id:
+                    # Store in memory for quick access
+                    self.document_metadata[document_id] = {
+                        "name": doc.get("name"),
+                        "file_path": doc.get("file_path"),
+                        "user_id": doc.get("user_id"),
+                        "uploaded_at": doc.get("uploaded_at"),
+                        "chunks_count": doc.get("chunks_count", 0),
+                        "controls_identified": doc.get("controls_identified", 0),
+                        "status": doc.get("status", "processed"),
+                        "file_type": doc.get("file_type")
+                    }
+                    
+                    # Try to restore vector store and QA chain if vector store exists
+                    db_path = f"./vector_stores/{document_id}"
+                    if os.path.exists(db_path):
+                        try:
+                            embeddings = llm_manager.get_embedding_model()
+                            vector_store = Chroma(
+                                persist_directory=db_path,
+                                embedding_function=embeddings
+                            )
+                            self.vector_stores[document_id] = vector_store
+                            
+                            # Create QA chain
+                            qa_chain = self._create_qa_chain(vector_store)
+                            self.qa_chains[document_id] = qa_chain
+                            
+                        except Exception as restore_error:
+                            print(f"Warning: Failed to restore vector store for document {document_id}: {restore_error}")
+                            # Update status to indicate issue
+                            self.document_metadata[document_id]["status"] = "vector_store_missing"
+            
+            print(f"Loaded {len(db_documents)} documents from database")
+            
+        except Exception as e:
+            print(f"Warning: Failed to load documents from database: {e}")
 
 # Global instance
 document_processor = DocumentProcessor()

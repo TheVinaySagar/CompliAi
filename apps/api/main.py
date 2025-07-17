@@ -40,6 +40,10 @@ async def lifespan(app: FastAPI):
             logger.info(f"Default admin created: {admin_user.email}")
             logger.warning("Default admin password is 'admin123' - CHANGE THIS IMMEDIATELY!")
         
+        # Initialize document processor with existing documents
+        from services.grc.document_processor import document_processor
+        await document_processor.initialize_documents()
+        
         logger.info("CompliAI API started successfully")
         
     except Exception as e:
@@ -108,7 +112,7 @@ All endpoints require JWT Bearer token authentication (except login).
     },
     servers=[
         {
-            "url": "http://localhost:8001",
+            "url": "http://localhost:8000",
             "description": "Development server"
         },
         {
@@ -285,7 +289,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8001,
+        port=8000,
         reload=settings.debug,
         log_level="info"
     )

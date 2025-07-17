@@ -194,26 +194,26 @@ GEMINI_EMBEDDING=models/embedding-001
 ## API Documentation
 
 When running in debug mode, visit:
-- **Swagger UI:** http://localhost:8001/docs
-- **ReDoc:** http://localhost:8001/redoc
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
 
 ## Testing the API
 
 ### 1. Initialize Admin (if needed)
 ```bash
-curl -X POST http://localhost:8001/auth/init-admin
+curl -X POST http://localhost:8000/auth/init-admin
 ```
 
 ### 2. Login
 ```bash
-curl -X POST http://localhost:8001/auth/login \
+curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@compliai.com","password":"admin123"}'
 ```
 
 ### 3. Use Chat (with Bearer token)
 ```bash
-curl -X POST http://localhost:8001/chat/ \
+curl -X POST http://localhost:8000/chat/ \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"message":"What are the key controls in ISO 27001?"}'

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { dummyAuditTasks, type AuditTask } from "@/lib/dummy"
+import { type AuditTask } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Calendar, CheckCircle, Clock, AlertTriangle, User, Download, Plus, Filter } from "lucide-react"
 
 export default function AuditPage() {
-  const [tasks] = useState<AuditTask[]>(dummyAuditTasks)
+  const [tasks] = useState<AuditTask[]>([])
   const [selectedFramework, setSelectedFramework] = useState("all")
 
   const getPriorityColor = (priority: AuditTask["priority"]) => {

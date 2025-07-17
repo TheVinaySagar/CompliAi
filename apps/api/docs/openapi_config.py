@@ -90,7 +90,7 @@ For technical support or API questions, contact your system administrator.
         routes=app.routes,
         servers=[
             {
-                "url": "http://localhost:8001",
+                "url": "http://localhost:8000",
                 "description": "Development server"
             },
             {

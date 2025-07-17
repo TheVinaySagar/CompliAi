@@ -5,7 +5,7 @@ echo "=================================="
 
 # Test 1: Get authentication token
 echo "Step 1: Getting authentication token..."
-TOKEN=$(curl -s -X POST "http://localhost:8001/auth/login" \
+TOKEN=$(curl -s -X POST "http://localhost:8000/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@compliai.com", "password": "admin123"}' | \
   python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('access_token', ''))" 2>/dev/null)
@@ -19,7 +19,7 @@ echo "Token obtained successfully: ${TOKEN:0:30}..."
 
 # Test 2: Basic chat endpoint
 echo -e "\nStep 2: Testing basic chat endpoint..."
-CHAT_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "http://localhost:8001/chat/" \
+CHAT_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "http://localhost:8000/chat/" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -42,7 +42,7 @@ fi
 
 # Test 3: Framework-specific chat
 echo -e "\nStep 3: Testing framework-specific chat..."
-FRAMEWORK_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "http://localhost:8001/chat/" \
+FRAMEWORK_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "http://localhost:8000/chat/" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -66,7 +66,7 @@ fi
 
 # Test 4: List conversations
 echo -e "\nStep 4: Testing conversation listing..."
-CONV_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X GET "http://localhost:8001/chat/conversations" \
+CONV_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X GET "http://localhost:8000/chat/conversations" \
   -H "Authorization: Bearer $TOKEN")
 
 HTTP_STATUS=$(echo "$CONV_RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
