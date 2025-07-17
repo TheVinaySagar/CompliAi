@@ -229,7 +229,7 @@ class ApiClient {
 
   // Authentication endpoints
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    const response = await this.makeRequestWithTimeout<LoginResponse>('/auth/login', {
+    const response = await this.makeRequestWithoutTimeout<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials)
     })
@@ -242,14 +242,14 @@ class ApiClient {
   }
 
   async register(userData: RegisterRequest): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout('/auth/register', {
+    return this.makeRequestWithoutTimeout('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData)
     })
   }
 
   async getCurrentUser(): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout('/auth/me')
+    return this.makeRequestWithoutTimeout('/auth/me')
   }
 
   async logout(): Promise<void> {
@@ -282,15 +282,15 @@ class ApiClient {
   }
 
   async getConversations(): Promise<ApiResponse<any[]>> {
-    return this.makeRequestWithTimeout<any[]>('/chat/conversations')
+    return this.makeRequestWithoutTimeout<any[]>('/chat/conversations')
   }
 
   async getConversationHistory(conversationId: string): Promise<ApiResponse<any[]>> {
-    return this.makeRequestWithTimeout<any[]>(`/chat/conversations/${conversationId}`)
+    return this.makeRequestWithoutTimeout<any[]>(`/chat/conversations/${conversationId}`)
   }
 
   async deleteConversation(conversationId: string): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout(`/chat/conversations/${conversationId}`, {
+    return this.makeRequestWithoutTimeout(`/chat/conversations/${conversationId}`, {
       method: 'DELETE'
     })
   }
@@ -342,21 +342,21 @@ class ApiClient {
   }
 
   async getDocuments(): Promise<ApiResponse<any[]>> {
-    return this.makeRequestWithTimeout<any[]>('/chat/documents')
+    return this.makeRequestWithoutTimeout<any[]>('/chat/documents')
   }
 
   async getDocumentInfo(documentId: string): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout(`/chat/documents/${documentId}`)
+    return this.makeRequestWithoutTimeout(`/chat/documents/${documentId}`)
   }
 
   async deleteDocument(documentId: string): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout(`/chat/documents/${documentId}`, {
+    return this.makeRequestWithoutTimeout(`/chat/documents/${documentId}`, {
       method: 'DELETE'
     })
   }
 
   async queryDocument(documentId: string, query: string): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout(`/chat/documents/${documentId}/query`, {
+    return this.makeRequestWithoutTimeout(`/chat/documents/${documentId}/query`, {
       method: 'POST',
       body: JSON.stringify({ query })
     })
@@ -364,24 +364,24 @@ class ApiClient {
 
   // System endpoints
   async getHealth(): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout('/health')
+    return this.makeRequestWithoutTimeout('/health')
   }
 
   async getApiInfo(): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout('/info')
+    return this.makeRequestWithoutTimeout('/info')
   }
 
   // Admin endpoints
   async getSystemStatus(): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout('/admin/status')
+    return this.makeRequestWithoutTimeout('/admin/status')
   }
 
   async getFrameworks(): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout('/admin/frameworks')
+    return this.makeRequestWithoutTimeout('/admin/frameworks')
   }
 
   async getFrameworkDetails(frameworkKey: string): Promise<ApiResponse<any>> {
-    return this.makeRequestWithTimeout(`/admin/frameworks/${frameworkKey}`)
+    return this.makeRequestWithoutTimeout(`/admin/frameworks/${frameworkKey}`)
   }
 }
 

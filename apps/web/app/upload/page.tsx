@@ -31,7 +31,9 @@ export default function UploadPage() {
         const convertedFiles: UploadedFile[] = response.data.map((doc: any) => ({
           id: doc.document_id || doc.id,
           name: doc.name || "Unknown Document",
-          size: `${Math.round((doc.file_size || 0) / 1024 / 1024 * 10) / 10} MB`,
+          size: doc.file_size && doc.file_size > 0 
+            ? `${Math.round((doc.file_size) / 1024 / 1024 * 10) / 10} MB`
+            : doc.size || "Unknown size",
           uploadDate: new Date(doc.uploaded_at || Date.now()),
           extractedPolicies: doc.policies_extracted || 0,
           mappedControls: doc.controls_identified || 0,
