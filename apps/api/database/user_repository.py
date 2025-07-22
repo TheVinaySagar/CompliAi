@@ -30,15 +30,15 @@ class UserRepository:
         """Create new user"""
         collection = await self.get_collection()
         
-        # Check if user already exists
+        
         existing_user = await collection.find_one({"email": user_data.email})
         if existing_user:
             raise ValueError("User with this email already exists")
         
-        # Hash password
+        
         hashed_password = self.get_password_hash(user_data.password)
         
-        # Prepare user document
+        
         user_doc = {
             "email": user_data.email,
             "full_name": user_data.full_name,
@@ -52,10 +52,9 @@ class UserRepository:
             "last_login": None
         }
         
-        # Insert user
+       
         result = await collection.insert_one(user_doc)
         
-        # Return created user
         created_user = await collection.find_one({"_id": result.inserted_id})
         return User(**created_user)
     
@@ -149,5 +148,4 @@ class UserRepository:
         
         return await self.create_user(admin_data)
 
-# Create repository instance
 user_repository = UserRepository()
