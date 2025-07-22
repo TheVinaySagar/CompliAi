@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { CheckCircle, AlertTriangle, XCircle, Eye, Download, Filter } from "lucide-react"
+import Link from "next/link"
 
 export default function MappingPage() {
   const [selectedFramework, setSelectedFramework] = useState("all")
@@ -55,6 +56,11 @@ export default function MappingPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Control Mapping</h1>
         <p className="text-gray-600">View and manage compliance control mappings across frameworks</p>
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+          <p className="text-blue-800 text-sm">
+            To view mapping results for a specific uploaded document, go to the <Link href="/upload" className="underline text-blue-700">Uploads</Link> page and click <b>View Mapping</b> next to your document.
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">

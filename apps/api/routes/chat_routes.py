@@ -348,3 +348,31 @@ async def query_document(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/documents/{document_id}/mapping")
+async def get_document_mapping(
+    document_id: str,
+    current_user: User = Depends(require_chat_permission)
+):
+    """
+    Get compliance framework mapping results for a specific document.
+    Users can only access their own documents (unless admin).
+    """
+    try:
+        doc_info = await document_processor.get_document_info(document_id, str(current_user.id))
+        # Additional ownership check for admin users
+        if doc_info.get('user_id') != str(current_user.id) and current_user.role != "admin":
+            raise HTTPException(
+                status_code=404, 
+                detail="Document not found or access denied"
+            )
+        mapping = doc_info.get("framework_mapping")
+        if mapping is None:
+            raise HTTPException(status_code=404, detail="No mapping results found for this document.")
+        return {"document_id": document_id, "framework_mapping": mapping}
+    except DocumentNotFoundError:
+        raise HTTPException(status_code=404, detail="Document not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

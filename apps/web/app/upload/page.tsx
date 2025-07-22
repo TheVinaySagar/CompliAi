@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { type UploadedFile } from "@/types"
 import { Upload, FileText, CheckCircle, Calendar, Database, AlertCircle, Loader } from "lucide-react"
 import { apiClient } from "@/lib/api-client"
+import { useRouter } from "next/navigation"
 
 export default function UploadPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
@@ -15,6 +16,8 @@ export default function UploadPage() {
   const [errorMessage, setErrorMessage] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+
+  const router = useRouter()
 
   // Load existing documents on component mount
   useEffect(() => {
@@ -258,6 +261,18 @@ export default function UploadPage() {
                         <Database className="h-3 w-3 mr-1" />
                         {file.mappedControls} controls
                       </span>
+                    </td>
+                    {/* New: View Mapping Button */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        className="inline-flex items-center px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200"
+                        onClick={() => router.push(`/mapping/${file.id}`)}
+                        disabled={file.status !== "Completed"}
+                        title={file.status === "Completed" ? "View Mapping" : "Mapping available after processing"}
+                      >
+                        <Database className="h-4 w-4 mr-1" />
+                        View Mapping
+                      </button>
                     </td>
                   </tr>
                 ))
