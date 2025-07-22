@@ -9,6 +9,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { authEvents } from "@/lib/auth-events"
 import { ROUTES } from "@/lib/constants"
+import { toast } from "@/hooks/use-toast"
 
 interface SessionExpiryHandlerProps {
   children: React.ReactNode
@@ -29,15 +30,14 @@ export default function SessionExpiryHandler({ children }: SessionExpiryHandlerP
   }, [])
 
   const showSessionExpiredNotification = () => {
-    // You can integrate with your toast system here
-    // For now, we'll use a simple alert (can be replaced with a proper toast)
     if (typeof window !== 'undefined') {
-      // Only show notification if not already on login page
       if (window.location.pathname !== ROUTES.LOGIN) {
-        console.log('Session expired - redirecting to login')
+        // console.log('Session expired - redirecting to login')
         
-        // Optional: Show a toast notification instead of alert
-        // toast.error('Your session has expired. Please sign in again.')
+        toast({
+          variant: "destructive",
+          description: "Your session has expired. Please sign in again."
+        })
       }
     }
   }

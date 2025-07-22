@@ -27,7 +27,7 @@ const AppLayout = memo(({
   return (
     <ErrorBoundary>
       <AuthGuard requireRole={requireRole} requirePermission={requirePermission}>
-        <div className={cn("flex h-screen bg-gray-100", className)}>
+        <div className={cn("flex h-screen bg-slate-50", className)}>
           {showSidebar && <Sidebar />}
           <div className="flex flex-1 flex-col overflow-hidden">
             {showHeader && <Header />}
