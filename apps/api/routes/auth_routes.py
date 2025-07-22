@@ -19,34 +19,34 @@ from config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@router.post("/register", response_model=User)
-async def register_user(
-    user_data: UserCreate, 
-    current_user: User = Depends(require_admin_role)
-):
+@router.post("/register", response_model=Token)
+async def register_user(user_data: UserCreate):
     """
-    ## Register New User (Admin Only)
+    ## Public User Registration
     
-    Create a new user account in the system. Only administrators can register new users.
+    Create a new user account and receive an authentication token.
     
-    ### Required Role: 
-    **Admin** - Only users with admin role can create new accounts
+    ### Public Endpoint:
+    This endpoint allows public user registration without authentication.
     
     ### Request Body:
     - **email**: Valid email address (will be username)
     - **full_name**: User's full name
     - **password**: Strong password (min 8 characters)
-    - **role**: User role (admin, user, auditor, viewer)
+    - **role**: Optional role (defaults to 'viewer' for public registration)
     - **department**: Optional department name
-    - **permissions**: List of specific permissions
+    - **permissions**: Optional list of permissions (defaults to basic permissions)
     
     ### Response:
-    Returns the created user object (without password)
+    Returns authentication token with user information:
+    - **access_token**: JWT bearer token for immediate API access
+    - **token_type**: Always "bearer"
+    - **expires_in**: Token expiration time in seconds
+    - **user**: Created user profile information
     
     ### Errors:
     - **400**: Invalid input data or user already exists
-    - **401**: Not authenticated
-    - **403**: Insufficient permissions (not admin)
+    - **422**: Validation errors (invalid email, weak password, etc.)
     """
     try:
         # Check if user already exists
@@ -54,12 +54,35 @@ async def register_user(
         if existing_user:
             raise UserExistsError("User with this email already exists")
         
+        # Set default role and permissions for public registration
+        if not user_data.role:
+            user_data.role = UserRole.VIEWER
+        if not user_data.permissions:
+            user_data.permissions = ["chat_access"]
+        
         # Create new user
         new_user = await user_repository.create_user(user_data)
-        return new_user
         
-    except ValueError as e:
+        # Create access token for immediate login
+        access_token = create_token_for_user(
+            user_id=str(new_user.id),
+            email=new_user.email,
+            role=new_user.role
+        )
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=settings.access_token_expire_minutes * 60,
+            user=new_user
+        )
+        
+    except UserExistsError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Registration failed")
 
 @router.post("/login", response_model=Token)
 async def login(user_credentials: UserLogin):
@@ -247,6 +270,52 @@ async def delete_user(
         if isinstance(e, UserNotFoundError):
             raise e
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/admin/register", response_model=User)
+async def admin_register_user(
+    user_data: UserCreate,
+    current_user: User = Depends(require_admin_role)
+):
+    """
+    ## Admin User Registration
+    
+    Create a new user account as an administrator. Only administrators can use this endpoint.
+    
+    ### Required Role: 
+    **Admin** - Only users with admin role can create new accounts
+    
+    ### Request Body:
+    - **email**: Valid email address (will be username)
+    - **full_name**: User's full name
+    - **password**: Strong password (min 8 characters)
+    - **role**: User role (admin, user, auditor, viewer)
+    - **department**: Optional department name
+    - **permissions**: List of specific permissions
+    
+    ### Response:
+    Returns the created user object (without password)
+    
+    ### Errors:
+    - **400**: Invalid input data or user already exists
+    - **401**: Not authenticated
+    - **403**: Insufficient permissions (not admin)
+    """
+    try:
+        # Check if user already exists
+        existing_user = await user_repository.get_user_by_email(user_data.email)
+        if existing_user:
+            raise UserExistsError("User with this email already exists")
+        
+        # Create new user with admin privileges
+        new_user = await user_repository.create_user(user_data)
+        return new_user
+        
+    except UserExistsError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="User creation failed")
 
 @router.post("/init-admin")
 async def initialize_admin():

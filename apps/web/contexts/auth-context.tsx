@@ -11,6 +11,9 @@ import {
 } from "@/types"
 import { STORAGE_KEYS, ROUTES } from "@/lib/constants"
 import { safeJsonParse, getErrorMessage } from "@/lib/utils"
+import { clearAllUserData as clearAllUserDataUtil } from "@/lib/chat-storage"
+import { authEvents, emitLogin, emitLogout } from "@/lib/auth-events"
+import { tokenValidator } from "@/lib/token-validator"
 
 interface AuthContextType {
   user: User | null
@@ -52,6 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const parsedUser = safeJsonParse<User | null>(userData, null)
           if (parsedUser) {
             setUser(parsedUser)
+            // Start token validation for authenticated users
+            tokenValidator.startValidation()
           }
         }
       } catch (error) {
@@ -66,6 +71,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth()
   }, [isClient])
+
+  // Listen for authentication events (token expiration, unauthorized access)
+  useEffect(() => {
+    const unsubscribe = authEvents.subscribe((event, data) => {
+      switch (event) {
+        case 'token_expired':
+        case 'unauthorized':
+          console.log('Token expired or unauthorized, redirecting to login...')
+          handleTokenExpired()
+          break
+        case 'logout':
+          console.log('Logout event received')
+          break
+        default:
+          break
+      }
+    })
+
+    // Cleanup subscription on unmount
+    return unsubscribe
+  }, [])
+
+  const handleTokenExpired = () => {
+    // Stop token validation
+    tokenValidator.stopValidation()
+    
+    // Clear all user data and redirect to login
+    clearAllUserDataUtil()
+    setUser(null)
+    setError('Your session has expired. Please sign in again.')
+    
+    // Emit logout event to clear chat data across components
+    emitLogout()
+    
+    // Redirect to login page
+    router.push(ROUTES.LOGIN)
+  }
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
@@ -92,6 +134,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(authUser))
         
         setUser(authUser)
+        
+        // Emit login event
+        emitLogin()
+        
+        // Start token validation
+        tokenValidator.startValidation()
+        
         return true
       }
       
@@ -126,37 +175,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         full_name: data.name,
         email: data.email,
         password: data.password,
-        role: "Viewer",
+        role: "viewer", // Default role for public registration
         permissions: ["chat_access"],
       }
       
       const response = await apiClient.register(registerData)
       
-      if (response.data?.user) {
-        const authUser: User = {
-          id: response.data.user.id,
-          name: response.data.user.full_name || response.data.user.name,
-          full_name: response.data.user.full_name || response.data.user.name,
-          email: response.data.user.email,
-          role: response.data.user.role,
-          is_active: response.data.user.is_active,
-          department: response.data.user.department,
-          permissions: response.data.user.permissions || [],
-          isAuthenticated: true,
-        }
-        
-        // Store token and user data if token is provided
-        if (response.data.token) {
-          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token)
+      if (response.success && response.data) {
+        // Registration returns a token response, similar to login
+        if (response.data.access_token && response.data.user) {
+          const authUser: User = {
+            id: response.data.user.id,
+            name: response.data.user.full_name,
+            full_name: response.data.user.full_name,
+            email: response.data.user.email,
+            role: response.data.user.role as any,
+            is_active: response.data.user.is_active,
+            department: response.data.user.department,
+            permissions: response.data.user.permissions || [],
+            isAuthenticated: true,
+          }
+          
+          // Store token and user data for immediate login
+          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.access_token)
           localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(authUser))
+          
           setUser(authUser)
+          
+          // Emit login event
+          emitLogin()
+          
+          // Start token validation
+          tokenValidator.startValidation()
+          
+          return true
         }
-        
-        return true
       }
       
-      setError('Registration failed')
+      // Handle error response
+      const errorMessage = response.error || 'Registration failed'
+      setError(errorMessage)
       return false
+      
     } catch (error) {
       const errorMessage = getErrorMessage(error)
       setError(errorMessage)
@@ -167,15 +227,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
-    // Clear local storage
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
-    localStorage.removeItem(STORAGE_KEYS.USER_DATA)
-    localStorage.removeItem(STORAGE_KEYS.CHAT_CONVERSATIONS)
-    localStorage.removeItem(STORAGE_KEYS.USER_PREFERENCES)
+    // Stop token validation
+    tokenValidator.stopValidation()
+    
+    // Clear all user data using utility
+    clearAllUserDataUtil()
     
     // Reset state
     setUser(null)
     setError(null)
+    
+    // Emit logout event to clear chat data across components
+    emitLogout()
     
     // Redirect to login
     router.push(ROUTES.LOGIN)

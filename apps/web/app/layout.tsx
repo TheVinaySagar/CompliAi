@@ -5,6 +5,7 @@ import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ChatProvider } from "@/contexts/chat-context"
 import ErrorBoundary from "@/components/error-boundary"
+import SessionExpiryHandler from "@/components/session-expiry-handler"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -37,7 +38,9 @@ export default function RootLayout({
         <ErrorBoundary>
           <AuthProvider>
             <ChatProvider>
-              {children}
+              <SessionExpiryHandler>
+                {children}
+              </SessionExpiryHandler>
             </ChatProvider>
           </AuthProvider>
         </ErrorBoundary>

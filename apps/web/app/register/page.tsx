@@ -24,10 +24,14 @@ export default function RegisterPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { register, user } = useAuth()
+  const [localError, setLocalError] = useState("")
+  const { register, user, isLoading, error: authError, clearError } = useAuth()
   const router = useRouter()
+
+  // Clear auth errors when component mounts or form data changes
+  useEffect(() => {
+    clearError()
+  }, [clearError])
 
   useEffect(() => {
     if (user) {
@@ -35,21 +39,29 @@ export default function RegisterPage() {
     }
   }, [user, router])
 
+  // Combine local and auth errors
+  const displayError = localError || authError
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setLocalError("")
+    clearError() // Clear any existing auth errors
 
+    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
+      setLocalError("Passwords do not match")
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setLocalError("Password must be at least 8 characters long")
       return
     }
 
     if (!formData.agreeToTerms) {
-      setError("Please agree to the terms of service")
+      setLocalError("Please agree to the terms of service")
       return
     }
-
-    setIsLoading(true)
 
     try {
       const success = await register({
@@ -57,21 +69,49 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
+        agreeToTerms: true
       })
 
-      if (!success) {
-        setError("An account with this email already exists")
+      if (success) {
+        // Registration successful, user will be automatically redirected to dashboard
+        // by the useEffect that monitors user state
+        console.log('Registration successful!')
       }
+      // Error handling is done in the auth context
     } catch (err) {
-      setError("An error occurred. Please try again.")
-    } finally {
-      setIsLoading(false)
+      setLocalError("An error occurred. Please try again.")
     }
   }
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    // Clear errors when user starts typing
+    if (localError) {
+      setLocalError("")
+    }
+    if (authError) {
+      clearError()
+    }
   }
+
+  const getPasswordStrength = (password: string) => {
+    let strength = 0
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password)
+    }
+    
+    strength = Object.values(checks).filter(Boolean).length
+    
+    if (strength < 2) return { level: 'Weak', color: 'text-red-500', width: '20%' }
+    if (strength < 4) return { level: 'Medium', color: 'text-yellow-500', width: '60%' }
+    return { level: 'Strong', color: 'text-green-500', width: '100%' }
+  }
+
+  const passwordStrength = formData.password ? getPasswordStrength(formData.password) : null
 
   if (user) {
     return null
@@ -95,9 +135,9 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
+              {displayError && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>{displayError}</AlertDescription>
                 </Alert>
               )}
 
@@ -150,6 +190,27 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
+                {/* Password Strength Indicator */}
+                {formData.password && passwordStrength && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Password strength:</span>
+                      <span className={passwordStrength.color}>{passwordStrength.level}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          passwordStrength.level === 'Weak' ? 'bg-red-500' :
+                          passwordStrength.level === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: passwordStrength.width }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use 8+ characters with uppercase, lowercase, numbers & symbols
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>

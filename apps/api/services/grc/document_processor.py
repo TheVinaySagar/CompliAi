@@ -17,7 +17,7 @@ from langchain.prompts import PromptTemplate
 
 from services.grc.llm_manager import llm_manager
 from utils.exceptions import DocumentNotFoundError, LLMServiceError
-from database.document_repository import document_repository
+from database.document_repository import document_repository    
 
 class DocumentProcessor:
     """Handles document processing and RAG operations"""
