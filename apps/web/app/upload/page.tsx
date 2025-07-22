@@ -31,9 +31,6 @@ export default function UploadPage() {
         const convertedFiles: UploadedFile[] = response.data.map((doc: any) => ({
           id: doc.document_id || doc.id,
           name: doc.name || "Unknown Document",
-          size: doc.file_size && doc.file_size > 0 
-            ? `${Math.round((doc.file_size) / 1024 / 1024 * 10) / 10} MB`
-            : doc.size || "Unknown size",
           uploadDate: new Date(doc.uploaded_at || Date.now()),
           extractedPolicies: doc.policies_extracted || 0,
           mappedControls: doc.controls_identified || 0,
@@ -84,7 +81,6 @@ export default function UploadPage() {
         const newFile: UploadedFile = {
           id: response.data.document_id || Date.now().toString(),
           name: file.name,
-          size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
           uploadDate: new Date(),
           extractedPolicies: response.data.policies_extracted || 0,
           mappedControls: response.data.controls_identified || 0,
@@ -202,7 +198,6 @@ export default function UploadPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Document
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Upload Date
                 </th>
@@ -242,7 +237,6 @@ export default function UploadPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{file.size}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />

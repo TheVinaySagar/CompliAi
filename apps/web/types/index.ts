@@ -154,7 +154,6 @@ export type MemberStatus = "Active" | "Pending" | "Inactive" | "Suspended"
 export interface UploadedFile {
   id: string
   name: string
-  size: string
   uploadDate: Date
   extractedPolicies: number
   mappedControls: number

@@ -19,7 +19,7 @@ class LLMManager:
     def __init__(self):
         self.llm_configs = {
             'google': {
-                'model': "gemini-1.5-flash",
+                'model': "gemini-2.5-pro",
                 'api_key': settings.google_api_key,
                 'temperature': 0.2
             },
@@ -68,12 +68,12 @@ class LLMManager:
         """Create LLM instance based on service type"""
         try:
             # if service == 'google':
-            #     return ChatGoogleGenerativeAI(
-            #         model=self.llm_configs['google']['model'],
-            #         google_api_key=self.llm_configs['google']['api_key'],
-            #         temperature=self.llm_configs['google']['temperature'],
-            #         convert_system_message_to_human=True
-            #     )
+            return ChatGoogleGenerativeAI(
+                model=self.llm_configs['google']['model'],
+                google_api_key=self.llm_configs['google']['api_key'],
+                temperature=self.llm_configs['google']['temperature'],
+                convert_system_message_to_human=True
+            )
             # elif service == 'openai':
             #     if not self.llm_configs['openai']['api_key']:
             #         raise LLMServiceError("OpenAI API key not configured")
@@ -85,10 +85,10 @@ class LLMManager:
             #     )
             # elif service == 'ollama':
 
-            return ChatOllama(
-                model=self.llm_configs['ollama']['model'],
-                base_url=self.llm_configs['ollama']['base_url']
-            )
+            # return ChatOllama(
+            #     model=self.llm_configs['ollama']['model'],
+            #     base_url=self.llm_configs['ollama']['base_url']
+            # )
             # else:
                 # raise LLMServiceError(f"Unsupported LLM service: {service}")
         

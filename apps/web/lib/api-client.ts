@@ -5,6 +5,7 @@
 
 import { API_CONFIG, STORAGE_KEYS } from './constants'
 import { type ApiResponse, type Source } from '@/types'
+import { emitTokenExpired, emitUnauthorized } from './auth-events'
 
 interface LoginRequest {
   email: string
@@ -150,6 +151,13 @@ class ApiClient {
         // Handle specific error cases
         if (response.status === 401) {
           this.removeTokenFromStorage()
+          
+          // Emit token expired event for the auth context to handle
+          if (!endpoint.includes('/auth/login')) {
+            emitTokenExpired()
+          } else {
+            emitUnauthorized()
+          }
         }
         
         // Retry on server errors

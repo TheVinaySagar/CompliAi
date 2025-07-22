@@ -5,6 +5,7 @@ import { apiClient, type ChatRequest, type ChatResponse } from "@/lib/api-client
 import { type Message, type Conversation } from "@/types"
 import { STORAGE_KEYS } from "@/lib/constants"
 import { safeJsonParse, getErrorMessage, generateId } from "@/lib/utils"
+import { authEvents } from "@/lib/auth-events"
 
 interface ChatContextType {
   messages: Message[]
@@ -283,10 +284,41 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setConversations([])
     setCurrentConversationId(null)
     setError(null)
-    localStorage.removeItem(STORAGE_KEYS.CHAT_CONVERSATIONS)
-    localStorage.removeItem(STORAGE_KEYS.CHAT_MESSAGES)
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_CONVERSATION_ID)
+    
+    // Clear all chat-related localStorage items
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.CHAT_CONVERSATIONS)
+      localStorage.removeItem(STORAGE_KEYS.CHAT_MESSAGES)
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_CONVERSATION_ID)
+    }
   }, [])
+
+  // Listen for authentication events to clear chat data on logout/token expiry
+  useEffect(() => {
+    const unsubscribe = authEvents.subscribe((event) => {
+      if (event === 'logout' || event === 'token_expired') {
+        console.log('Auth event received, clearing chat data:', event)
+        clearAllData()
+      }
+    })
+
+    return unsubscribe
+  }, [clearAllData])
+
+  // Listen for localStorage changes from other tabs (logout in another tab)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      // If auth token is removed, clear all chat data
+      if (e.key === STORAGE_KEYS.AUTH_TOKEN && e.newValue === null) {
+        clearAllData()
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange)
+      return () => window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [clearAllData])
 
   const value: ChatContextType = {
     messages,
