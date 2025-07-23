@@ -370,6 +370,36 @@ class ApiClient {
     })
   }
 
+  async getDocumentMapping(documentId: string): Promise<ApiResponse<any>> {
+    const url = `${this.baseUrl}/chat/documents/${documentId}/mapping`
+    const headers: Record<string, string> = {}
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+    try {
+      const response = await fetch(url, { method: 'GET', headers })
+      const data = await response.json()
+      if (!response.ok) {
+        return {
+          error: data?.detail || `HTTP ${response.status}`,
+          status: response.status,
+          success: false
+        }
+      }
+      return {
+        data,
+        status: response.status,
+        success: true
+      }
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Network error',
+        status: 0,
+        success: false
+      }
+    }
+  }
+
   // System endpoints
   async getHealth(): Promise<ApiResponse<any>> {
     return this.makeRequestWithoutTimeout('/health')

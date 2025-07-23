@@ -8,6 +8,7 @@ import uuid
 import shutil
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
+import re
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -18,6 +19,7 @@ from langchain.prompts import PromptTemplate
 from services.grc.llm_manager import llm_manager
 from utils.exceptions import DocumentNotFoundError, LLMServiceError
 from database.document_repository import document_repository    
+from services.grc.knowledge_base import grc_knowledge
 
 class DocumentProcessor:
     """Handles document processing and RAG operations"""
@@ -155,12 +157,16 @@ class DocumentProcessor:
             # Update control count in metadata
             self.document_metadata[document_id]["controls_identified"] = len(controls)
             
-            # Update database with control count
+            # --- NEW: Multi-framework mapping ---
+            mapping_results = self._map_controls_to_frameworks(controls)
+            self.document_metadata[document_id]["framework_mapping"] = mapping_results
+            
+            # Update database with control count and mapping
             try:
                 await document_repository.update_document_metadata(
                     document_id, 
                     user_id, 
-                    {"controls_identified": len(controls)}
+                    {"controls_identified": len(controls), "framework_mapping": mapping_results}
                 )
             except Exception as db_error:
                 print(f"Warning: Failed to update control count in database: {db_error}")
@@ -170,6 +176,7 @@ class DocumentProcessor:
                 "status": "success",
                 "chunks_created": len(chunks),
                 "controls_identified": len(controls),
+                "framework_mapping_summary": {fw: {"covered": len(res["covered"]), "missing": len(res["missing"])} for fw, res in mapping_results.items()},
                 "message": f"Document '{display_name}' processed successfully"
             }
             
@@ -302,34 +309,41 @@ class DocumentProcessor:
             return []
     
     def _parse_controls_response(self, response: str) -> List[Dict]:
-        """Parse controls from LLM response"""
+        """Parse controls from LLM response (robust version)"""
         controls = []
-        
-        # Simple parsing - can be enhanced with more sophisticated NLP
         lines = response.split('\n')
         current_control = {}
-        
+        control_id_pattern = re.compile(r'(A\.\d+\.\d+\.\d+|A\.\d+\.\d+|CC\d+\.\d+|CC\d+|ID\.[A-Z]{2}-\d+|PR\.[A-Z]{2}-\d+|\d+\.\d+\.\d+|\d+\.\d+|[A-Z]{2,}-\d+)', re.IGNORECASE)
         for line in lines:
             line = line.strip()
-            
+            if not line:
+                continue
+            # New control section
             if line.startswith(('1.', '2.', '3.', '4.', '5.')) or line.startswith('•'):
                 if current_control:
                     controls.append(current_control)
                     current_control = {}
-                
-                current_control['description'] = line
-                current_control['id'] = str(len(controls) + 1)
-                current_control['type'] = 'administrative'  # Default
-            
-            elif line and current_control:
-                if 'context' not in current_control:
-                    current_control['context'] = line
+                # Try to extract control ID and title
+                match = control_id_pattern.search(line)
+                if match:
+                    current_control['control_id'] = match.group(0)
+                # Try to extract title (after control ID or after number/bullet)
+                title = line
+                if match:
+                    title = line[match.end():].strip(' .:-')
                 else:
-                    current_control['context'] += ' ' + line
-        
+                    # Remove bullet/number
+                    title = re.sub(r'^(\d+\.|•)\s*', '', line).strip(' .:-')
+                current_control['title'] = title if title else line
+                current_control['raw'] = line
+            else:
+                # Add to description/context
+                if 'description' not in current_control:
+                    current_control['description'] = line
+                else:
+                    current_control['description'] += ' ' + line
         if current_control:
             controls.append(current_control)
-        
         return controls
     
     async def get_document_info(self, document_id: str, user_id: str = None) -> Dict:
@@ -348,9 +362,9 @@ class DocumentProcessor:
                     "chunks_count": db_document.get("chunks_count", 0),
                     "controls_identified": db_document.get("controls_identified", 0),
                     "status": db_document.get("status", "unknown"),
-                    "file_type": db_document.get("file_type")
+                    "file_type": db_document.get("file_type"),
+                    "framework_mapping": db_document.get("framework_mapping")
                 }
-                
                 # Also store in memory for faster future access
                 self.document_metadata[document_id] = doc_info
                 return doc_info
@@ -367,6 +381,9 @@ class DocumentProcessor:
         if user_id and metadata.get('user_id') != user_id:
             raise DocumentNotFoundError(f"Document {document_id} not found")
         
+        # Ensure framework_mapping is present in returned metadata
+        if "framework_mapping" not in metadata:
+            metadata["framework_mapping"] = None
         return metadata
     
     async def list_documents(self, user_id: str = None) -> List[Dict]:
@@ -523,6 +540,67 @@ class DocumentProcessor:
             
         except Exception as e:
             print(f"Warning: Failed to load documents from database: {e}")
+
+    def _map_controls_to_frameworks(self, controls: list) -> dict:
+        """
+        Robust mapping: match by control ID, then by normalized title, then by fuzzy/partial description (case-insensitive).
+        """
+        from difflib import SequenceMatcher
+        def normalize(text):
+            return re.sub(r'[^a-zA-Z0-9]', '', text or '').lower()
+        extracted_ids = set()
+        extracted_titles = set()
+        extracted_descs = []
+        for ctrl in controls:
+            if isinstance(ctrl, dict):
+                if 'control_id' in ctrl:
+                    extracted_ids.add(ctrl['control_id'].upper())
+                if 'title' in ctrl:
+                    extracted_titles.add(normalize(ctrl['title']))
+                if 'description' in ctrl:
+                    extracted_descs.append(ctrl['description'])
+                if 'raw' in ctrl:
+                    # Also search for control IDs in raw text
+                    for m in re.findall(r'(A\.\d+\.\d+\.\d+|A\.\d+\.\d+|CC\d+\.\d+|CC\d+|ID\.[A-Z]{2}-\d+|PR\.[A-Z]{2}-\d+|\d+\.\d+\.\d+|\d+\.\d+|[A-Z]{2,}-\d+)', ctrl['raw'], re.IGNORECASE):
+                        extracted_ids.add(m.upper())
+            elif isinstance(ctrl, str):
+                extracted_descs.append(ctrl)
+        mapping = {}
+        for fw, fw_data in grc_knowledge.frameworks.items():
+            fw_controls = fw_data['controls']
+            covered = set()
+            missing = set()
+            for ctrl_id, ctrl_data in fw_controls.items():
+                # 1. Match by control ID (case-insensitive)
+                if ctrl_id.upper() in extracted_ids:
+                    covered.add(ctrl_id)
+                    continue
+                # 2. Match by normalized title
+                ctrl_title_norm = normalize(ctrl_data.get('title', ''))
+                if ctrl_title_norm in extracted_titles:
+                    covered.add(ctrl_id)
+                    continue
+                # 3. Fuzzy/partial match by description
+                found = False
+                for desc in extracted_descs:
+                    desc_norm = normalize(desc)
+                    if ctrl_title_norm and ctrl_title_norm in desc_norm:
+                        found = True
+                        break
+                    # Fuzzy match (ratio > 0.8)
+                    if ctrl_title_norm and SequenceMatcher(None, ctrl_title_norm, desc_norm).ratio() > 0.8:
+                        found = True
+                        break
+                if found:
+                    covered.add(ctrl_id)
+                    continue
+                missing.add(ctrl_id)
+            mapping[fw] = {
+                "covered": list(covered),
+                "missing": list(missing),
+                "overlaps": []
+            }
+        return mapping
 
 # Global instance
 document_processor = DocumentProcessor()
