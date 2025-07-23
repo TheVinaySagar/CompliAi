@@ -53,13 +53,6 @@ const navigation = [
     description: "Manage policy documents"
   },
   { 
-    name: "Control Mapping", 
-    href: "/mapping", 
-    icon: GitBranch,
-    badge: null,
-    description: "Map compliance controls"
-  },
-  { 
     name: "Audit Planner", 
     href: "/audit", 
     icon: Calendar,
