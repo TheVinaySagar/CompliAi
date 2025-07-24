@@ -60,6 +60,13 @@ const navigation = [
     description: "Plan audit activities"
   },
   { 
+    name: "Policy Generator", 
+    href: "/audit-planner", 
+    icon: Zap,
+    badge: "New",
+    description: "AI-powered policy creation"
+  },
+  { 
     name: "Team Management", 
     href: "/team", 
     icon: Users,

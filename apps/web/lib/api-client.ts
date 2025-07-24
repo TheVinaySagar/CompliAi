@@ -421,6 +421,61 @@ class ApiClient {
   async getFrameworkDetails(frameworkKey: string): Promise<ApiResponse<any>> {
     return this.makeRequestWithoutTimeout(`/admin/frameworks/${frameworkKey}`)
   }
+
+  // Audit Planner endpoints
+  async generatePolicy(request: {
+    project_title: string
+    source_document_id: string
+    target_framework: string
+    description?: string
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/audit-planner/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        project_title: request.project_title,
+        source_document_id: request.source_document_id,
+        target_framework: request.target_framework,
+        description: request.description
+      })
+    })
+  }
+
+  async getAuditProjects(): Promise<ApiResponse<any[]>> {
+    return this.makeRequestWithoutTimeout('/audit-planner/projects')
+  }
+
+  async getAuditProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/audit-planner/projects/${projectId}`)
+  }
+
+  async exportPolicy(projectId: string, format: 'pdf' | 'docx' | 'txt', options?: {
+    include_citations?: boolean
+    include_audit_trail?: boolean
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/audit-planner/projects/${projectId}/export`, {
+      method: 'POST',
+      body: JSON.stringify({
+        project_id: projectId,
+        format,
+        include_citations: options?.include_citations ?? true,
+        include_audit_trail: options?.include_audit_trail ?? true
+      })
+    })
+  }
+
+  async deleteAuditProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/audit-planner/projects/${projectId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getSupportedFrameworks(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/audit-planner/frameworks')
+  }
+
+  async getAuditPlannerHealth(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/audit-planner/health')
+  }
 }
 
 // Create singleton instance

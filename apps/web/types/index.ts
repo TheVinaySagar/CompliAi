@@ -136,6 +136,82 @@ export interface AuditTask {
 export type Priority = "High" | "Medium" | "Low"
 export type TaskStatus = "Not Started" | "In Progress" | "Completed" | "Blocked" | "Cancelled"
 
+// Audit Planner Types
+export interface AuditProject {
+  id: string
+  title: string
+  description?: string
+  framework: ComplianceFramework["name"]
+  sourceDocument?: {
+    id: string
+    name: string
+    uploadDate: Date
+  }
+  status: "Draft" | "Generating" | "Review" | "Completed" | "Failed"
+  createdAt: Date
+  updatedAt: Date
+  complianceScore?: number
+  coveredControls: string[]
+  missingControls: string[]
+  generatedPolicy?: {
+    id: string
+    content: string
+    citations: PolicyCitation[]
+    wordCount: number
+    generatedAt: Date
+  }
+  auditTrail: AuditTrailEntry[]
+}
+
+export interface PolicyCitation {
+  controlId: string
+  controlTitle: string
+  framework: string
+  section: string
+  description: string
+  policySection: string
+}
+
+export interface AuditTrailEntry {
+  id: string
+  timestamp: Date
+  action: string
+  details: string
+  userId?: string
+  userName?: string
+}
+
+export interface PolicyGenerationRequest {
+  projectTitle: string
+  sourceDocumentId: string
+  targetFramework: string
+  description?: string
+}
+
+export interface PolicyGenerationResponse {
+  projectId: string
+  status: "started" | "completed" | "failed"
+  message: string
+  complianceScore?: number
+  coveredControls?: string[]
+  missingControls?: string[]
+  policyContent?: string
+  citations?: PolicyCitation[]
+}
+
+export interface ComplianceDashboard {
+  complianceScore: number
+  coveredControls: string[]
+  missingControls: string[]
+  frameworkCoverage: {
+    [framework: string]: {
+      totalControls: number
+      mappedControls: number
+      percentage: number
+    }
+  }
+}
+
 // Team Management Types
 export interface TeamMember {
   id: string
