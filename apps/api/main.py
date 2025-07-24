@@ -15,6 +15,7 @@ from database.user_repository import user_repository
 from routes.auth_routes import router as auth_router
 from routes.chat_routes import router as chat_router
 from routes.admin_routes import router as admin_router
+from routes.audit_planner_routes import router as audit_planner_router
 from config import settings
 
 # Configure logging
@@ -139,6 +140,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(admin_router)
+app.include_router(audit_planner_router)
 
 @app.get("/", tags=["System"])
 async def root():
