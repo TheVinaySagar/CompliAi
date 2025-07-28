@@ -73,7 +73,7 @@ class ChatService:
             prompt = await self._build_general_prompt(request, conversation_id, user_id)
             
             # Generate response using LLM
-            llm = llm_manager.get_primary_llm()
+            llm_manager.get_primary_llm()
             raw_response = await llm_manager.generate_response(prompt)
             
             # Format and enhance response
@@ -257,9 +257,9 @@ class ChatService:
             * **Professional Disclaimer:** Conclude every response with the following disclaimer: _"This guidance is for informational purposes and is not a substitute for formal legal or certified audit advice. Always consult with qualified professionals for your specific situation."_
         """
         if framework_context:
-            better_prompt += f"\n\nCurrent Focus: Prioritize {framework_context} requirements and controls in your response."
+            best_prompt += f"\n\nCurrent Focus: Prioritize {framework_context} requirements and controls in your response."
         
-        return better_prompt
+        return best_prompt
     
     def _get_relevant_knowledge_context(self, query: str, framework: str = None) -> str:
         """Get relevant context from GRC knowledge base"""

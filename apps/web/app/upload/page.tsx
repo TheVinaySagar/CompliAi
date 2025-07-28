@@ -25,34 +25,45 @@ export default function UploadPage() {
   }, [])
 
   const loadDocuments = async () => {
-    try {
-      setIsLoading(true)
-      const response = await apiClient.getDocuments()
-      
-      if (response.success && response.data) {
-        // Convert API response to UploadedFile format
-        const convertedFiles: UploadedFile[] = response.data.map((doc: any) => ({
-          id: doc.document_id || doc.id,
-          name: doc.name || "Unknown Document",
-          uploadDate: new Date(doc.uploaded_at || Date.now()),
-          extractedPolicies: doc.policies_extracted || 0,
-          mappedControls: doc.controls_identified || 0,
-          status: doc.status === "processed" ? "Completed" : 
-                  doc.status === "processing" ? "Processing" : "Failed"
-        }))
-        
-        setUploadedFiles(convertedFiles)
-      } else {
-        console.error("Failed to load documents:", response.error)
-        setUploadedFiles([])
-      }
-    } catch (error) {
-      console.error("Error loading documents:", error)
-      setUploadedFiles([])
-    } finally {
-      setIsLoading(false)
+  try {
+    setIsLoading(true)
+
+    const response = await apiClient.getDocuments()
+
+    if (!response || typeof response !== "object") {
+      throw new Error("Unexpected response format from API")
     }
+
+    const { success, data, error } = response
+
+    if (success && Array.isArray(data)) {
+      const convertedFiles: UploadedFile[] = data.map((doc: any) => ({
+        id: doc.document_id || doc.id || crypto.randomUUID(),
+        name: doc.name || "Untitled Document",
+        uploadDate: doc.uploaded_at ? new Date(doc.uploaded_at) : new Date(),
+        extractedPolicies: doc.policies_extracted ?? 0,
+        mappedControls: doc.controls_identified ?? 0,
+        status:
+          doc.status === "processed"
+            ? "Completed"
+            : doc.status === "processing"
+            ? "Processing"
+            : "Failed",
+      }))
+
+      setUploadedFiles(convertedFiles)
+    } else {
+      console.error("API returned unsuccessful response:", error || response)
+      setUploadedFiles([])
+    }
+  } catch (error: any) {
+    console.error("Exception occurred while loading documents:", error?.message || error)
+    setUploadedFiles([])
+  } finally {
+    setIsLoading(false)
   }
+}
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
