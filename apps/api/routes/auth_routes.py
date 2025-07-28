@@ -3,24 +3,28 @@ Authentication Routes
 Handles user registration, login, and user management.
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from fastapi.security import HTTPAuthorizationCredentials
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import List
 
 from models.user_models import (
-    User, UserCreate, UserLogin, UserUpdate, Token, UserRole
+    User, UserCreate, UserLogin, UserUpdate, Token, UserRole, ChangePasswordRequest
 )
 from database.user_repository import user_repository
 from utils.auth_utils import create_token_for_user
 from utils.exceptions import AuthenticationError, UserExistsError, UserNotFoundError
 from auth import get_current_user, require_admin_role
 from config import settings
+from services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+# Initialize email service
+email_service = EmailService()
+
 @router.post("/register", response_model=Token)
-async def register_user(user_data: UserCreate):
+async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks):
     """
     ## Public User Registration
     
@@ -62,6 +66,13 @@ async def register_user(user_data: UserCreate):
         
         # Create new user
         new_user = await user_repository.create_user(user_data)
+        
+        # Send welcome email (background task)
+        background_tasks.add_task(
+            email_service.send_registration_welcome_email,
+            new_user.email,
+            new_user.full_name
+        )
         
         # Create access token for immediate login
         access_token = create_token_for_user(
@@ -345,3 +356,146 @@ async def initialize_admin():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/change-password")
+async def change_password(
+    password_data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    ## Change User Password
+    
+    Change the current user's password.
+    
+    ### Authentication Required:
+    Must be authenticated with valid JWT token.
+    
+    ### Request Body:
+    - **current_password**: User's current password for verification
+    - **new_password**: New password (minimum 8 characters with complexity requirements)
+    
+    ### Response:
+    Returns success message upon successful password change.
+    
+    ### Errors:
+    - **400**: Invalid current password or password requirements not met
+    - **401**: Not authenticated
+    - **422**: Validation errors (weak password, etc.)
+    - **500**: Server error
+    """
+    try:
+        # Verify current password
+        is_valid = await user_repository.verify_user_password(current_user.email, password_data.current_password)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        
+        # Update password
+        success = await user_repository.update_password(current_user.id, password_data.new_password)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update password")
+        
+        return {
+            "message": "Password changed successfully",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Password change failed")
+
+@router.get("/profile")
+async def get_user_profile(current_user: User = Depends(get_current_user)):
+    """
+    ## Get User Profile
+    
+    Retrieve current user's profile information.
+    
+    ### Authentication Required:
+    Must be authenticated with valid JWT token.
+    
+    ### Response:
+    Returns current user's profile information including:
+    - Basic user info (name, email, role)
+    - Account status and permissions
+    - Creation and last login dates
+    
+    ### Errors:
+    - **401**: Not authenticated
+    - **500**: Server error
+    """
+    try:
+        return {
+            "id": current_user.id,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "role": current_user.role.value,
+            "is_active": current_user.is_active,
+            "department": current_user.department,
+            "permissions": current_user.permissions,
+            "created_at": current_user.created_at.isoformat(),
+            "updated_at": current_user.updated_at.isoformat(),
+            "last_login": current_user.last_login.isoformat() if current_user.last_login else None
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to retrieve profile")
+
+@router.put("/profile")
+async def update_user_profile(
+    profile_data: UserUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    ## Update User Profile
+    
+    Update current user's profile information (non-sensitive fields only).
+    
+    ### Authentication Required:
+    Must be authenticated with valid JWT token.
+    
+    ### Request Body:
+    - **full_name**: Optional new full name
+    - **department**: Optional department update
+    
+    Note: Role and permissions can only be changed by administrators through team management.
+    
+    ### Response:
+    Returns updated user profile information.
+    
+    ### Errors:
+    - **400**: Invalid input data
+    - **401**: Not authenticated
+    - **422**: Validation errors
+    - **500**: Server error
+    """
+    try:
+        # Only allow certain fields to be updated by the user themselves
+        allowed_updates = UserUpdate(
+            full_name=profile_data.full_name,
+            department=profile_data.department
+        )
+        
+        updated_user = await user_repository.update_user(current_user.id, allowed_updates)
+        if not updated_user:
+            raise HTTPException(status_code=500, detail="Failed to update profile")
+        
+        return {
+            "message": "Profile updated successfully",
+            "user": {
+                "id": updated_user.id,
+                "email": updated_user.email,
+                "full_name": updated_user.full_name,
+                "role": updated_user.role.value,
+                "is_active": updated_user.is_active,
+                "department": updated_user.department,
+                "permissions": updated_user.permissions,
+                "created_at": updated_user.created_at.isoformat(),
+                "updated_at": updated_user.updated_at.isoformat(),
+                "last_login": updated_user.last_login.isoformat() if updated_user.last_login else None
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Profile update failed")

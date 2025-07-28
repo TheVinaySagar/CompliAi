@@ -22,6 +22,7 @@ turbo/
 .vscode/
 .idea/
 *.swp
+vector_stores
 
 # Python
 __pycache__/
