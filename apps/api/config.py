@@ -1,5 +1,9 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Settings(BaseSettings):
     # App settings
@@ -32,6 +36,18 @@ class Settings(BaseSettings):
     
     # Gemini settings
     gemini_embedding: str = "models/embedding-001"
+    
+    # Email/SMTP settings
+    smtp_server: Optional[str] = None
+    smtp_port: int = 587
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_use_tls: bool = True
+    from_email: Optional[str] = None
+    from_name: str = "CompliAI"
+    
+    # Frontend URL for email links
+    frontend_url: str = "http://localhost:3000"
     
     class Config:
         env_file = ".env"

@@ -222,9 +222,40 @@ export interface TeamMember {
   joinDate: Date
   last_login?: Date
   department?: string
+  permissions?: string[]
 }
 
 export type MemberStatus = "Active" | "Pending" | "Inactive" | "Suspended"
+
+export interface TeamStats {
+  total_members: number
+  active_members: number
+  pending_members: number
+  admin_count: number
+  role_distribution: {
+    [key: string]: number
+  }
+}
+
+export interface InviteUserRequest {
+  email: string
+  full_name: string
+  role: UserRole
+  department?: string
+  permissions?: string[]
+}
+
+export interface TeamInvitation {
+  id: string
+  email: string
+  full_name: string
+  role: UserRole
+  department?: string
+  invited_by: string
+  invited_at: Date
+  expires_at: Date
+  status: "pending" | "accepted" | "expired"
+}
 
 // File Upload Types
 export interface UploadedFile {

@@ -476,6 +476,52 @@ class ApiClient {
   async getAuditPlannerHealth(): Promise<ApiResponse<any>> {
     return this.makeRequestWithoutTimeout('/audit-planner/health')
   }
+
+  // Team Management endpoints
+  async getTeamMembers(): Promise<ApiResponse<any[]>> {
+    return this.makeRequestWithoutTimeout('/team/members')
+  }
+
+  async getTeamStats(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/team/stats')
+  }
+
+  async inviteTeamMember(request: {
+    email: string
+    full_name: string
+    role: string
+    department?: string
+    permissions?: string[]
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/team/invite', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+  }
+
+  async getTeamMember(userId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/team/members/${userId}`)
+  }
+
+  async updateMemberRole(userId: string, role: string, permissions?: string[]): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/team/members/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role, permissions })
+    })
+  }
+
+  async updateMemberStatus(userId: string, isActive: boolean): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/team/members/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_active: isActive })
+    })
+  }
+
+  async removeTeamMember(userId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/team/members/${userId}`, {
+      method: 'DELETE'
+    })
+  }
 }
 
 // Create singleton instance

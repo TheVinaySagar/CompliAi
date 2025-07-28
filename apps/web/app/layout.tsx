@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { ChatProvider } from "@/contexts/chat-context"
 import ErrorBoundary from "@/components/error-boundary"
 import SessionExpiryHandler from "@/components/session-expiry-handler"
+import { Toaster } from "sonner"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({
             <ChatProvider>
               <SessionExpiryHandler>
                 {children}
+                <Toaster position="top-right" />
               </SessionExpiryHandler>
             </ChatProvider>
           </AuthProvider>
