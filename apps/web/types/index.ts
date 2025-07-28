@@ -151,8 +151,8 @@ export interface AuditProject {
   createdAt: Date
   updatedAt: Date
   complianceScore?: number
-  coveredControls: string[]
-  missingControls: string[]
+  coveredControls?: string[]
+  missingControls?: string[]
   generatedPolicy?: {
     id: string
     content: string
@@ -160,7 +160,7 @@ export interface AuditProject {
     wordCount: number
     generatedAt: Date
   }
-  auditTrail: AuditTrailEntry[]
+  auditTrail?: AuditTrailEntry[]
 }
 
 export interface PolicyCitation {

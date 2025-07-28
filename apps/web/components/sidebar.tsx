@@ -45,20 +45,20 @@ const navigation = [
     badge: null,
     description: "Add compliance docs"
   },
-  { 
-    name: "Policies", 
-    href: "/policies", 
-    icon: FileText,
-    badge: null,
-    description: "Manage policy documents"
-  },
-  { 
-    name: "Audit Planner", 
-    href: "/audit", 
-    icon: Calendar,
-    badge: "Pro",
-    description: "Plan audit activities"
-  },
+  // { 
+  //   name: "Policies", 
+  //   href: "/policies", 
+  //   icon: FileText,
+  //   badge: null,
+  //   description: "Manage policy documents"
+  // },
+  // { 
+  //   name: "Audit Planner", 
+  //   href: "/audit", 
+  //   icon: Calendar,
+  //   badge: "Pro",
+  //   description: "Plan audit activities"
+  // },
   { 
     name: "Policy Generator", 
     href: "/audit-planner", 
@@ -70,7 +70,7 @@ const navigation = [
     name: "Team Management", 
     href: "/team", 
     icon: Users,
-    badge: null,
+    badge: "Admin",
     description: "Manage team access"
   },
   { 

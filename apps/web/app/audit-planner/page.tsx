@@ -862,10 +862,10 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-green-600 mb-2">
-                  {currentProject.coveredControls.length}
+                  {currentProject.coveredControls?.length || 0}
                 </div>
                 <div className="space-y-1">
-                  {currentProject.coveredControls.slice(0, 3).map((control, index) => (
+                  {(currentProject.coveredControls || []).slice(0, 3).map((control, index) => (
                     <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
                       {control}
                     </Badge>
@@ -886,10 +886,10 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-amber-600 mb-2">
-                  {currentProject.missingControls.length}
+                  {currentProject.missingControls?.length || 0}
                 </div>
                 <div className="space-y-1">
-                  {currentProject.missingControls.slice(0, 3).map((control, index) => (
+                  {(currentProject.missingControls || []).slice(0, 3).map((control, index) => (
                     <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
                       {control}
                     </Badge>
@@ -969,7 +969,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               <div className="mt-6">
                 <h4 className="font-medium text-gray-900 mb-3">Framework Citations</h4>
                 <div className="space-y-2">
-                  {currentProject.generatedPolicy?.citations.map((citation, index) => (
+                  {(currentProject.generatedPolicy?.citations || []).map((citation, index) => (
                     <div key={index} className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -1087,7 +1087,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-gray-900 mb-2">Activity Log</h4>
                   <div className="space-y-2">
-                    {currentProject.auditTrail.map((entry) => (
+                    {(currentProject.auditTrail || []).map((entry) => (
                       <div key={entry.id} className="flex items-center justify-between text-sm">
                         <div>
                           <span className="font-medium">{entry.action}</span>

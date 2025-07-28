@@ -7,7 +7,7 @@ export default function AuditPlannerLayout({
   children: React.ReactNode
 }) {
   return (
-    <AppLayout requirePermission="chat_access">
+    <AppLayout requireRole={["admin", "editor"]}>
       {children}
     </AppLayout>
   )
