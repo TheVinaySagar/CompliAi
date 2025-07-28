@@ -260,6 +260,27 @@ class ApiClient {
     return this.makeRequestWithoutTimeout('/auth/me')
   }
 
+  async getUserProfile(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/auth/profile')
+  }
+
+  async updateUserProfile(profileData: { full_name?: string; department?: string }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    })
+  }
+
+  async changePassword(passwordData: { 
+    current_password: string; 
+    new_password: string 
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData)
+    })
+  }
+
   async logout(): Promise<void> {
     this.removeTokenFromStorage()
   }
