@@ -44,6 +44,18 @@ export default function PoliciesPage() {
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No policies generated yet</h3>
           <p className="mt-1 text-sm text-gray-500">Upload documents and use the chat feature to generate compliance policies.</p>
+          
+          <div className="mt-6">
+            <a
+              href="/audit-planner"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Try Audit Planner & Policy Generator
+            </a>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

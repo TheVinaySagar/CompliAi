@@ -52,3 +52,11 @@ class LLMServiceError(CompliAIException):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=detail
         )
+
+class ServiceError(CompliAIException):
+    """General service errors"""
+    def __init__(self, detail: str = "Service error"):
+        super().__init__(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=detail
+        )
