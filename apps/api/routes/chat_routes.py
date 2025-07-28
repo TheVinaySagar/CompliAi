@@ -376,3 +376,6 @@ async def get_document_mapping(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+    

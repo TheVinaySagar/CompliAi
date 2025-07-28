@@ -9,6 +9,7 @@ import shutil
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 import re
+import json
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -21,6 +22,18 @@ from utils.exceptions import DocumentNotFoundError, LLMServiceError
 from database.document_repository import document_repository    
 from services.grc.knowledge_base import grc_knowledge
 
+MAX_DOCUMENT_CHARS = 10000
+
+
+def extract_json(text):
+        """Attempts to extract valid JSON from LLM output."""
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError as e:
+                print("JSON extraction failed:", e)
+        return {}
 class DocumentProcessor:
     """Handles document processing and RAG operations"""
     
@@ -125,6 +138,8 @@ class DocumentProcessor:
             # Store references
             self.vector_stores[document_id] = vector_store
             
+            # print("hi I am here")
+            
             # Create QA chain
             qa_chain = self._create_qa_chain(vector_store)
             self.qa_chains[document_id] = qa_chain
@@ -151,22 +166,22 @@ class DocumentProcessor:
             except Exception as db_error:
                 print(f"Warning: Failed to save document metadata to database: {db_error}")
             
-            # Identify controls in document
-            controls = await self._identify_controls_in_document(document_id, qa_chain)
-            
+            controls = await self._policies(document_id)
+            # print(controls)
+            print(controls["analysis_summary"]["identified_controls_count"])
             # Update control count in metadata
-            self.document_metadata[document_id]["controls_identified"] = len(controls)
-            
+            self.document_metadata[document_id]["controls_identified"] = controls["analysis_summary"]["identified_controls_count"]
+
             # --- NEW: Multi-framework mapping ---
-            mapping_results = self._map_controls_to_frameworks(controls)
-            self.document_metadata[document_id]["framework_mapping"] = mapping_results
+            # mapping_results = self._map_controls_to_frameworks(controls)
+            self.document_metadata[document_id]["framework_mapping"] = controls
             
             # Update database with control count and mapping
             try:
                 await document_repository.update_document_metadata(
                     document_id, 
                     user_id, 
-                    {"controls_identified": len(controls), "framework_mapping": mapping_results}
+                    {"controls_identified": controls["analysis_summary"]["identified_controls_count"], "framework_mapping": controls}
                 )
             except Exception as db_error:
                 print(f"Warning: Failed to update control count in database: {db_error}")
@@ -175,8 +190,8 @@ class DocumentProcessor:
                 "document_id": document_id,
                 "status": "success",
                 "chunks_created": len(chunks),
-                "controls_identified": len(controls),
-                "framework_mapping_summary": {fw: {"covered": len(res["covered"]), "missing": len(res["missing"])} for fw, res in mapping_results.items()},
+                # "controls_identified": len(controls),
+                # "framework_mapping_summary": {fw: {"covered": len(res["covered"]), "missing": len(res["missing"])} for fw, res in mapping_results.items()},
                 "message": f"Document '{display_name}' processed successfully"
             }
             
@@ -265,7 +280,95 @@ class DocumentProcessor:
             template=template,
             input_variables=['context', 'question']
         )
-    
+
+      # prevent LLM cutoff
+
+    async def _policies(self, document_id):
+        try:
+            # 1. Retrieve all chunks
+            vector_store = self.vector_stores.get(document_id)
+            all_chunks = vector_store.get()['documents']
+            full_text = "\n".join(all_chunks)
+
+            # Optional: Trim if too large for model context
+            if len(full_text) > MAX_DOCUMENT_CHARS:
+                print(f"Document too long ({len(full_text)} chars), trimming.")
+                full_text = full_text[:MAX_DOCUMENT_CHARS]
+
+            # 2. Construct prompt
+            prompt = f"""
+            You are CompliAI, a world-class AI assistant specializing in Governance, Risk, and Compliance (GRC). Your task is to perform a detailed, automated control mapping and gap analysis based on the provided document text.
+
+            Analyze the document to identify all security controls, policies, and procedures. For each identified control, generate:
+            - Control Name/Title
+            - Description
+            - Relevant Text Excerpt
+            - Control Type (preventive, detective, corrective)
+            - Applicable Compliance Framework (if identifiable)
+
+            Then, perform a **gap analysis** against major frameworks like ISO 27001, SOC 2, and NIST. Identify any missing controls.
+
+            Only output a valid JSON object. Do not include any commentary, markdown, or explanations.
+
+            Format:
+            {{
+            "analysis_summary": {{
+                "document_character_count": <int>,
+                "identified_controls_count": <int>,
+                "frameworks_analyzed": ["ISO 27001", "SOC 2", "NIST"]
+            }},
+            "mapped_controls": [
+                {{
+                "extracted_statement": "<quote>",
+                "ai_control_summary": "<summary>",
+                "mappings": [
+                    {{
+                    "framework": "<framework>",
+                    "control_id": "<e.g., A.5.17>",
+                    "control_title": "<title>",
+                    "mapping_confidence": "<High/Medium/Low>",
+                    "rationale": "<reason>"
+                    }}
+                ]
+                }}
+            ],
+            "gap_analysis": {{
+                "ISO 27001": [
+                {{
+                    "control_id": "<missing control>",
+                    "control_title": "<title>",
+                    "description": "<description>"
+                }}
+                ]
+            }}
+            }}
+
+            DOCUMENT_TEXT:
+            \"\"\"
+            {full_text}
+            \"\"\"
+            """
+
+        # 3. Call LLM
+            llm = llm_manager.get_rag_llm()
+            print("Calling LLM...")
+            response = llm.invoke(prompt)
+            print("LLM response received.")
+
+            # 4. Clean & parse output
+            raw_text = getattr(response, "content", str(response))
+            result = extract_json(raw_text)
+
+            if not result:
+                print("Failed to parse LLM output as valid JSON.")
+                print("Raw output was:\n", raw_text)
+
+            return result
+
+        except Exception as e:
+            print(f"Error invoking LLM: {e}")
+            return {}
+
     async def query_document(self, document_id: str, query: str) -> Dict:
         """Query a specific document using RAG"""
         if document_id not in self.qa_chains:
@@ -285,66 +388,6 @@ class DocumentProcessor:
         
         except Exception as e:
             raise LLMServiceError(f"Error querying document: {str(e)}")
-    
-    async def _identify_controls_in_document(self, document_id: str, qa_chain) -> List[Dict]:
-        """Identify controls in uploaded document"""
-        controls_query = """
-        Analyze this document and identify all internal controls, policies, procedures, and compliance requirements.
-        For each control identified, provide:
-        1. Control name/title
-        2. Brief description
-        3. Relevant text excerpt from the document
-        4. Control type (preventive, detective, or corrective)
-        5. Applicable compliance framework if identifiable (ISO 27001, SOC 2, NIST, PCI DSS, etc.)
-        
-        Format your response as a structured list with clear sections for each control.
-        """
-        
-        try:
-            response = qa_chain.invoke({"query": controls_query})
-            return self._parse_controls_response(response.get('result', ''))
-        
-        except Exception as e:
-            print(f"Error identifying controls: {e}")
-            return []
-    
-    def _parse_controls_response(self, response: str) -> List[Dict]:
-        """Parse controls from LLM response (robust version)"""
-        controls = []
-        lines = response.split('\n')
-        current_control = {}
-        control_id_pattern = re.compile(r'(A\.\d+\.\d+\.\d+|A\.\d+\.\d+|CC\d+\.\d+|CC\d+|ID\.[A-Z]{2}-\d+|PR\.[A-Z]{2}-\d+|\d+\.\d+\.\d+|\d+\.\d+|[A-Z]{2,}-\d+)', re.IGNORECASE)
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            # New control section
-            if line.startswith(('1.', '2.', '3.', '4.', '5.')) or line.startswith('•'):
-                if current_control:
-                    controls.append(current_control)
-                    current_control = {}
-                # Try to extract control ID and title
-                match = control_id_pattern.search(line)
-                if match:
-                    current_control['control_id'] = match.group(0)
-                # Try to extract title (after control ID or after number/bullet)
-                title = line
-                if match:
-                    title = line[match.end():].strip(' .:-')
-                else:
-                    # Remove bullet/number
-                    title = re.sub(r'^(\d+\.|•)\s*', '', line).strip(' .:-')
-                current_control['title'] = title if title else line
-                current_control['raw'] = line
-            else:
-                # Add to description/context
-                if 'description' not in current_control:
-                    current_control['description'] = line
-                else:
-                    current_control['description'] += ' ' + line
-        if current_control:
-            controls.append(current_control)
-        return controls
     
     async def get_document_info(self, document_id: str, user_id: str = None) -> Dict:
         """Get document information"""
@@ -540,67 +583,5 @@ class DocumentProcessor:
             
         except Exception as e:
             print(f"Warning: Failed to load documents from database: {e}")
-
-    def _map_controls_to_frameworks(self, controls: list) -> dict:
-        """
-        Robust mapping: match by control ID, then by normalized title, then by fuzzy/partial description (case-insensitive).
-        """
-        from difflib import SequenceMatcher
-        def normalize(text):
-            return re.sub(r'[^a-zA-Z0-9]', '', text or '').lower()
-        extracted_ids = set()
-        extracted_titles = set()
-        extracted_descs = []
-        for ctrl in controls:
-            if isinstance(ctrl, dict):
-                if 'control_id' in ctrl:
-                    extracted_ids.add(ctrl['control_id'].upper())
-                if 'title' in ctrl:
-                    extracted_titles.add(normalize(ctrl['title']))
-                if 'description' in ctrl:
-                    extracted_descs.append(ctrl['description'])
-                if 'raw' in ctrl:
-                    # Also search for control IDs in raw text
-                    for m in re.findall(r'(A\.\d+\.\d+\.\d+|A\.\d+\.\d+|CC\d+\.\d+|CC\d+|ID\.[A-Z]{2}-\d+|PR\.[A-Z]{2}-\d+|\d+\.\d+\.\d+|\d+\.\d+|[A-Z]{2,}-\d+)', ctrl['raw'], re.IGNORECASE):
-                        extracted_ids.add(m.upper())
-            elif isinstance(ctrl, str):
-                extracted_descs.append(ctrl)
-        mapping = {}
-        for fw, fw_data in grc_knowledge.frameworks.items():
-            fw_controls = fw_data['controls']
-            covered = set()
-            missing = set()
-            for ctrl_id, ctrl_data in fw_controls.items():
-                # 1. Match by control ID (case-insensitive)
-                if ctrl_id.upper() in extracted_ids:
-                    covered.add(ctrl_id)
-                    continue
-                # 2. Match by normalized title
-                ctrl_title_norm = normalize(ctrl_data.get('title', ''))
-                if ctrl_title_norm in extracted_titles:
-                    covered.add(ctrl_id)
-                    continue
-                # 3. Fuzzy/partial match by description
-                found = False
-                for desc in extracted_descs:
-                    desc_norm = normalize(desc)
-                    if ctrl_title_norm and ctrl_title_norm in desc_norm:
-                        found = True
-                        break
-                    # Fuzzy match (ratio > 0.8)
-                    if ctrl_title_norm and SequenceMatcher(None, ctrl_title_norm, desc_norm).ratio() > 0.8:
-                        found = True
-                        break
-                if found:
-                    covered.add(ctrl_id)
-                    continue
-                missing.add(ctrl_id)
-            mapping[fw] = {
-                "covered": list(covered),
-                "missing": list(missing),
-                "overlaps": []
-            }
-        return mapping
-
 # Global instance
 document_processor = DocumentProcessor()
