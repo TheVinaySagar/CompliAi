@@ -38,7 +38,7 @@ import { toast } from "sonner"
 const inviteFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
-  role: z.enum(["admin", "user", "auditor", "viewer"], {
+  role: z.enum(["admin", "editor", "viewer"], {
     required_error: "Please select a role",
   }),
   department: z.string().optional(),
@@ -49,8 +49,7 @@ type InviteFormValues = z.infer<typeof inviteFormSchema>
 
 const rolePermissions = {
   admin: ["chat_access", "document_upload", "user_management", "system_admin"],
-  user: ["chat_access", "document_upload"],
-  auditor: ["chat_access", "document_upload", "audit_planning"],
+  editor: ["chat_access", "document_upload", "audit_planning"],
   viewer: ["chat_access"],
 }
 
@@ -180,8 +179,7 @@ export function InviteMemberDialog({ onMemberInvited }: InviteMemberDialogProps)
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="viewer">Viewer</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="auditor">Auditor</SelectItem>
+                        <SelectItem value="editor">Editor</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>

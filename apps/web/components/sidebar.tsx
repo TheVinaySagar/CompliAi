@@ -112,27 +112,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* User Info */}
-      {/* {user && (
-        <div className="px-4 py-4 border-b border-slate-700/50">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">
-                {user.name?.charAt(0)?.toUpperCase() || 'U'}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {user.name || 'User'}
-              </p>
-              <p className="text-xs text-slate-400 truncate">
-                {user.email}
-              </p>
-            </div>
-          </div>
-        </div>
-      )} */}
-
       {/* Navigation */}
       <nav className="flex flex-1 flex-col px-4 py-4">
         <ul role="list" className="flex flex-1 flex-col gap-y-1">
@@ -188,7 +167,7 @@ export default function Sidebar() {
         <Separator className="my-4 bg-slate-700/50" />
 
         {/* Quick Stats */}
-        <div className="space-y-3 mb-4">
+        {/* <div className="space-y-3 mb-4">
           <div className="px-3 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Compliance Score</span>
@@ -198,17 +177,17 @@ export default function Sidebar() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Logout Button */}
-        <Button
+        {/* <Button
           onClick={handleLogout}
           variant="ghost"
           className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800/50 transition-colors"
         >
           <LogOut className="h-4 w-4 mr-3" />
           Sign Out
-        </Button>
+        </Button> */}
       </nav>
     </div>
   )
