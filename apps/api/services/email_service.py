@@ -196,6 +196,104 @@ The CompliAI Team
 This email was sent from CompliAI. If you believe you received this email in error, please contact your administrator.
         """
     
+    def _generate_registration_welcome_html(
+        self, 
+        full_name: str, 
+        email: str
+    ) -> str:
+        """Generate HTML content for registration welcome email (no password)."""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Welcome to CompliAI</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .logo {{ font-size: 28px; font-weight: bold; color: #2563eb; margin-bottom: 10px; }}
+                .welcome-message {{ background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981; }}
+                .button {{ display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }}
+                .features {{ background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+                .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">🛡️ CompliAI</div>
+                    <h1>Welcome to CompliAI!</h1>
+                </div>
+                
+                <div class="welcome-message">
+                    <h3>🎉 Account Successfully Created!</h3>
+                    <p>Hi {full_name},</p>
+                    <p>Thank you for joining CompliAI! Your account has been successfully created and you're now ready to explore our AI-powered compliance management platform.</p>
+                </div>
+                
+                <p style="text-align: center;">
+                    <a href="{settings.frontend_url}/dashboard" class="button">Go to Dashboard</a>
+                </p>
+                
+                <div class="features">
+                    <h3>🚀 What you can do with CompliAI:</h3>
+                    <ul>
+                        <li>🤖 <strong>AI Chat Assistant</strong> - Ask compliance questions and get instant answers</li>
+                        <li>📄 <strong>Document Analysis</strong> - Upload and analyze compliance documents</li>
+                        <li>📋 <strong>Policy Generation</strong> - Create audit-ready policies and procedures</li>
+                        <li>🎯 <strong>Framework Mapping</strong> - Map controls to compliance frameworks</li>
+                        <li>📊 <strong>Compliance Tracking</strong> - Monitor compliance status and identify gaps</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                    <strong>💡 Pro Tip:</strong> Start by visiting the Chat Assistant to ask your first compliance question, or upload a document to see our AI analysis in action!
+                </div>
+                
+                <p>If you have any questions or need help getting started, please don't hesitate to explore our help resources or contact support.</p>
+                
+                <div class="footer">
+                    <p>Best regards,<br>The CompliAI Team</p>
+                    <p><small>This email was sent to {email} because you created an account with CompliAI. If you believe you received this email in error, please contact support.</small></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+    
+    def _generate_registration_welcome_text(
+        self, 
+        full_name: str, 
+        email: str
+    ) -> str:
+        """Generate plain text content for registration welcome email (no password)."""
+        return f"""
+Welcome to CompliAI!
+
+Hi {full_name},
+
+Thank you for joining CompliAI! Your account has been successfully created and you're now ready to explore our AI-powered compliance management platform.
+
+Dashboard URL: {settings.frontend_url}/dashboard
+
+What you can do with CompliAI:
+- 🤖 AI Chat Assistant - Ask compliance questions and get instant answers
+- 📄 Document Analysis - Upload and analyze compliance documents  
+- 📋 Policy Generation - Create audit-ready policies and procedures
+- 🎯 Framework Mapping - Map controls to compliance frameworks
+- 📊 Compliance Tracking - Monitor compliance status and identify gaps
+
+Pro Tip: Start by visiting the Chat Assistant to ask your first compliance question, or upload a document to see our AI analysis in action!
+
+If you have any questions or need help getting started, please don't hesitate to explore our help resources or contact support.
+
+Best regards,
+The CompliAI Team
+
+This email was sent to {email} because you created an account with CompliAI. If you believe you received this email in error, please contact support.
+        """
+
     async def send_welcome_email(
         self, 
         email: str, 
@@ -234,6 +332,40 @@ This email was sent from CompliAI. If you believe you received this email in err
             logger.error(f"Failed to send welcome email to {email}: {str(e)}")
             return False
     
+    async def send_registration_welcome_email(
+        self, 
+        email: str, 
+        full_name: str
+    ) -> bool:
+        """
+        Send welcome email to new user who registered themselves.
+        This is different from team invitations - no password info included.
+        
+        Args:
+            email: Recipient email address
+            full_name: Recipient full name
+            
+        Returns:
+            bool: True if email sent successfully, False otherwise
+        """
+        try:
+            if not self.enabled:
+                logger.info(f"Email service disabled. Would send registration welcome email to {email}")
+                logger.info(f"Registration welcome for {full_name} ({email})")
+                return True
+            
+            # Generate email content
+            html_content = self._generate_registration_welcome_html(full_name, email)
+            text_content = self._generate_registration_welcome_text(full_name, email)
+            subject = f"Welcome to CompliAI, {full_name}!"
+            
+            # Send email
+            return await self._send_smtp_email(email, subject, html_content, text_content)
+            
+        except Exception as e:
+            logger.error(f"Failed to send registration welcome email to {email}: {str(e)}")
+            return False
+
     async def send_invitation_email(
         self, 
         email: str, 

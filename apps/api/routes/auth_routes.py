@@ -3,7 +3,7 @@ Authentication Routes
 Handles user registration, login, and user management.
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from fastapi.security import HTTPAuthorizationCredentials
 from datetime import timedelta, datetime
 from typing import List
@@ -16,11 +16,15 @@ from utils.auth_utils import create_token_for_user
 from utils.exceptions import AuthenticationError, UserExistsError, UserNotFoundError
 from auth import get_current_user, require_admin_role
 from config import settings
+from services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+# Initialize email service
+email_service = EmailService()
+
 @router.post("/register", response_model=Token)
-async def register_user(user_data: UserCreate):
+async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks):
     """
     ## Public User Registration
     
@@ -62,6 +66,13 @@ async def register_user(user_data: UserCreate):
         
         # Create new user
         new_user = await user_repository.create_user(user_data)
+        
+        # Send welcome email (background task)
+        background_tasks.add_task(
+            email_service.send_registration_welcome_email,
+            new_user.email,
+            new_user.full_name
+        )
         
         # Create access token for immediate login
         access_token = create_token_for_user(
