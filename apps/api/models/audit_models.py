@@ -5,11 +5,11 @@ from enum import Enum
 import json
 
 class AuditProjectStatus(str, Enum):
-    DRAFT = "draft"
-    GENERATING = "generating"
-    REVIEW = "review" 
-    COMPLETED = "completed"
-    FAILED = "failed"
+    DRAFT = "Draft"
+    GENERATING = "Generating"
+    REVIEW = "Review" 
+    COMPLETED = "Completed"
+    FAILED = "Failed"
 
 class PolicyCitation(BaseModel):
     control_id: str

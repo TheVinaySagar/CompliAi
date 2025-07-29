@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { 
   type AuditProject, 
   type PolicyGenerationRequest, 
@@ -49,6 +51,8 @@ export default function AuditPlannerPage() {
   const [documents, setDocuments] = useState<UploadedDocument[]>([])
   const [currentProject, setCurrentProject] = useState<AuditProject | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isEditingPolicy, setIsEditingPolicy] = useState(false)
+  const [editedPolicyContent, setEditedPolicyContent] = useState("")
   
   // Form state
   const [projectTitle, setProjectTitle] = useState("")
@@ -60,6 +64,114 @@ export default function AuditPlannerPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user } = useAuth()
+
+  // Professional markdown components like the chat interface
+  const MarkdownComponents = {
+    // Custom code block with styling
+    code: ({ node, inline, className, children, ...props }: any) => {
+      const match = /language-(\w+)/.exec(className || '')
+      const language = match ? match[1] : 'text'
+
+      if (!inline) {
+        return (
+          <div className="relative rounded-lg overflow-hidden bg-slate-100 my-4">
+            <div className="flex items-center justify-between px-4 py-2 text-xs bg-slate-200 text-slate-600 border-b">
+              <span className="font-medium">{language}</span>
+            </div>
+            <div className="p-4 text-sm font-mono text-slate-800">
+              <pre className="whitespace-pre-wrap overflow-x-auto">
+                <code {...props}>{children}</code>
+              </pre>
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <code className="px-2 py-1 text-sm font-mono rounded bg-slate-200 text-slate-800" {...props}>
+          {children}
+        </code>
+      )
+    },
+
+    // Custom styling for different elements
+    h1: ({ children }: any) => (
+      <h1 className="text-2xl font-bold mt-6 mb-4 text-slate-900">{children}</h1>
+    ),
+    h2: ({ children }: any) => (
+      <h2 className="text-xl font-bold mt-6 mb-3 text-slate-900 border-b border-slate-300 pb-2">{children}</h2>
+    ),
+    h3: ({ children }: any) => (
+      <h3 className="text-lg font-semibold mt-4 mb-2 text-slate-800">{children}</h3>
+    ),
+    h4: ({ children }: any) => (
+      <h4 className="text-base font-semibold mt-3 mb-2 text-slate-800">{children}</h4>
+    ),
+    p: ({ children }: any) => (
+      <p className="leading-relaxed text-base mb-3 text-gray-700">{children}</p>
+    ),
+    ul: ({ children }: any) => (
+      <ul className="space-y-1 ml-4 mb-4 list-disc">{children}</ul>
+    ),
+    ol: ({ children }: any) => (
+      <ol className="space-y-1 ml-4 mb-4 list-decimal">{children}</ol>
+    ),
+    li: ({ children }: any) => (
+      <li className="leading-relaxed">{children}</li>
+    ),
+    a: ({ href, children }: any) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-500 transition-colors"
+      >
+        {children}
+      </a>
+    ),
+    blockquote: ({ children }: any) => (
+      <blockquote className="border-l-4 border-blue-500 pl-4 italic text-slate-700 my-4 bg-blue-50/50 py-2 rounded-r">
+        {children}
+      </blockquote>
+    ),
+    hr: () => (
+      <hr className="my-4 border-t border-slate-300" />
+    ),
+    strong: ({ children }: any) => {
+      // Special handling for Framework Alignment
+      if (typeof children === 'string' && children.includes('Framework Alignment:')) {
+        return (
+          <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 text-sm font-medium my-1">
+            {children}
+          </span>
+        )
+      }
+      return <strong className="font-semibold text-slate-900">{children}</strong>
+    },
+    em: ({ children }: any) => (
+      <em className="italic text-slate-700">{children}</em>
+    ),
+    table: ({ children }: any) => (
+      <div className="overflow-x-auto my-4">
+        <table className="min-w-full border border-slate-300">{children}</table>
+      </div>
+    ),
+    thead: ({ children }: any) => (
+      <thead className="bg-slate-100">{children}</thead>
+    ),
+    tbody: ({ children }: any) => (
+      <tbody>{children}</tbody>
+    ),
+    tr: ({ children }: any) => (
+      <tr className="border-b border-slate-300">{children}</tr>
+    ),
+    th: ({ children }: any) => (
+      <th className="px-4 py-2 text-left font-semibold text-slate-900">{children}</th>
+    ),
+    td: ({ children }: any) => (
+      <td className="px-4 py-2 text-slate-700">{children}</td>
+    ),
+  }
 
   // Available frameworks
   const frameworks = [
@@ -220,56 +332,126 @@ export default function AuditPlannerPage() {
   }
 
   const pollForCompletion = async (projectId: string) => {
-    const maxAttempts = 60 // 5 minutes max
+    const maxAttempts = 120 // 10 minutes max (5 second intervals)
     let attempts = 0
     
-    setGenerationStatus("Analyzing source document...")
-    setGenerationProgress(20)
+    setGenerationStatus("Starting policy generation...")
+    setGenerationProgress(10)
     
     while (attempts < maxAttempts) {
       try {
-        const response = await apiClient.getAuditProject(projectId)
+        // Use the new status endpoint for more accurate progress tracking
+        const statusResponse = await apiClient.getAuditProjectStatus(projectId)
         
-        if (response.success && response.data) {
-          const project = response.data as AuditProject
+        if (statusResponse.success && statusResponse.data) {
+          const status = statusResponse.data
           
-          // Update progress based on status
-          if (project.status === "Generating") {
-            const progressSteps = [
-              { progress: 30, status: "Mapping framework controls..." },
-              { progress: 50, status: "Generating policy content..." },
-              { progress: 70, status: "Adding framework citations..." },
-              { progress: 90, status: "Finalizing document..." }
-            ]
-            
-            const step = progressSteps[Math.min(Math.floor(attempts / 3), progressSteps.length - 1)]
-            setGenerationProgress(step.progress)
-            setGenerationStatus(step.status)
-          } else if (project.status === "Completed") {
+          console.log(`Poll attempt ${attempts + 1}: Status=${status.status}, Progress=${status.progress}%`)
+          
+          // Update progress with real backend progress
+          setGenerationProgress(status.progress || 0)
+          setGenerationStatus(status.latest_action || status.latest_details || "Processing...")
+          
+          if (status.status === "COMPLETED") {
             setGenerationProgress(100)
             setGenerationStatus("Policy generation completed!")
-            setCurrentProject(project)
-            setProjects(prev => [project, ...prev])
-            setActiveStep("generate")
-            return
-          } else if (project.status === "Failed") {
-            throw new Error("Policy generation failed")
+            
+            console.log("Project completed, fetching full project data...")
+            
+            // Add a small delay to ensure database is fully updated
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            
+            // Now get the full project data with retries
+            let projectResponse = null
+            let retryCount = 0
+            const maxRetries = 3
+            
+            while (retryCount < maxRetries && !projectResponse?.success) {
+              console.log(`Fetching project data, attempt ${retryCount + 1}`)
+              projectResponse = await apiClient.getAuditProject(projectId)
+              
+              if (!projectResponse?.success) {
+                console.log(`Failed to fetch project, retrying in 1 second...`)
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                retryCount++
+              }
+            }
+            
+            if (projectResponse?.success && projectResponse.data) {
+              const project = projectResponse.data as AuditProject
+              console.log("Successfully retrieved completed project:", project)
+              
+              setCurrentProject(project)
+              setProjects(prev => {
+                // Remove any existing project with same ID and add the updated one
+                const filtered = prev.filter(p => p.id !== projectId)
+                return [project, ...filtered]
+              })
+              setActiveStep("generate")
+              return // Success - exit polling loop
+              
+            } else {
+              console.error("Failed to retrieve completed project after retries")
+              throw new Error("Failed to retrieve completed project data")
+            }
+            
+          } else if (status.status === "FAILED") {
+            throw new Error(status.latest_details || "Policy generation failed")
           }
           
           // Still generating, wait and try again
           await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
           attempts++
+          
         } else {
+          console.error("Status endpoint failed, trying fallback...")
           throw new Error("Failed to check project status")
         }
+        
       } catch (error) {
         console.error("Polling error:", error)
+        
+        // If status endpoint fails, fall back to regular project endpoint
+        try {
+          console.log("Trying fallback project endpoint...")
+          const response = await apiClient.getAuditProject(projectId)
+          
+          if (response.success && response.data) {
+            const project = response.data as AuditProject
+            console.log(`Fallback: Project status=${project.status}`)
+            
+            if (project.status === "Completed") {
+              setGenerationProgress(100)
+              setGenerationStatus("Policy generation completed!")
+              setCurrentProject(project)
+              setProjects(prev => {
+                const filtered = prev.filter(p => p.id !== projectId)
+                return [project, ...filtered]
+              })
+              setActiveStep("generate")
+              return // Success - exit polling loop
+              
+            } else if (project.status === "Failed") {
+              throw new Error("Policy generation failed")
+            }
+            
+            // Update progress with basic time-based estimation
+            const timeBasedProgress = Math.min(20 + (attempts * 2), 90)
+            setGenerationProgress(timeBasedProgress)
+            setGenerationStatus("Generating policy content...")
+          }
+        } catch (fallbackError) {
+          console.error("Fallback polling error:", fallbackError)
+        }
+        
         attempts++
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 5000))
+        }
       }
     }
     
-    throw new Error("Policy generation timed out")
+    throw new Error("Policy generation timed out after 10 minutes")
   }
 
   const generatePolicy = async () => {
@@ -322,63 +504,6 @@ export default function AuditPlannerPage() {
     } finally {
       setIsGenerating(false)
     }
-  }
-
-  const generateMockPolicyContent = () => {
-    return `# ${projectTitle}
-
-## 1. PURPOSE AND SCOPE
-This policy establishes the framework for information security management in accordance with ${frameworks.find(f => f.id === selectedFramework)?.name} requirements.
-
-## 2. POLICY STATEMENT
-Our organization is committed to maintaining the confidentiality, integrity, and availability of all information assets.
-
-**Framework Alignment:** This section satisfies ${selectedFramework}: A.5.1.1 - Information security policies
-
-## 3. ACCESS CONTROL PROCEDURES
-Access to information systems shall be controlled and monitored according to business requirements and security policies.
-
-**Framework Alignment:** This section satisfies ${selectedFramework}: A.9.1.1 - Access control policy
-
-## 4. OPERATIONAL PROCEDURES
-Documented operating procedures shall be prepared for all IT systems and regularly reviewed for effectiveness.
-
-**Framework Alignment:** This section satisfies ${selectedFramework}: A.12.1.1 - Operational procedures
-
-## 5. RESPONSIBILITIES
-- Management: Overall policy oversight and resource allocation
-- IT Security Team: Implementation and monitoring
-- All Employees: Compliance with policy requirements
-
-## 6. COMPLIANCE AND MONITORING
-This policy will be reviewed annually and updated as necessary to maintain compliance with applicable frameworks and regulations.
-
-## 7. ENFORCEMENT
-Non-compliance with this policy may result in disciplinary action up to and including termination.
-
----
-*This document was generated by CompliAI Audit Planner and includes explicit framework citations for audit readiness.*`
-  }
-
-  const generateMockCitations = () => {
-    return [
-      {
-        controlId: "A.5.1.1",
-        controlTitle: "Information security policies",
-        framework: selectedFramework,
-        section: "Section 2 - Policy Statement",
-        description: "Information security policies shall be defined and approved by management",
-        policySection: "Purpose and Scope"
-      },
-      {
-        controlId: "A.9.1.1", 
-        controlTitle: "Access control policy",
-        framework: selectedFramework,
-        section: "Section 3 - Access Control",
-        description: "An access control policy shall be established and reviewed",
-        policySection: "Access Control Procedures"
-      }
-    ]
   }
 
   const exportToPDF = async () => {
@@ -468,8 +593,9 @@ Non-compliance with this policy may result in disciplinary action up to and incl
   }
 
   const copyToClipboard = () => {
-    if (currentProject?.generatedPolicy?.content) {
-      navigator.clipboard.writeText(currentProject.generatedPolicy.content)
+    const contentToCopy = isEditingPolicy ? editedPolicyContent : currentProject?.generated_policy?.content
+    if (contentToCopy) {
+      navigator.clipboard.writeText(contentToCopy)
       toast({
         title: "Copied to clipboard",
         description: "Policy content has been copied to your clipboard."
@@ -477,27 +603,43 @@ Non-compliance with this policy may result in disciplinary action up to and incl
     }
   }
 
-  const testApiConnection = async () => {
-    try {
-      console.log("Testing API connection...")
-      const response = await apiClient.getDocuments()
-      console.log("API test result:", response)
+  const startEditingPolicy = () => {
+    if (currentProject?.generated_policy?.content) {
+      setEditedPolicyContent(currentProject.generated_policy.content)
+      setIsEditingPolicy(true)
+    }
+  }
+
+  const saveEditedPolicy = () => {
+    if (currentProject && editedPolicyContent) {
+      // Update the current project with the edited content
+      const updatedProject = {
+        ...currentProject,
+        generated_policy: {
+          ...currentProject.generated_policy!,
+          content: editedPolicyContent,
+          word_count: editedPolicyContent.split(/\s+/).length
+        }
+      }
+      setCurrentProject(updatedProject)
+      
+      // Also update in the projects list
+      setProjects(prev => 
+        prev.map(p => p.id === currentProject.id ? updatedProject : p)
+      )
+      
+      setIsEditingPolicy(false)
       
       toast({
-        title: response.success ? "API Connection Success" : "API Connection Failed",
-        description: response.success 
-          ? `Connected successfully. Found ${response.data?.length || 0} documents.`
-          : `Error: ${response.error || 'Unknown error'}`,
-        variant: response.success ? "default" : "destructive"
-      })
-    } catch (error) {
-      console.error("API test error:", error)
-      toast({
-        title: "API Connection Failed",
-        description: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive"
+        title: "Policy updated",
+        description: "Your changes have been saved locally. Don't forget to export your updated policy."
       })
     }
+  }
+
+  const cancelEditingPolicy = () => {
+    setIsEditingPolicy(false)
+    setEditedPolicyContent("")
   }
 
   const resetForm = () => {
@@ -510,6 +652,8 @@ Non-compliance with this policy may result in disciplinary action up to and incl
     setIsGenerating(false)
     setGenerationProgress(0)
     setGenerationStatus("")
+    setIsEditingPolicy(false)
+    setEditedPolicyContent("")
   }
 
   return (
@@ -714,16 +858,6 @@ Non-compliance with this policy may result in disciplinary action up to and incl
 
               {/* Generate Button */}
               <div className="pt-4 border-t space-y-3">
-                {/* Debug Button - Remove this after testing */}
-                <Button 
-                  onClick={testApiConnection}
-                  variant="outline"
-                  className="w-full"
-                  size="sm"
-                >
-                  🔧 Test API Connection (Debug)
-                </Button>
-                
                 <Button 
                   onClick={generatePolicy}
                   disabled={!projectTitle || !selectedFramework || !selectedDocument || isGenerating}
@@ -844,9 +978,9 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {currentProject.complianceScore}%
+                  {currentProject.compliance_score}%
                 </div>
-                <Progress value={currentProject.complianceScore} className="h-2" />
+                <Progress value={currentProject.compliance_score} className="h-2" />
                 <p className="text-sm text-gray-600 mt-2">
                   Based on framework requirements analysis
                 </p>
@@ -862,10 +996,10 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-green-600 mb-2">
-                  {currentProject.coveredControls?.length || 0}
+                  {currentProject.covered_controls?.length || 0}
                 </div>
                 <div className="space-y-1">
-                  {(currentProject.coveredControls || []).slice(0, 3).map((control, index) => (
+                  {(currentProject.covered_controls || []).slice(0, 3).map((control, index) => (
                     <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
                       {control}
                     </Badge>
@@ -886,10 +1020,10 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-amber-600 mb-2">
-                  {currentProject.missingControls?.length || 0}
+                  {currentProject.missing_controls?.length || 0}
                 </div>
                 <div className="space-y-1">
-                  {(currentProject.missingControls || []).slice(0, 3).map((control, index) => (
+                  {(currentProject.missing_controls || []).slice(0, 3).map((control, index) => (
                     <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
                       {control}
                     </Badge>
@@ -912,16 +1046,49 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline">
-                    {currentProject.generatedPolicy?.wordCount} words
+                    {isEditingPolicy 
+                      ? `${editedPolicyContent.split(/\s+/).length} words`
+                      : `${currentProject.generated_policy?.word_count} words`
+                    }
                   </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTrackedChanges(!showTrackedChanges)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    {showTrackedChanges ? "Hide" : "Show"} Changes
-                  </Button>
+                  {!isEditingPolicy ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={startEditingPolicy}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit Policy
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTrackedChanges(!showTrackedChanges)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        {showTrackedChanges ? "Hide" : "Show"} Changes
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={saveEditedPolicy}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Save Changes
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={cancelEditingPolicy}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -932,55 +1099,113 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 </div>
               </CardTitle>
               <CardDescription>
-                Your audit-ready policy with framework citations. You can edit the content below.
+                {isEditingPolicy 
+                  ? "Edit your policy content below. Markdown formatting is supported."
+                  : "Your audit-ready policy with framework citations. Click 'Edit Policy' to make changes."
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
-                {showTrackedChanges ? (
-                  <div className="space-y-2">
-                    <div className="text-xs text-gray-500 mb-3 flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-3 h-3 bg-green-200 rounded"></div>
-                        <span>AI Generated Content</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-3 h-3 bg-blue-200 rounded"></div>
-                        <span>Framework Citations</span>
+              {isEditingPolicy ? (
+                <div className="space-y-4">
+                  <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                    <p className="font-medium mb-1">Markdown Formatting Tips:</p>
+                    <ul className="text-xs space-y-1">
+                      <li>• Use # for main headings, ## for subheadings, ### for sub-subheadings</li>
+                      <li>• Use **text** for bold formatting</li>
+                      <li>• Use *text* for italic formatting</li>
+                      <li>• Use - or * for bullet points</li>
+                      <li>• Use 1. 2. 3. for numbered lists</li>
+                      <li>• Use `code` for inline code formatting</li>
+                      <li>• Leave blank lines between sections for proper spacing</li>
+                      <li>• **Framework Alignment:** will be highlighted automatically</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Editor */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">Edit Content</h4>
+                      <Textarea
+                        value={editedPolicyContent}
+                        onChange={(e) => setEditedPolicyContent(e.target.value)}
+                        className="min-h-96 font-mono text-sm resize-none"
+                        placeholder="Enter your policy content here..."
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Characters: {editedPolicyContent.length}</span>
+                        <span>Words: {editedPolicyContent.split(/\s+/).filter(word => word.length > 0).length}</span>
                       </div>
                     </div>
-                    <div 
-                      className="whitespace-pre-wrap font-mono text-sm"
-                      dangerouslySetInnerHTML={{
-                        __html: (currentProject.generatedPolicy?.content || '')
-                          .replace(/\*\*Framework Alignment:\*\*/g, '<span class="bg-blue-200 px-1 rounded"><strong>Framework Alignment:</strong></span>')
-                          .replace(/(## \d+\. [A-Z\s]+)/g, '<span class="bg-green-200 px-1 rounded font-semibold">$1</span>')
-                      }}
-                    />
+                    
+                    {/* Preview */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">Preview</h4>
+                      <div className="border rounded-lg p-4 bg-white min-h-96 max-h-96 overflow-y-auto">
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={MarkdownComponents}
+                          >
+                            {editedPolicyContent || "Start typing to see the preview..."}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <pre className="whitespace-pre-wrap font-mono text-sm">
-                    {currentProject.generatedPolicy?.content}
-                  </pre>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                  {showTrackedChanges ? (
+                    <div className="space-y-2">
+                      <div className="text-xs text-gray-500 mb-3 flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <div className="w-3 h-3 bg-green-200 rounded"></div>
+                          <span>AI Generated Content</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-3 h-3 bg-blue-200 rounded"></div>
+                          <span>Framework Citations</span>
+                        </div>
+                      </div>
+                      <div 
+                        className="whitespace-pre-wrap font-mono text-sm"
+                        dangerouslySetInnerHTML={{
+                          __html: (currentProject.generated_policy?.content || '')
+                            .replace(/\*\*Framework Alignment:\*\*/g, '<span class="bg-blue-200 px-1 rounded"><strong>Framework Alignment:</strong></span>')
+                            .replace(/(## \d+\. [A-Z\s]+)/g, '<span class="bg-green-200 px-1 rounded font-semibold">$1</span>')
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="prose prose-sm max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={MarkdownComponents}
+                      >
+                        {currentProject.generated_policy?.content || "No policy content available."}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Framework Citations */}
               <div className="mt-6">
                 <h4 className="font-medium text-gray-900 mb-3">Framework Citations</h4>
                 <div className="space-y-2">
-                  {(currentProject.generatedPolicy?.citations || []).map((citation, index) => (
+                  {(currentProject.generated_policy?.citations || []).map((citation, index) => (
                     <div key={index} className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <Badge>{citation.controlId}</Badge>
-                          <span className="font-medium">{citation.controlTitle}</span>
+                          <Badge>{citation.control_id}</Badge>
+                          <span className="font-medium">{citation.control_title}</span>
                         </div>
                         <ExternalLink className="h-4 w-4 text-gray-400" />
                       </div>
                       <p className="text-sm text-gray-600 mt-1">{citation.description}</p>
                       <p className="text-xs text-blue-600 mt-1">
-                        Referenced in: {citation.policySection}
+                        Referenced in: {citation.policy_section}
                       </p>
                     </div>
                   ))}
@@ -1041,7 +1266,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 >
                   <Copy className="h-8 w-8" />
                   <span>Copy to Clipboard</span>
-                  <span className="text-xs text-gray-500">For quick pasting</span>
+                  <span className="text-xs text-gray-500">Current policy content</span>
                 </Button>
               </div>
             </CardContent>
@@ -1072,8 +1297,8 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                   <div>
                     <span className="font-medium text-gray-600">Generation Date:</span>
                     <p>
-                      {currentProject.generatedPolicy?.generatedAt 
-                        ? new Date(currentProject.generatedPolicy.generatedAt).toLocaleString()
+                      {currentProject.generated_policy?.generated_at 
+                        ? new Date(currentProject.generated_policy.generated_at).toLocaleString()
                         : 'Not generated yet'
                       }
                     </p>
@@ -1087,7 +1312,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-gray-900 mb-2">Activity Log</h4>
                   <div className="space-y-2">
-                    {(currentProject.auditTrail || []).map((entry) => (
+                    {(currentProject.audit_trail || []).map((entry) => (
                       <div key={entry.id} className="flex items-center justify-between text-sm">
                         <div>
                           <span className="font-medium">{entry.action}</span>

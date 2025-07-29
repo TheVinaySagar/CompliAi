@@ -150,26 +150,26 @@ export interface AuditProject {
   status: "Draft" | "Generating" | "Review" | "Completed" | "Failed"
   createdAt: Date
   updatedAt: Date
-  complianceScore?: number
-  coveredControls?: string[]
-  missingControls?: string[]
-  generatedPolicy?: {
+  compliance_score?: number
+  covered_controls?: string[]
+  missing_controls?: string[]
+  generated_policy?: {
     id: string
     content: string
     citations: PolicyCitation[]
-    wordCount: number
-    generatedAt: Date
+    word_count: number
+    generated_at: Date
   }
-  auditTrail?: AuditTrailEntry[]
+  audit_trail?: AuditTrailEntry[]
 }
 
 export interface PolicyCitation {
-  controlId: string
-  controlTitle: string
+  control_id: string
+  control_title: string
   framework: string
   section: string
   description: string
-  policySection: string
+  policy_section: string
 }
 
 export interface AuditTrailEntry {
@@ -177,8 +177,8 @@ export interface AuditTrailEntry {
   timestamp: Date
   action: string
   details: string
-  userId?: string
-  userName?: string
+  user_id?: string
+  user_name?: string
 }
 
 export interface PolicyGenerationRequest {

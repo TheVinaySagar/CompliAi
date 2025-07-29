@@ -469,6 +469,14 @@ class ApiClient {
     return this.makeRequestWithoutTimeout(`/audit-planner/projects/${projectId}`)
   }
 
+  async getAuditProjectStatus(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/audit-planner/projects/${projectId}/status`)
+  }
+
+  async refreshAuditProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/audit-planner/projects/${projectId}/refresh`)
+  }
+
   async exportPolicy(projectId: string, format: 'pdf' | 'docx' | 'txt', options?: {
     include_citations?: boolean
     include_audit_trail?: boolean
