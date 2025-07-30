@@ -1305,5 +1305,588 @@ Non-compliance with this policy may result in disciplinary action up to and incl
             # Don't raise exception - audit trail is not critical for functionality
             pass
 
+    async def update_audit_project(
+        self,
+        project_id: str,
+        update_data: Dict[str, Any],
+        user_id: str
+    ) -> Optional[AuditProject]:
+        """Update an audit project with new data"""
+        try:
+            self._ensure_db_connection()
+            collection = self.db.audit_projects
+            
+            # Get the existing project first
+            project_doc = await collection.find_one({"id": project_id, "user_id": user_id})
+            if not project_doc:
+                logger.error(f"Project {project_id} not found for user {user_id}")
+                return None
+            
+            # Prepare update data
+            update_fields = {
+                "updated_at": datetime.utcnow()
+            }
+            
+            # Handle policy content updates
+            if "policy_content" in update_data:
+                policy_content = update_data["policy_content"]
+                word_count = len(policy_content.split()) if policy_content else 0
+                
+                # Update the generated policy
+                if project_doc.get("generated_policy"):
+                    update_fields["generated_policy.content"] = policy_content
+                    update_fields["generated_policy.word_count"] = word_count
+                else:
+                    # Create new generated policy if it doesn't exist
+                    generated_policy = GeneratedPolicy(
+                        id=str(uuid.uuid4()),
+                        content=policy_content,
+                        citations=[],
+                        word_count=word_count,
+                        generated_at=datetime.utcnow()
+                    )
+                    update_fields["generated_policy"] = generated_policy.dict()
+            
+            # Apply other updates
+            for key, value in update_data.items():
+                if key not in ["policy_content"]:  # Already handled above
+                    update_fields[key] = value
+            
+            # Update the project
+            result = await collection.update_one(
+                {"id": project_id, "user_id": user_id},
+                {"$set": update_fields}
+            )
+            
+            if result.modified_count > 0:
+                # Add audit trail entry
+                await self._add_audit_trail_entry(
+                    project_id,
+                    "Policy Updated",
+                    "Policy content was manually edited and saved"
+                )
+                
+                # Fetch and return updated project
+                updated_project_doc = await collection.find_one({"id": project_id, "user_id": user_id})
+                if updated_project_doc:
+                    return self._doc_to_audit_project(updated_project_doc)
+                    
+            logger.error(f"Failed to update project {project_id}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error updating project {project_id}: {e}")
+            return None
+
+    async def export_policy_to_file(
+        self,
+        project: AuditProject,
+        format: str,
+        options: Dict[str, Any]
+    ) -> tuple[bytes, str, str]:
+        """Export policy to file format"""
+        try:
+            if format.lower() == 'pdf':
+                return await self._export_to_pdf(project, options)
+            elif format.lower() in ['docx', 'doc']:
+                return await self._export_to_docx(project, options)
+            elif format.lower() == 'txt':
+                return await self._export_to_txt(project, options)
+            else:
+                raise ValueError(f"Unsupported export format: {format}")
+                
+        except Exception as e:
+            logger.error(f"Error exporting policy to {format}: {e}")
+            raise
+
+    async def _export_to_pdf(self, project: AuditProject, options: Dict[str, Any]) -> tuple[bytes, str, str]:
+        """Export policy to PDF with proper formatting"""
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+            from reportlab.lib.units import inch
+            from reportlab.lib.colors import HexColor, black, blue
+            import io
+            import re
+            
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(
+                buffer, 
+                pagesize=A4,
+                rightMargin=72,
+                leftMargin=72,
+                topMargin=72,
+                bottomMargin=18
+            )
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Custom styles
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=20,
+                spaceAfter=30,
+                alignment=1,  # Center alignment
+                textColor=HexColor('#1f2937')
+            )
+            
+            heading1_style = ParagraphStyle(
+                'CustomHeading1',
+                parent=styles['Heading1'],
+                fontSize=18,
+                spaceBefore=20,
+                spaceAfter=12,
+                textColor=HexColor('#1f2937'),
+                borderWidth=1,
+                borderColor=HexColor('#d1d5db'),
+                borderPadding=8
+            )
+            
+            heading2_style = ParagraphStyle(
+                'CustomHeading2',
+                parent=styles['Heading2'],
+                fontSize=16,
+                spaceBefore=16,
+                spaceAfter=10,
+                textColor=HexColor('#374151'),
+                borderWidth=0.5,
+                borderColor=HexColor('#d1d5db')
+            )
+            
+            heading3_style = ParagraphStyle(
+                'CustomHeading3',
+                parent=styles['Heading3'],
+                fontSize=14,
+                spaceBefore=12,
+                spaceAfter=8,
+                textColor=HexColor('#4b5563')
+            )
+            
+            framework_style = ParagraphStyle(
+                'FrameworkStyle',
+                parent=styles['Normal'],
+                fontSize=10,
+                spaceBefore=8,
+                spaceAfter=8,
+                backColor=HexColor('#dbeafe'),
+                borderColor=HexColor('#3b82f6'),
+                borderWidth=1,
+                borderPadding=6,
+                textColor=HexColor('#1e40af')
+            )
+            
+            body_style = ParagraphStyle(
+                'BodyStyle',
+                parent=styles['Normal'],
+                fontSize=11,
+                spaceBefore=6,
+                spaceAfter=6,
+                leading=16,
+                textColor=HexColor('#374151')
+            )
+            
+            # Title
+            story.append(Paragraph(project.title, title_style))
+            story.append(Spacer(1, 12))
+            
+            # Framework info
+            info_style = ParagraphStyle(
+                'InfoStyle',
+                parent=styles['Normal'],
+                fontSize=10,
+                spaceAfter=6,
+                textColor=HexColor('#6b7280')
+            )
+            story.append(Paragraph(f"<b>Framework:</b> {project.framework}", info_style))
+            story.append(Paragraph(f"<b>Generated:</b> {project.generated_policy.generated_at.strftime('%Y-%m-%d %H:%M:%S')}", info_style))
+            story.append(Paragraph(f"<b>Compliance Score:</b> {project.compliance_score}%", info_style))
+            story.append(Spacer(1, 20))
+            
+            # Policy content with proper markdown processing
+            content = project.generated_policy.content
+            
+            # Process the content line by line to maintain formatting
+            lines = content.split('\n')
+            current_paragraph = []
+            
+            for line in lines:
+                line = line.strip()
+                
+                if not line:
+                    # Empty line - end current paragraph if any
+                    if current_paragraph:
+                        para_text = ' '.join(current_paragraph)
+                        # Process inline formatting
+                        para_text = re.sub(r'\*\*Framework Alignment:\*\*', '<b>Framework Alignment:</b>', para_text)
+                        para_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', para_text)
+                        para_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', para_text)
+                        
+                        if 'Framework Alignment:' in para_text:
+                            story.append(Paragraph(para_text, framework_style))
+                        else:
+                            story.append(Paragraph(para_text, body_style))
+                        current_paragraph = []
+                    story.append(Spacer(1, 6))
+                    continue
+                
+                # Check for headings
+                if line.startswith('# '):
+                    # Finish current paragraph first
+                    if current_paragraph:
+                        para_text = ' '.join(current_paragraph)
+                        para_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', para_text)
+                        para_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', para_text)
+                        story.append(Paragraph(para_text, body_style))
+                        current_paragraph = []
+                    
+                    story.append(Paragraph(line[2:], heading1_style))
+                elif line.startswith('## '):
+                    # Finish current paragraph first
+                    if current_paragraph:
+                        para_text = ' '.join(current_paragraph)
+                        para_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', para_text)
+                        para_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', para_text)
+                        story.append(Paragraph(para_text, body_style))
+                        current_paragraph = []
+                    
+                    story.append(Paragraph(line[3:], heading2_style))
+                elif line.startswith('### '):
+                    # Finish current paragraph first
+                    if current_paragraph:
+                        para_text = ' '.join(current_paragraph)
+                        para_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', para_text)
+                        para_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', para_text)
+                        story.append(Paragraph(para_text, body_style))
+                        current_paragraph = []
+                    
+                    story.append(Paragraph(line[4:], heading3_style))
+                elif line.startswith('- ') or line.startswith('* '):
+                    # Finish current paragraph first
+                    if current_paragraph:
+                        para_text = ' '.join(current_paragraph)
+                        para_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', para_text)
+                        para_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', para_text)
+                        story.append(Paragraph(para_text, body_style))
+                        current_paragraph = []
+                    
+                    # Bullet point
+                    bullet_text = line[2:]
+                    bullet_text = re.sub(r'\*\*Framework Alignment:\*\*', '<b>Framework Alignment:</b>', bullet_text)
+                    bullet_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', bullet_text)
+                    bullet_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', bullet_text)
+                    
+                    bullet_style = ParagraphStyle(
+                        'BulletStyle',
+                        parent=body_style,
+                        leftIndent=20,
+                        bulletIndent=10,
+                        bulletText='•'
+                    )
+                    story.append(Paragraph(f"• {bullet_text}", bullet_style))
+                else:
+                    # Regular text - add to current paragraph
+                    current_paragraph.append(line)
+            
+            # Don't forget the last paragraph
+            if current_paragraph:
+                para_text = ' '.join(current_paragraph)
+                para_text = re.sub(r'\*\*Framework Alignment:\*\*', '<b>Framework Alignment:</b>', para_text)
+                para_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', para_text)
+                para_text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', para_text)
+                
+                if 'Framework Alignment:' in para_text:
+                    story.append(Paragraph(para_text, framework_style))
+                else:
+                    story.append(Paragraph(para_text, body_style))
+            
+            # Citations if requested
+            if options.get('include_citations', True) and project.generated_policy.citations:
+                story.append(PageBreak())
+                story.append(Paragraph("Framework Citations", heading1_style))
+                story.append(Spacer(1, 12))
+                
+                citation_style = ParagraphStyle(
+                    'CitationStyle',
+                    parent=styles['Normal'],
+                    fontSize=10,
+                    spaceBefore=8,
+                    spaceAfter=8,
+                    backColor=HexColor('#f0f9ff'),
+                    borderColor=HexColor('#0ea5e9'),
+                    borderWidth=1,
+                    leftBorderWidth=4,
+                    borderPadding=8,
+                    textColor=HexColor('#0c4a6e')
+                )
+                
+                for citation in project.generated_policy.citations:
+                    citation_text = f"<b>{citation.control_id}: {citation.control_title}</b><br/>{citation.description}<br/><i>Referenced in: {citation.policy_section}</i>"
+                    story.append(Paragraph(citation_text, citation_style))
+                    story.append(Spacer(1, 8))
+            
+            doc.build(story)
+            pdf_data = buffer.getvalue()
+            buffer.close()
+            
+            return pdf_data, 'application/pdf', 'pdf'
+            
+        except ImportError:
+            # Fallback if reportlab is not available
+            logger.warning("ReportLab not available, using text export as fallback")
+            return await self._export_to_txt(project, options)
+        except Exception as e:
+            logger.error(f"Error creating PDF: {e}")
+            raise
+
+    async def _export_to_docx(self, project: AuditProject, options: Dict[str, Any]) -> tuple[bytes, str, str]:
+        """Export policy to DOCX with proper formatting"""
+        try:
+            from docx import Document
+            from docx.shared import Inches, RGBColor
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            import io
+            import re
+            
+            doc = Document()
+            
+            # Set document margins
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+            
+            # Title with centered alignment
+            title = doc.add_heading(project.title, level=0)
+            title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            title_run = title.runs[0]
+            title_run.font.size = Inches(0.3)  # 20pt
+            title_run.font.color.rgb = RGBColor(31, 41, 55)  # Gray-900
+            
+            # Add spacing after title
+            doc.add_paragraph()
+            
+            # Framework info
+            info_para = doc.add_paragraph()
+            info_para.add_run(f"Framework: ").bold = True
+            info_para.add_run(f"{project.framework}")
+            
+            info_para2 = doc.add_paragraph()
+            info_para2.add_run(f"Generated: ").bold = True
+            info_para2.add_run(f"{project.generated_policy.generated_at.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            info_para3 = doc.add_paragraph()
+            info_para3.add_run(f"Compliance Score: ").bold = True
+            info_para3.add_run(f"{project.compliance_score}%")
+            
+            doc.add_paragraph()  # Spacing
+            
+            # Policy content with proper markdown processing
+            content = project.generated_policy.content
+            lines = content.split('\n')
+            current_paragraph_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                
+                if not line:
+                    # Empty line - process accumulated paragraph
+                    if current_paragraph_lines:
+                        para_text = ' '.join(current_paragraph_lines)
+                        self._add_formatted_paragraph(doc, para_text)
+                        current_paragraph_lines = []
+                    continue
+                
+                # Check for headings
+                if line.startswith('# '):
+                    # Process any accumulated text first
+                    if current_paragraph_lines:
+                        para_text = ' '.join(current_paragraph_lines)
+                        self._add_formatted_paragraph(doc, para_text)
+                        current_paragraph_lines = []
+                    
+                    # Add heading 1
+                    heading = doc.add_heading(line[2:], level=1)
+                    heading_run = heading.runs[0]
+                    heading_run.font.color.rgb = RGBColor(31, 41, 55)  # Gray-900
+                    
+                elif line.startswith('## '):
+                    # Process any accumulated text first
+                    if current_paragraph_lines:
+                        para_text = ' '.join(current_paragraph_lines)
+                        self._add_formatted_paragraph(doc, para_text)
+                        current_paragraph_lines = []
+                    
+                    # Add heading 2
+                    heading = doc.add_heading(line[3:], level=2)
+                    heading_run = heading.runs[0]
+                    heading_run.font.color.rgb = RGBColor(55, 65, 81)  # Gray-700
+                    
+                elif line.startswith('### '):
+                    # Process any accumulated text first
+                    if current_paragraph_lines:
+                        para_text = ' '.join(current_paragraph_lines)
+                        self._add_formatted_paragraph(doc, para_text)
+                        current_paragraph_lines = []
+                    
+                    # Add heading 3
+                    heading = doc.add_heading(line[4:], level=3)
+                    heading_run = heading.runs[0]
+                    heading_run.font.color.rgb = RGBColor(75, 85, 99)  # Gray-600
+                    
+                elif line.startswith('- ') or line.startswith('* '):
+                    # Process any accumulated text first
+                    if current_paragraph_lines:
+                        para_text = ' '.join(current_paragraph_lines)
+                        self._add_formatted_paragraph(doc, para_text)
+                        current_paragraph_lines = []
+                    
+                    # Add bullet point
+                    bullet_text = line[2:]
+                    bullet_para = doc.add_paragraph(style='List Bullet')
+                    self._add_formatted_text_to_paragraph(bullet_para, bullet_text)
+                    
+                else:
+                    # Regular text - accumulate for paragraph
+                    current_paragraph_lines.append(line)
+            
+            # Process any remaining text
+            if current_paragraph_lines:
+                para_text = ' '.join(current_paragraph_lines)
+                self._add_formatted_paragraph(doc, para_text)
+            
+            # Citations if requested
+            if options.get('include_citations', True) and project.generated_policy.citations:
+                doc.add_page_break()
+                
+                citations_heading = doc.add_heading('Framework Citations', level=1)
+                citations_heading_run = citations_heading.runs[0]
+                citations_heading_run.font.color.rgb = RGBColor(31, 41, 55)
+                
+                for citation in project.generated_policy.citations:
+                    # Citation header
+                    citation_para = doc.add_paragraph()
+                    citation_run = citation_para.add_run(f"{citation.control_id}: {citation.control_title}")
+                    citation_run.bold = True
+                    citation_run.font.color.rgb = RGBColor(30, 64, 175)  # Blue-800
+                    
+                    # Citation description
+                    desc_para = doc.add_paragraph(citation.description)
+                    desc_para.style.font.color.rgb = RGBColor(75, 85, 99)  # Gray-600
+                    
+                    # Referenced section
+                    ref_para = doc.add_paragraph()
+                    ref_run = ref_para.add_run(f"Referenced in: {citation.policy_section}")
+                    ref_run.italic = True
+                    ref_run.font.color.rgb = RGBColor(59, 130, 246)  # Blue-500
+                    
+                    doc.add_paragraph()  # Spacing
+            
+            # Save to buffer
+            buffer = io.BytesIO()
+            doc.save(buffer)
+            docx_data = buffer.getvalue()
+            buffer.close()
+            
+            return docx_data, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'
+            
+        except ImportError:
+            # Fallback if python-docx is not available
+            logger.warning("python-docx not available, using text export as fallback")
+            return await self._export_to_txt(project, options)
+        except Exception as e:
+            logger.error(f"Error creating DOCX: {e}")
+            raise
+    
+    def _add_formatted_paragraph(self, doc, text: str):
+        """Add a paragraph with proper formatting to the document"""
+        import re
+        from docx.shared import RGBColor
+        
+        # Check if this is a Framework Alignment paragraph
+        if 'Framework Alignment:' in text:
+            para = doc.add_paragraph()
+            # Add shading/background color for framework alignment
+            try:
+                para.style.font.color.rgb = RGBColor(30, 64, 175)  # Blue-800
+            except:
+                pass  # Ignore color setting errors
+            self._add_formatted_text_to_paragraph(para, text)
+        else:
+            para = doc.add_paragraph()
+            try:
+                para.style.font.color.rgb = RGBColor(55, 65, 81)  # Gray-700
+            except:
+                pass  # Ignore color setting errors
+            self._add_formatted_text_to_paragraph(para, text)
+    
+    def _add_formatted_text_to_paragraph(self, paragraph, text: str):
+        """Add formatted text to a paragraph, handling bold and italic"""
+        import re
+        from docx.shared import RGBColor
+        
+        # Process bold and italic formatting
+        parts = re.split(r'(\*\*.*?\*\*|\*.*?\*)', text)
+        
+        for part in parts:
+            if part.startswith('**') and part.endswith('**'):
+                # Bold text
+                run = paragraph.add_run(part[2:-2])
+                run.bold = True
+                if 'Framework Alignment:' in part:
+                    try:
+                        run.font.color.rgb = RGBColor(30, 64, 175)  # Blue-800
+                    except:
+                        pass  # Ignore color setting errors
+            elif part.startswith('*') and part.endswith('*') and not part.startswith('**'):
+                # Italic text
+                run = paragraph.add_run(part[1:-1])
+                run.italic = True
+            else:
+                # Regular text
+                if part:
+                    paragraph.add_run(part)
+
+    async def _export_to_txt(self, project: AuditProject, options: Dict[str, Any]) -> tuple[bytes, str, str]:
+        """Export policy to TXT"""
+        try:
+            content_lines = []
+            content_lines.append(f"{project.title}")
+            content_lines.append("=" * len(project.title))
+            content_lines.append("")
+            content_lines.append(f"Framework: {project.framework}")
+            content_lines.append(f"Generated: {project.generated_policy.generated_at.strftime('%Y-%m-%d %H:%M:%S')}")
+            content_lines.append("")
+            content_lines.append("POLICY CONTENT")
+            content_lines.append("-" * 50)
+            content_lines.append("")
+            
+            # Add policy content
+            content_lines.append(project.generated_policy.content)
+            
+            # Citations if requested
+            if options.get('include_citations', True) and project.generated_policy.citations:
+                content_lines.append("")
+                content_lines.append("")
+                content_lines.append("FRAMEWORK CITATIONS")
+                content_lines.append("-" * 50)
+                content_lines.append("")
+                
+                for citation in project.generated_policy.citations:
+                    content_lines.append(f"{citation.control_id}: {citation.control_title}")
+                    content_lines.append(citation.description)
+                    content_lines.append("")
+            
+            text_content = '\n'.join(content_lines)
+            return text_content.encode('utf-8'), 'text/plain', 'txt'
+            
+        except Exception as e:
+            logger.error(f"Error creating TXT: {e}")
+            raise
+
 # Global instance
 audit_planner_service = AuditPlannerService()

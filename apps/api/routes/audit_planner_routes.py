@@ -179,7 +179,49 @@ async def refresh_project_data(
             detail=f"Failed to refresh project data: {str(e)}"
         )
 
-@router.post("/projects/{project_id}/export", response_model=PolicyExportResponse)
+@router.put("/projects/{project_id}")
+async def update_audit_project(
+    project_id: str,
+    update_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update an audit project's policy content
+    
+    Allows updating the generated policy content and saves changes to database.
+    """
+    try:
+        # Get the existing project
+        project = await audit_planner_service.get_audit_project(
+            project_id,
+            current_user.id
+        )
+        
+        if not project:
+            raise HTTPException(
+                status_code=404,
+                detail="Audit project not found"
+            )
+        
+        # Update the project with new data
+        updated_project = await audit_planner_service.update_audit_project(
+            project_id,
+            update_data,
+            current_user.id
+        )
+        
+        return {"success": True, "project": updated_project}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update audit project: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update project: {str(e)}"
+        )
+
+@router.post("/projects/{project_id}/export")
 async def export_policy(
     project_id: str,
     export_request: PolicyExportRequest,
@@ -194,6 +236,9 @@ async def export_policy(
     - Compliance analysis summary
     """
     try:
+        from fastapi.responses import Response
+        import io
+        
         # Get the project
         project = await audit_planner_service.get_audit_project(
             project_id,
@@ -212,17 +257,24 @@ async def export_policy(
                 detail="No policy has been generated for this project yet"
             )
         
-        # For now, return a mock response
-        # In a real implementation, this would generate the actual file
-        from datetime import datetime, timedelta
+        # Generate the export
+        file_content, content_type, file_extension = await audit_planner_service.export_policy_to_file(
+            project,
+            export_request.format,
+            {
+                'include_citations': export_request.include_citations,
+                'include_audit_trail': export_request.include_audit_trail
+            }
+        )
         
-        file_name = f"{project.title.replace(' ', '_')}_{project.framework}.{export_request.format}"
+        file_name = f"{project.title.replace(' ', '_')}_{project.framework}.{file_extension}"
         
-        return PolicyExportResponse(
-            download_url=f"/audit-planner/download/{project_id}/{export_request.format}",
-            file_name=file_name,
-            format=export_request.format,
-            expires_at=datetime.utcnow() + timedelta(hours=24)
+        return Response(
+            content=file_content,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename={file_name}"
+            }
         )
         
     except HTTPException:

@@ -480,15 +480,51 @@ class ApiClient {
   async exportPolicy(projectId: string, format: 'pdf' | 'docx' | 'txt', options?: {
     include_citations?: boolean
     include_audit_trail?: boolean
-  }): Promise<ApiResponse<any>> {
-    return this.makeRequest(`/audit-planner/projects/${projectId}/export`, {
-      method: 'POST',
-      body: JSON.stringify({
-        project_id: projectId,
-        format,
-        include_citations: options?.include_citations ?? true,
-        include_audit_trail: options?.include_audit_trail ?? true
+  }): Promise<ApiResponse<Blob>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/audit-planner/projects/${projectId}/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getToken()}`
+        },
+        body: JSON.stringify({
+          project_id: projectId,
+          format,
+          include_citations: options?.include_citations ?? true,
+          include_audit_trail: options?.include_audit_trail ?? true
+        })
       })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        return {
+          success: false,
+          error: errorData.detail || `HTTP ${response.status}`,
+          status: response.status
+        }
+      }
+
+      const blob = await response.blob()
+      return {
+        success: true,
+        data: blob,
+        status: response.status
+      }
+    } catch (error) {
+      console.error('Export policy error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        status: 0
+      }
+    }
+  }
+
+  async updateAuditProject(projectId: string, updateData: any): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/audit-planner/projects/${projectId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
     })
   }
 

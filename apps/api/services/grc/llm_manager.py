@@ -19,7 +19,7 @@ class LLMManager:
     def __init__(self):
         self.llm_configs = {
             'google': {
-                'model': "gemini-2.5-pro",
+                'model': "gemini-1.5-flash",
                 'api_key': settings.google_api_key,
                 'temperature': 0.2
             },
@@ -71,8 +71,7 @@ class LLMManager:
             return ChatGoogleGenerativeAI(
                 model=self.llm_configs['google']['model'],
                 google_api_key=self.llm_configs['google']['api_key'],
-                temperature=self.llm_configs['google']['temperature'],
-                convert_system_message_to_human=True
+                temperature=self.llm_configs['google']['temperature']
             )
             # elif service == 'openai':
             #     if not self.llm_configs['openai']['api_key']:

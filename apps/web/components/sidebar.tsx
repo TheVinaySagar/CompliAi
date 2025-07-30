@@ -52,15 +52,15 @@ const navigation = [
   //   badge: null,
   //   description: "Manage policy documents"
   // },
-  // { 
-  //   name: "Audit Planner", 
-  //   href: "/audit", 
-  //   icon: Calendar,
-  //   badge: "Pro",
-  //   description: "Plan audit activities"
-  // },
   { 
     name: "Policy Generator", 
+    href: "/policy-generator", 
+    icon: Calendar,
+    badge: "Pro",
+    description: "Plan audit activities"
+  },
+  { 
+    name: "Audit Planner", 
     href: "/audit-planner", 
     icon: Zap,
     badge: "New",

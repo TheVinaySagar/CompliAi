@@ -17,3 +17,5 @@ python-jose[cryptography]>=3.3.0
 python-dotenv>=1.0.0
 docx2txt>=0.8
 pydantic[email]
+reportlab>=4.0.0
+python-docx>=1.2.0

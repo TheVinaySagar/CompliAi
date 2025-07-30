@@ -148,8 +148,8 @@ export interface AuditProject {
     uploadDate: Date
   }
   status: "Draft" | "Generating" | "Review" | "Completed" | "Failed"
-  createdAt: Date
-  updatedAt: Date
+  created_at: Date
+  updated_at: Date
   compliance_score?: number
   covered_controls?: string[]
   missing_controls?: string[]

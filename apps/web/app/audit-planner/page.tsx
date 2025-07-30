@@ -522,11 +522,11 @@ export default function AuditPlannerPage() {
       
       if (response.success && response.data) {
         // Handle file download
-        const blob = new Blob([response.data], { type: 'application/pdf' })
+        const blob = response.data as Blob
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${currentProject.title}_policy.pdf`
+        a.download = `${currentProject.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.pdf`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -564,13 +564,11 @@ export default function AuditPlannerPage() {
       
       if (response.success && response.data) {
         // Handle file download
-        const blob = new Blob([response.data], { 
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        })
+        const blob = response.data as Blob
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${currentProject.title}_policy.docx`
+        a.download = `${currentProject.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.docx`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -610,30 +608,48 @@ export default function AuditPlannerPage() {
     }
   }
 
-  const saveEditedPolicy = () => {
+  const saveEditedPolicy = async () => {
     if (currentProject && editedPolicyContent) {
-      // Update the current project with the edited content
-      const updatedProject = {
-        ...currentProject,
-        generated_policy: {
-          ...currentProject.generated_policy!,
-          content: editedPolicyContent,
-          word_count: editedPolicyContent.split(/\s+/).length
+      try {
+        // Update the project in the database
+        const response = await apiClient.updateAuditProject(currentProject.id, {
+          policy_content: editedPolicyContent
+        })
+
+        if (response.success) {
+          // Update the current project locally
+          const updatedProject = {
+            ...currentProject,
+            generated_policy: {
+              ...currentProject.generated_policy!,
+              content: editedPolicyContent,
+              word_count: editedPolicyContent.split(/\s+/).length
+            }
+          }
+          setCurrentProject(updatedProject)
+          
+          // Also update in the projects list
+          setProjects(prev => 
+            prev.map(p => p.id === currentProject.id ? updatedProject : p)
+          )
+          
+          setIsEditingPolicy(false)
+          
+          toast({
+            title: "Policy updated successfully",
+            description: "Your changes have been saved to the database."
+          })
+        } else {
+          throw new Error(response.error || "Failed to update policy")
         }
+      } catch (error) {
+        console.error("Error saving policy:", error)
+        toast({
+          title: "Save failed",
+          description: error instanceof Error ? error.message : "Failed to save policy changes",
+          variant: "destructive"
+        })
       }
-      setCurrentProject(updatedProject)
-      
-      // Also update in the projects list
-      setProjects(prev => 
-        prev.map(p => p.id === currentProject.id ? updatedProject : p)
-      )
-      
-      setIsEditingPolicy(false)
-      
-      toast({
-        title: "Policy updated",
-        description: "Your changes have been saved locally. Don't forget to export your updated policy."
-      })
     }
   }
 
@@ -659,7 +675,7 @@ export default function AuditPlannerPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Planner & Policy Generator</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Planner</h1>
         <p className="text-gray-600 mb-6">
           Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
         </p>
@@ -923,9 +939,9 @@ export default function AuditPlannerPage() {
                           <span>{project.framework}</span>
                           <span>•</span>
                           <span>
-                            {project.updatedAt 
-                              ? new Date(project.updatedAt).toLocaleDateString()
-                              : 'No date'
+                            {project.updated_at 
+                              ? new Date(project.updated_at).toLocaleDateString()
+                              : new Date(project.created_at).toLocaleDateString()
                             }
                           </span>
                           <Badge variant={
