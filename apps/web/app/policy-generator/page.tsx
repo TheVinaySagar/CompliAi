@@ -1,66 +1,109 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
-  Sparkles, 
+  FileText, 
   Download, 
   Copy, 
-  RefreshCw, 
-  FileText, 
   Edit, 
   Save, 
-  X,
-  Wand2,
+  X, 
+  Sparkles, 
   Clock,
-  CheckCircle2
+  Loader2,
+  RefreshCw,
+  Target,
+  Shield,
+  FileCheck,
+  CheckCircle,
+  ExternalLink,
+  AlertCircle,
+  BarChart3
 } from "lucide-react"
+import { apiClient } from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/contexts/auth-context"
 
-interface GeneratedPolicy {
+interface PolicyProject {
   id: string
   title: string
-  content: string
-  prompt: string
   framework: string
-  generatedAt: Date
-  wordCount: number
-  status: 'generating' | 'completed' | 'error'
+  prompt: string
+  description?: string
+  status: 'Draft' | 'Generating' | 'Completed' | 'Failed'
+  generated_policy?: {
+    content: string
+    summary: string
+    word_count: number
+    generated_at: string
+  }
+  created_at: string
+  updated_at: string
+  error_message?: string
 }
 
 export default function PolicyGeneratorPage() {
-  const [prompt, setPrompt] = useState("")
-  const [selectedFramework, setSelectedFramework] = useState("")
-  const [policyTitle, setPolicyTitle] = useState("")
+  const [activeStep, setActiveStep] = useState<"define" | "generate" | "export">("define")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedPolicies, setGeneratedPolicies] = useState<GeneratedPolicy[]>([])
-  const [currentPolicy, setCurrentPolicy] = useState<GeneratedPolicy | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedContent, setEditedContent] = useState("")
+  const [generationProgress, setGenerationProgress] = useState(0)
+  const [generationStatus, setGenerationStatus] = useState("")
+  const [projects, setProjects] = useState<PolicyProject[]>([])
+  const [currentProject, setCurrentProject] = useState<PolicyProject | null>(null)
+  const [isEditingPolicy, setIsEditingPolicy] = useState(false)
+  const [editedPolicyContent, setEditedPolicyContent] = useState("")
+  const [isExporting, setIsExporting] = useState(false)
+  
+  // Form state
+  const [projectTitle, setProjectTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [selectedFramework, setSelectedFramework] = useState("")
+  const [prompt, setPrompt] = useState("")
+  
+  const router = useRouter()
   const { toast } = useToast()
+  const { user } = useAuth()
 
-  const frameworks = [
-    { id: "ISO27001", name: "ISO 27001", description: "Information Security Management" },
-    { id: "SOC2", name: "SOC 2", description: "Service Organization Controls" },
-    { id: "NIST_CSF", name: "NIST CSF", description: "Cybersecurity Framework" },
-    { id: "PCI_DSS", name: "PCI DSS", description: "Payment Card Industry" },
-    { id: "GDPR", name: "GDPR", description: "General Data Protection Regulation" },
-    { id: "HIPAA", name: "HIPAA", description: "Healthcare Information Security" },
-    { id: "CUSTOM", name: "Custom Policy", description: "General business policy" }
-  ]
-
-  // Professional markdown components
+  // Professional markdown components matching audit planner
   const MarkdownComponents = {
+    // Custom code block with styling
+    code: ({ node, inline, className, children, ...props }: any) => {
+      const match = /language-(\w+)/.exec(className || '')
+      const language = match ? match[1] : 'text'
+
+      if (!inline) {
+        return (
+          <div className="relative rounded-lg overflow-hidden bg-slate-100 my-4">
+            <div className="flex items-center justify-between px-4 py-2 text-xs bg-slate-200 text-slate-600 border-b">
+              <span className="font-medium">{language}</span>
+            </div>
+            <div className="p-4 text-sm font-mono text-slate-800">
+              <pre className="whitespace-pre-wrap overflow-x-auto">
+                <code {...props}>{children}</code>
+              </pre>
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <code className="px-2 py-1 text-sm font-mono rounded bg-slate-200 text-slate-800" {...props}>
+          {children}
+        </code>
+      )
+    },
+
+    // Custom styling for different elements
     h1: ({ children }: any) => (
       <h1 className="text-2xl font-bold mt-6 mb-4 text-slate-900">{children}</h1>
     ),
@@ -69,6 +112,9 @@ export default function PolicyGeneratorPage() {
     ),
     h3: ({ children }: any) => (
       <h3 className="text-lg font-semibold mt-4 mb-2 text-slate-800">{children}</h3>
+    ),
+    h4: ({ children }: any) => (
+      <h4 className="text-base font-semibold mt-3 mb-2 text-slate-800">{children}</h4>
     ),
     p: ({ children }: any) => (
       <p className="leading-relaxed text-base mb-3 text-gray-700">{children}</p>
@@ -82,21 +128,87 @@ export default function PolicyGeneratorPage() {
     li: ({ children }: any) => (
       <li className="leading-relaxed">{children}</li>
     ),
-    strong: ({ children }: any) => (
-      <strong className="font-semibold text-slate-900">{children}</strong>
-    ),
-    em: ({ children }: any) => (
-      <em className="italic text-slate-700">{children}</em>
+    a: ({ href, children }: any) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-500 transition-colors"
+      >
+        {children}
+      </a>
     ),
     blockquote: ({ children }: any) => (
       <blockquote className="border-l-4 border-blue-500 pl-4 italic text-slate-700 my-4 bg-blue-50/50 py-2 rounded-r">
         {children}
       </blockquote>
     ),
+    hr: () => (
+      <hr className="my-4 border-t border-slate-300" />
+    ),
+    strong: ({ children }: any) => {
+      // Special handling for Framework Alignment
+      if (typeof children === 'string' && children.includes('Framework Alignment:')) {
+        return (
+          <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 text-sm font-medium my-1">
+            {children}
+          </span>
+        )
+      }
+      return <strong className="font-semibold text-slate-900">{children}</strong>
+    },
+    em: ({ children }: any) => (
+      <em className="italic text-slate-700">{children}</em>
+    ),
+    table: ({ children }: any) => (
+      <div className="overflow-x-auto my-4">
+        <table className="min-w-full border border-slate-300">{children}</table>
+      </div>
+    ),
+    thead: ({ children }: any) => (
+      <thead className="bg-slate-100">{children}</thead>
+    ),
+    tbody: ({ children }: any) => (
+      <tbody>{children}</tbody>
+    ),
+    tr: ({ children }: any) => (
+      <tr className="border-b border-slate-300">{children}</tr>
+    ),
+    th: ({ children }: any) => (
+      <th className="px-4 py-2 text-left font-semibold text-slate-900">{children}</th>
+    ),
+    td: ({ children }: any) => (
+      <td className="px-4 py-2 text-slate-700">{children}</td>
+    ),
+  }
+
+  // Available frameworks
+  const frameworks = [
+    { id: "ISO27001", name: "ISO 27001", description: "Information Security Management" },
+    { id: "SOC2", name: "SOC 2", description: "Service Organization Controls" },
+    { id: "NIST_CSF", name: "NIST CSF", description: "Cybersecurity Framework" },
+    { id: "PCI_DSS", name: "PCI DSS", description: "Payment Card Industry" },
+    { id: "GDPR", name: "GDPR", description: "General Data Protection Regulation" },
+    { id: "HIPAA", name: "HIPAA", description: "Healthcare Information Security" }
+  ]
+
+  useEffect(() => {
+    loadProjects()
+  }, [])
+
+  const loadProjects = async () => {
+    try {
+      const response = await apiClient.getPolicyProjects()
+      if (response.success && response.data) {
+        setProjects(response.data)
+      }
+    } catch (error) {
+      console.error("Failed to load projects:", error)
+    }
   }
 
   const generatePolicy = async () => {
-    if (!prompt.trim() || !selectedFramework || !policyTitle.trim()) {
+    if (!projectTitle || !selectedFramework || !prompt) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -105,208 +217,222 @@ export default function PolicyGeneratorPage() {
       return
     }
 
-    setIsGenerating(true)
-    
-    // Create a new policy entry
-    const newPolicy: GeneratedPolicy = {
-      id: Date.now().toString(),
-      title: policyTitle,
-      content: "",
-      prompt: prompt,
-      framework: selectedFramework,
-      generatedAt: new Date(),
-      wordCount: 0,
-      status: 'generating'
-    }
-
-    setGeneratedPolicies(prev => [newPolicy, ...prev])
-    setCurrentPolicy(newPolicy)
-
     try {
-      // Simulate AI policy generation (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 3000))
-      
-      // Mock generated content based on framework and prompt
-      const generatedContent = generateMockPolicy(policyTitle, selectedFramework, prompt)
-      
-      const completedPolicy: GeneratedPolicy = {
-        ...newPolicy,
-        content: generatedContent,
-        wordCount: generatedContent.split(/\s+/).length,
-        status: 'completed'
-      }
+      setIsGenerating(true)
+      setGenerationProgress(10)
+      setGenerationStatus("Initializing policy generation...")
 
-      setCurrentPolicy(completedPolicy)
-      setGeneratedPolicies(prev => 
-        prev.map(p => p.id === newPolicy.id ? completedPolicy : p)
-      )
-
-      toast({
-        title: "Policy Generated Successfully",
-        description: "Your policy has been created and is ready for review."
+      const response = await apiClient.generatePolicyFromPrompt({
+        title: projectTitle,
+        framework: selectedFramework,
+        prompt: prompt,
+        description: description
       })
 
-    } catch (error) {
-      const errorPolicy: GeneratedPolicy = {
-        ...newPolicy,
-        status: 'error'
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to start policy generation')
       }
-      
-      setCurrentPolicy(errorPolicy)
-      setGeneratedPolicies(prev => 
-        prev.map(p => p.id === newPolicy.id ? errorPolicy : p)
-      )
 
+      const projectId = response.data.project_id
+      setGenerationProgress(30)
+      setGenerationStatus("AI is analyzing your requirements...")
+
+      // Create a temporary project object for the UI
+      const newProject: PolicyProject = {
+        id: projectId,
+        title: projectTitle,
+        framework: selectedFramework,
+        prompt: prompt,
+        description: description,
+        status: 'Generating',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      setProjects(prev => [newProject, ...prev])
+      setCurrentProject(newProject)
+      setActiveStep("generate")
+
+      // Poll for completion
+      const pollForCompletion = async () => {
+        const maxAttempts = 60 // 60 seconds max
+        let attempts = 0
+
+        const poll = async () => {
+          try {
+            setGenerationProgress(30 + (attempts * 2)) // Gradually increase progress
+            
+            if (attempts < 10) {
+              setGenerationStatus("Analyzing compliance requirements...")
+            } else if (attempts < 20) {
+              setGenerationStatus("Generating policy content...")
+            } else if (attempts < 30) {
+              setGenerationStatus("Applying framework standards...")
+            } else {
+              setGenerationStatus("Finalizing policy document...")
+            }
+
+            const projectResponse = await apiClient.getPolicyProject(projectId)
+            
+            if (projectResponse.success && projectResponse.data) {
+              const project = projectResponse.data
+              
+              if (project.status === 'Completed' && project.generated_policy) {
+                // Policy is complete
+                const completedProject: PolicyProject = {
+                  ...project,
+                  status: 'Completed'
+                }
+
+                setCurrentProject(completedProject)
+                setProjects(prev => 
+                  prev.map(p => p.id === projectId ? completedProject : p)
+                )
+                setGenerationProgress(100)
+                setGenerationStatus("Policy generation completed!")
+
+                toast({
+                  title: "Policy Generated Successfully",
+                  description: "Your policy has been created and is ready for review."
+                })
+
+                return true // Stop polling
+              } else if (project.status === 'Failed') {
+                // Generation failed
+                const errorProject: PolicyProject = {
+                  ...newProject,
+                  status: 'Failed',
+                  error_message: project.error_message
+                }
+                
+                setCurrentProject(errorProject)
+                setProjects(prev => 
+                  prev.map(p => p.id === projectId ? errorProject : p)
+                )
+
+                toast({
+                  title: "Generation Failed",
+                  description: project.error_message || "There was an error generating your policy.",
+                  variant: "destructive"
+                })
+
+                return true // Stop polling
+              }
+            }
+
+            attempts++
+            if (attempts >= maxAttempts) {
+              throw new Error('Timeout waiting for policy generation')
+            }
+
+            // Continue polling
+            setTimeout(poll, 1000)
+            return false
+          } catch (error) {
+            console.error('Polling error:', error)
+            attempts++
+            if (attempts >= maxAttempts) {
+              throw error
+            }
+            setTimeout(poll, 1000)
+            return false
+          }
+        }
+
+        return poll()
+      }
+
+      await pollForCompletion()
+
+    } catch (error) {
+      console.error('Policy generation error:', error)
+      
       toast({
         title: "Generation Failed",
-        description: "There was an error generating your policy. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error generating your policy. Please try again.",
         variant: "destructive"
       })
     } finally {
       setIsGenerating(false)
+      setGenerationProgress(0)
+      setGenerationStatus("")
     }
   }
 
-  const generateMockPolicy = (title: string, framework: string, userPrompt: string): string => {
-    const frameworkInfo = frameworks.find(f => f.id === framework)?.name || framework
-    
-    return `# ${title}
-
-## 1. PURPOSE AND SCOPE
-
-This policy establishes guidelines and procedures for ${userPrompt.toLowerCase()} in accordance with ${frameworkInfo} requirements. This policy applies to all employees, contractors, and third parties who have access to organizational resources.
-
-**Framework Alignment:** This section satisfies ${frameworkInfo} control requirements for policy documentation and scope definition.
-
-## 2. POLICY STATEMENT
-
-Our organization is committed to maintaining the highest standards of ${userPrompt.toLowerCase()} through:
-
-- Implementation of appropriate controls and safeguards
-- Regular monitoring and assessment of compliance
-- Continuous improvement of our security posture
-- Training and awareness programs for all personnel
-
-**Framework Alignment:** This section addresses ${frameworkInfo} policy statement requirements.
-
-## 3. ROLES AND RESPONSIBILITIES
-
-### 3.1 Management
-- Provide leadership and resources for policy implementation
-- Ensure compliance with regulatory requirements
-- Review and approve policy updates annually
-
-### 3.2 IT Security Team
-- Implement technical controls and monitoring systems
-- Conduct regular security assessments
-- Respond to security incidents and breaches
-
-### 3.3 All Employees
-- Comply with policy requirements and procedures
-- Report security incidents promptly
-- Participate in required training programs
-
-**Framework Alignment:** This section satisfies ${frameworkInfo} requirements for role-based responsibilities.
-
-## 4. IMPLEMENTATION PROCEDURES
-
-### 4.1 Control Implementation
-All controls specified in this policy shall be implemented according to ${frameworkInfo} guidelines:
-
-1. **Risk Assessment**: Regular assessment of risks related to ${userPrompt.toLowerCase()}
-2. **Control Selection**: Implementation of appropriate controls based on risk analysis
-3. **Monitoring**: Continuous monitoring of control effectiveness
-4. **Review**: Regular review and update of controls as needed
-
-### 4.2 Documentation Requirements
-- All procedures must be documented and maintained
-- Evidence of compliance must be collected and retained
-- Regular audits must be conducted to verify effectiveness
-
-**Framework Alignment:** This section addresses ${frameworkInfo} implementation and documentation requirements.
-
-## 5. MONITORING AND COMPLIANCE
-
-### 5.1 Performance Metrics
-Key performance indicators for this policy include:
-- Compliance assessment scores
-- Number of incidents or violations
-- Training completion rates
-- Control implementation status
-
-### 5.2 Audit and Review
-- Annual policy review and update process
-- Regular internal audits of policy compliance
-- External audit preparation and support
-- Corrective action tracking and resolution
-
-**Framework Alignment:** This section satisfies ${frameworkInfo} monitoring and audit requirements.
-
-## 6. ENFORCEMENT
-
-Non-compliance with this policy may result in disciplinary action up to and including termination of employment or contract. All violations will be investigated and appropriate corrective measures will be taken.
-
-## 7. POLICY MAINTENANCE
-
-This policy will be reviewed annually or as required by changes in:
-- Regulatory requirements
-- Business operations
-- Technology infrastructure
-- Risk environment
-
-**Effective Date:** ${new Date().toLocaleDateString()}
-**Review Date:** ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-**Version:** 1.0
-
----
-*This policy was generated by CompliAI Policy Generator in accordance with ${frameworkInfo} requirements.*`
-  }
-
-  const startEditing = () => {
-    if (currentPolicy && currentPolicy.content) {
-      setEditedContent(currentPolicy.content)
-      setIsEditing(true)
+  const startEditingPolicy = () => {
+    if (currentProject?.generated_policy?.content) {
+      setEditedPolicyContent(currentProject.generated_policy.content)
+      setIsEditingPolicy(true)
     }
   }
 
-  const saveEdits = () => {
-    if (currentPolicy && editedContent) {
-      const updatedPolicy: GeneratedPolicy = {
-        ...currentPolicy,
-        content: editedContent,
-        wordCount: editedContent.split(/\s+/).length
+  const saveEditedPolicy = async () => {
+    if (currentProject && editedPolicyContent) {
+      try {
+        const response = await apiClient.updatePolicyContent(currentProject.id, editedPolicyContent)
+        
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to save changes')
+        }
+
+        const updatedProject: PolicyProject = {
+          ...currentProject,
+          generated_policy: {
+            ...currentProject.generated_policy!,
+            content: editedPolicyContent,
+            word_count: editedPolicyContent.split(/\s+/).length
+          }
+        }
+        
+        setCurrentProject(updatedProject)
+        setProjects(prev => 
+          prev.map(p => p.id === currentProject.id ? updatedProject : p)
+        )
+        setIsEditingPolicy(false)
+        
+        toast({
+          title: "Changes Saved",
+          description: "Your policy edits have been saved successfully."
+        })
+      } catch (error) {
+        console.error('Failed to save edits:', error)
+        toast({
+          title: "Save Failed",
+          description: error instanceof Error ? error.message : "Failed to save changes. Please try again.",
+          variant: "destructive"
+        })
       }
-      
-      setCurrentPolicy(updatedPolicy)
-      setGeneratedPolicies(prev => 
-        prev.map(p => p.id === currentPolicy.id ? updatedPolicy : p)
-      )
-      setIsEditing(false)
-      
-      toast({
-        title: "Changes Saved",
-        description: "Your policy edits have been saved successfully."
-      })
     }
   }
 
-  const cancelEditing = () => {
-    setIsEditing(false)
-    setEditedContent("")
+  const cancelEditingPolicy = () => {
+    setIsEditingPolicy(false)
+    setEditedPolicyContent("")
   }
 
-  const copyToClipboard = () => {
-    if (currentPolicy?.content) {
-      navigator.clipboard.writeText(currentPolicy.content)
-      toast({
-        title: "Copied to Clipboard",
-        description: "Policy content has been copied to your clipboard."
-      })
+  const copyToClipboard = async () => {
+    if (currentProject?.generated_policy?.content) {
+      try {
+        await navigator.clipboard.writeText(currentProject.generated_policy.content)
+        toast({
+          title: "Copied to Clipboard",
+          description: "Policy content has been copied to your clipboard."
+        })
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error)
+        toast({
+          title: "Copy Failed",
+          description: "Failed to copy content to clipboard.",
+          variant: "destructive"
+        })
+      }
     }
   }
 
   const exportToPDF = async () => {
-    if (!currentPolicy?.content) return
+    if (!currentProject?.id) return
+    
+    setIsExporting(true)
     
     try {
       toast({
@@ -314,63 +440,26 @@ This policy will be reviewed annually or as required by changes in:
         description: "Your policy document is being prepared for download."
       })
 
-      // Import html2pdf dynamically
-      const html2pdf = (await import('html2pdf.js')).default
-      
-      // Create a temporary container with the rendered markdown content
-      const tempContainer = document.createElement('div')
-      tempContainer.style.position = 'absolute'
-      tempContainer.style.left = '-9999px'
-      tempContainer.style.width = '210mm' // A4 width
-      tempContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif'
-      tempContainer.style.fontSize = '14px'
-      tempContainer.style.lineHeight = '1.6'
-      tempContainer.style.color = '#374151'
-      document.body.appendChild(tempContainer)
+      const response = await apiClient.exportPolicyProject(
+        currentProject.id, 
+        'pdf',
+        { include_metadata: true }
+      )
 
-      // Add title and metadata
-      const titleSection = document.createElement('div')
-      titleSection.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb;">
-          <h1 style="font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 10px;">${currentPolicy.title}</h1>
-          <div style="font-size: 12px; color: #6b7280; margin-bottom: 5px;"><strong>Framework:</strong> ${frameworks.find(f => f.id === currentPolicy.framework)?.name || currentPolicy.framework}</div>
-          <div style="font-size: 12px; color: #6b7280; margin-bottom: 5px;"><strong>Generated:</strong> ${currentPolicy.generatedAt.toLocaleString()}</div>
-          <div style="font-size: 12px; color: #6b7280;"><strong>Word Count:</strong> ${currentPolicy.wordCount} words</div>
-        </div>
-      `
-      tempContainer.appendChild(titleSection)
-
-      // Process markdown to HTML
-      const contentContainer = document.createElement('div')
-      const processedHTML = currentPolicy.content
-        .replace(/^# (.+)$/gm, '<h1 style="font-size: 20px; font-weight: bold; margin: 24px 0 16px 0; color: #1f2937;">$1</h1>')
-        .replace(/^## (.+)$/gm, '<h2 style="font-size: 18px; font-weight: bold; margin: 20px 0 12px 0; color: #1f2937; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">$1</h2>')
-        .replace(/^### (.+)$/gm, '<h3 style="font-size: 16px; font-weight: 600; margin: 16px 0 8px 0; color: #374151;">$1</h3>')
-        .replace(/^\*\*Framework Alignment:\*\*(.+)$/gm, '<div style="background: #dbeafe; color: #1e40af; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; margin: 8px 0; border: 1px solid #3b82f6;"><strong>Framework Alignment:</strong>$1</div>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^- (.+)$/gm, '<li style="margin: 4px 0;">$1</li>')
-        .replace(/(<li.*<\/li>)/g, '<ul style="margin: 8px 0; padding-left: 20px;">$1</ul>')
-        .replace(/^\d+\. (.+)$/gm, '<li style="margin: 4px 0;">$1</li>')
-        .replace(/^(?!<[hl]|<ul|<li|<div|<strong|<em)(.+)$/gm, '<p style="margin: 6px 0; line-height: 1.6;">$1</p>')
-
-      contentContainer.innerHTML = processedHTML
-      tempContainer.appendChild(contentContainer)
-
-      // PDF options
-      const opt = {
-        margin: [15, 15, 15, 15] as [number, number, number, number],
-        filename: `${currentPolicy.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Export failed')
       }
 
-      // Generate PDF
-      await html2pdf().set(opt).from(tempContainer).save()
-      
-      // Cleanup
-      document.body.removeChild(tempContainer)
+      // Create download link
+      const url = window.URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = `${currentProject.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
       
       toast({
         title: "Export Completed",
@@ -378,16 +467,21 @@ This policy will be reviewed annually or as required by changes in:
       })
       
     } catch (error) {
+      console.error('PDF export error:', error)
       toast({
         title: "Export Failed",
-        description: error instanceof Error ? error.message : "Unknown error",
+        description: error instanceof Error ? error.message : "Failed to export PDF. Please try again.",
         variant: "destructive"
       })
+    } finally {
+      setIsExporting(false)
     }
   }
 
   const exportToWord = async () => {
-    if (!currentPolicy?.content) return
+    if (!currentProject?.id) return
+    
+    setIsExporting(true)
     
     try {
       toast({
@@ -395,106 +489,26 @@ This policy will be reviewed annually or as required by changes in:
         description: "Your policy document is being prepared for download."
       })
 
-      // Import docx and file-saver dynamically
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx')
-      const { saveAs } = await import('file-saver')
-      
-      // Parse markdown content to create Word document elements
-      const parseMarkdownToDocx = (markdown: string) => {
-        const lines = markdown.split('\n')
-        const elements: any[] = []
-        
-        // Add title section
-        elements.push(
-          new Paragraph({
-            children: [new TextRun({ text: currentPolicy.title, bold: true, size: 32 })],
-            heading: HeadingLevel.TITLE,
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 }
-          })
-        )
-        
-        let currentParagraph: string[] = []
-        
-        for (const line of lines) {
-          const trimmedLine = line.trim()
-          
-          if (!trimmedLine) {
-            if (currentParagraph.length > 0) {
-              const paragraphText = currentParagraph.join(' ')
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun({ text: paragraphText.replace(/\*\*/g, '') })],
-                  spacing: { after: 200 }
-                })
-              )
-              currentParagraph = []
-            }
-            continue
-          }
-          
-          if (trimmedLine.startsWith('# ')) {
-            if (currentParagraph.length > 0) {
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun({ text: currentParagraph.join(' ').replace(/\*\*/g, '') })],
-                  spacing: { after: 200 }
-                })
-              )
-              currentParagraph = []
-            }
-            elements.push(
-              new Paragraph({
-                children: [new TextRun({ text: trimmedLine.substring(2), bold: true, size: 28 })],
-                heading: HeadingLevel.HEADING_1,
-                spacing: { before: 400, after: 200 }
-              })
-            )
-          } else if (trimmedLine.startsWith('## ')) {
-            if (currentParagraph.length > 0) {
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun({ text: currentParagraph.join(' ').replace(/\*\*/g, '') })],
-                  spacing: { after: 200 }
-                })
-              )
-              currentParagraph = []
-            }
-            elements.push(
-              new Paragraph({
-                children: [new TextRun({ text: trimmedLine.substring(3), bold: true, size: 24 })],
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 300, after: 200 }
-              })
-            )
-          } else {
-            currentParagraph.push(trimmedLine)
-          }
-        }
-        
-        if (currentParagraph.length > 0) {
-          elements.push(
-            new Paragraph({
-              children: [new TextRun({ text: currentParagraph.join(' ').replace(/\*\*/g, '') })],
-              spacing: { after: 200 }
-            })
-          )
-        }
-        
-        return elements
+      const response = await apiClient.exportPolicyProject(
+        currentProject.id, 
+        'docx',
+        { include_metadata: true }
+      )
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Export failed')
       }
 
-      const docElements = parseMarkdownToDocx(currentPolicy.content)
-      
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: docElements
-        }]
-      })
-      
-      const buffer = await Packer.toBlob(doc)
-      saveAs(buffer, `${currentPolicy.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.docx`)
+      // Create download link
+      const url = window.URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = `${currentProject.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.docx`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
       
       toast({
         title: "Export Completed",
@@ -505,48 +519,100 @@ This policy will be reviewed annually or as required by changes in:
       console.error('Word export error:', error)
       toast({
         title: "Export Failed",
-        description: error instanceof Error ? error.message : "Unknown error",
+        description: error instanceof Error ? error.message : "Failed to export Word document. Please try again.",
         variant: "destructive"
       })
+    } finally {
+      setIsExporting(false)
     }
   }
 
   const resetForm = () => {
-    setPrompt("")
+    setProjectTitle("")
+    setDescription("")
     setSelectedFramework("")
-    setPolicyTitle("")
-    setCurrentPolicy(null)
-    setIsEditing(false)
-    setEditedContent("")
+    setPrompt("")
+    setCurrentProject(null)
+    setIsEditingPolicy(false)
+    setEditedPolicyContent("")
+    setActiveStep("define")
   }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Policy Generator</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Policy Generator</h1>
         <p className="text-gray-600">
-          Generate comprehensive compliance policies using AI. Simply describe what you need and select your framework.
+          Generate comprehensive compliance policies. Define your requirements, generate content, and export professional documents.
         </p>
       </div>
 
-      <Tabs defaultValue="generate" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="generate">Generate Policy</TabsTrigger>
-          <TabsTrigger value="review">Review & Edit</TabsTrigger>
-          <TabsTrigger value="export">Export Options</TabsTrigger>
-          <TabsTrigger value="history">Policy History</TabsTrigger>
-        </TabsList>
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className={`flex items-center space-x-2 ${
+            activeStep === "define" ? "text-blue-600" : 
+            activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
+          }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              activeStep === "define" ? "bg-blue-100 text-blue-600" :
+              activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
+            }`}>
+              {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
+            </div>
+            <span className="font-medium">Define Requirements</span>
+          </div>
 
-        {/* Generate Policy Tab */}
-        <TabsContent value="generate" className="space-y-6">
+          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+            <div className={`h-full transition-all duration-300 ${
+              activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
+            }`} />
+          </div>
+
+          <div className={`flex items-center space-x-2 ${
+            activeStep === "generate" ? "text-blue-600" : 
+            activeStep === "export" ? "text-green-600" : "text-gray-400"
+          }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              activeStep === "generate" ? "bg-blue-100 text-blue-600" :
+              activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
+            }`}>
+              {activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "2"}
+            </div>
+            <span className="font-medium">Generate & Review</span>
+          </div>
+
+          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+            <div className={`h-full transition-all duration-300 ${
+              activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
+            }`} />
+          </div>
+
+          <div className={`flex items-center space-x-2 ${
+            activeStep === "export" ? "text-blue-600" : "text-gray-400"
+          }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-gray-100"
+            }`}>
+              3
+            </div>
+            <span className="font-medium">Export & Implement</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 1: Define Requirements */}
+      {activeStep === "define" && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Wand2 className="h-5 w-5 text-blue-600" />
-                <span>Create New Policy</span>
+                <Target className="h-5 w-5 text-blue-600" />
+                <span>Step 1: Define Your Policy Requirements</span>
               </CardTitle>
               <CardDescription>
-                Describe your policy requirements and let AI generate a comprehensive, framework-compliant document.
+                Provide the basic information for your policy generation project and describe your specific requirements.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -555,19 +621,30 @@ This policy will be reviewed annually or as required by changes in:
                 <Label htmlFor="policyTitle">Policy Title *</Label>
                 <Input
                   id="policyTitle"
-                  value={policyTitle}
-                  onChange={(e) => setPolicyTitle(e.target.value)}
-                  placeholder="e.g., Information Security Policy, Data Privacy Policy"
-                  disabled={isGenerating}
+                  value={projectTitle}
+                  onChange={(e) => setProjectTitle(e.target.value)}
+                  placeholder="e.g., Data Privacy Policy, Information Security Policy"
                 />
               </div>
 
-              {/* Framework Selection */}
+              {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="framework">Compliance Framework *</Label>
-                <Select value={selectedFramework} onValueChange={setSelectedFramework} disabled={isGenerating}>
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief description of your policy objectives and scope..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Framework Selector */}
+              <div className="space-y-2">
+                <Label htmlFor="framework">Target Compliance Framework *</Label>
+                <Select value={selectedFramework} onValueChange={setSelectedFramework}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select the compliance framework for your policy" />
+                    <SelectValue placeholder="Select the framework for your policy" />
                   </SelectTrigger>
                   <SelectContent>
                     {frameworks.map((framework) => (
@@ -584,458 +661,434 @@ This policy will be reviewed annually or as required by changes in:
 
               {/* Policy Requirements */}
               <div className="space-y-2">
-                <Label htmlFor="prompt">Policy Requirements *</Label>
+                <Label htmlFor="requirements">Policy Requirements *</Label>
                 <Textarea
-                  id="prompt"
+                  id="requirements"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe what you need in your policy. For example:
-• Security controls for remote work
-• Data protection measures for customer information  
-• Access control procedures for cloud systems
-• Incident response protocols
-• Employee training requirements
-
-Be as specific as possible to get the best results."
-                  rows={8}
-                  disabled={isGenerating}
+                  placeholder="Describe what your policy should cover. Include specific requirements, scope, audience, and any particular compliance needs..."
+                  rows={6}
                 />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Be specific about your requirements for better results</span>
-                  <span>{prompt.length}/2000 characters</span>
-                </div>
+                <p className="text-sm text-gray-500">
+                  Be specific about your organization's needs, industry requirements, and any particular compliance objectives.
+                </p>
               </div>
 
               {/* Generate Button */}
-              <div className="pt-4 border-t">
-                <div className="flex justify-between items-center">
-                  <Button
-                    variant="outline"
-                    onClick={resetForm}
-                    disabled={isGenerating}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Reset Form
-                  </Button>
-                  
-                  <Button
-                    onClick={generatePolicy}
-                    disabled={!prompt.trim() || !selectedFramework || !policyTitle.trim() || isGenerating}
-                    size="lg"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                        Generating Policy...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Generate Policy
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {isGenerating && (
-                  <div className="mt-4 space-y-2">
-                    <div className="text-sm text-gray-600">
-                      AI is analyzing your requirements and generating a comprehensive policy...
-                    </div>
-                    <Progress value={66} className="h-2" />
-                    <p className="text-xs text-gray-500">
-                      This may take a few moments to ensure quality and compliance.
-                    </p>
-                  </div>
-                )}
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={resetForm}
+                  disabled={isGenerating}
+                >
+                  Reset Form
+                </Button>
+                <Button 
+                  onClick={generatePolicy}
+                  disabled={isGenerating || !projectTitle || !selectedFramework || !prompt}
+                  className="min-w-[140px]"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate Policy
+                    </>
+                  )}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Quick Examples */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Start Examples</CardTitle>
-              <CardDescription>
-                Click on any example to use it as a starting point
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  {
-                    title: "Remote Work Security",
-                    framework: "ISO27001",
-                    prompt: "Create a comprehensive policy for secure remote work including VPN usage, device management, home office security, and data protection measures."
-                  },
-                  {
-                    title: "Data Privacy Compliance",
-                    framework: "GDPR",
-                    prompt: "Develop a data privacy policy covering personal data collection, processing, storage, subject rights, and breach notification procedures."
-                  },
-                  {
-                    title: "Access Control Policy",
-                    framework: "SOC2",
-                    prompt: "Create an access control policy defining user authentication, authorization procedures, privileged access management, and regular access reviews."
-                  },
-                  {
-                    title: "Incident Response Plan",
-                    framework: "NIST_CSF",
-                    prompt: "Develop an incident response policy including detection procedures, containment strategies, recovery processes, and post-incident analysis."
-                  }
-                ].map((example, index) => (
-                  <Card key={index} className="cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => {
-                      setPolicyTitle(example.title)
-                      setSelectedFramework(example.framework)
-                      setPrompt(example.prompt)
-                    }}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900">{example.title}</h4>
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                            {example.prompt}
-                          </p>
-                          <Badge variant="outline" className="mt-2">
-                            {frameworks.find(f => f.id === example.framework)?.name}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Review & Edit Tab */}
-        <TabsContent value="review" className="space-y-6">
-          {currentPolicy ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-green-600" />
-                    <span>{currentPolicy.title}</span>
+              {/* Generation Progress */}
+              {isGenerating && (
+                <div className="space-y-3 p-4 bg-blue-50 rounded-lg border">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">{generationStatus}</span>
+                    <span className="text-gray-600">{generationProgress}%</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline">
-                      {frameworks.find(f => f.id === currentPolicy.framework)?.name}
-                    </Badge>
-                    <Badge variant="outline">
-                      {currentPolicy.wordCount} words
-                    </Badge>
-                    {currentPolicy.status === 'completed' && (
-                      <Badge className="bg-green-100 text-green-800">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Generated
-                      </Badge>
-                    )}
-                  </div>
-                </CardTitle>
-                <CardDescription>
-                  Review and edit your generated policy. All changes are automatically saved.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {currentPolicy.status === 'generating' ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Generating Your Policy</h3>
-                      <p className="text-gray-600">AI is creating a comprehensive policy based on your requirements...</p>
-                    </div>
-                  </div>
-                ) : currentPolicy.status === 'error' ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <X className="h-5 w-5 text-red-600" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Generation Failed</h3>
-                      <p className="text-gray-600 mb-4">There was an error generating your policy. Please try again.</p>
-                      <Button onClick={() => generatePolicy()}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry Generation
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-600">
-                        Generated on {currentPolicy.generatedAt.toLocaleString()}
-                      </div>
-                      <div className="flex space-x-2">
-                        {!isEditing ? (
-                          <Button variant="outline" onClick={startEditing}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Policy
-                          </Button>
-                        ) : (
-                          <>
-                            <Button variant="outline" onClick={cancelEditing}>
-                              <X className="h-4 w-4 mr-2" />
-                              Cancel
-                            </Button>
-                            <Button onClick={saveEdits}>
-                              <Save className="h-4 w-4 mr-2" />
-                              Save Changes
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {isEditing ? (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="editContent">Edit Content</Label>
-                          <Textarea
-                            id="editContent"
-                            value={editedContent}
-                            onChange={(e) => setEditedContent(e.target.value)}
-                            className="min-h-96 font-mono text-sm"
-                            placeholder="Edit your policy content here..."
-                          />
-                          <div className="text-xs text-gray-500">
-                            Words: {editedContent.split(/\s+/).length}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Preview</Label>
-                          <div className="border rounded-lg p-4 bg-white min-h-96 overflow-y-auto">
-                            <div className="prose prose-sm max-w-none">
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={MarkdownComponents}
-                              >
-                                {editedContent || "Start editing to see the preview..."}
-                              </ReactMarkdown>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="border rounded-lg p-6 bg-gray-50 max-h-96 overflow-y-auto">
-                        <div className="prose prose-sm max-w-none">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={MarkdownComponents}
-                          >
-                            {currentPolicy.content}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Policy Generated</h3>
-                  <p className="text-gray-600 mb-4">
-                    Generate a policy first to review and edit it here.
+                  <Progress value={generationProgress} className="h-3" />
+                  <p className="text-xs text-gray-500 text-center">
+                    This may take 1-2 minutes for comprehensive policy generation.
                   </p>
-                  <Button onClick={() => {
-                    const tabs = document.querySelector('[data-state="active"]')?.parentElement
-                    const generateTab = tabs?.querySelector('[value="generate"]') as HTMLElement
-                    generateTab?.click()
-                  }}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Policy
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Export Options Tab */}
-        <TabsContent value="export" className="space-y-6">
-          {currentPolicy && currentPolicy.status === 'completed' ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Download className="h-5 w-5 text-blue-600" />
-                    <span>Export Options</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Download your policy in various formats for distribution and implementation.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Button
-                      onClick={exportToWord}
-                      className="h-24 flex flex-col items-center justify-center space-y-2"
-                      variant="outline"
-                    >
-                      <FileText className="h-8 w-8" />
-                      <span>Export as Word</span>
-                      <span className="text-xs text-gray-500">For editing & collaboration</span>
-                    </Button>
-
-                    <Button
-                      onClick={exportToPDF}
-                      className="h-24 flex flex-col items-center justify-center space-y-2"
-                      variant="outline"
-                    >
-                      <FileText className="h-8 w-8" />
-                      <span>Export as PDF</span>
-                      <span className="text-xs text-gray-500">For official records</span>
-                    </Button>
-
-                    <Button
-                      onClick={copyToClipboard}
-                      className="h-24 flex flex-col items-center justify-center space-y-2"
-                      variant="outline"
-                    >
-                      <Copy className="h-8 w-8" />
-                      <span>Copy to Clipboard</span>
-                      <span className="text-xs text-gray-500">Raw markdown text</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Policy Information</CardTitle>
-                  <CardDescription>
-                    Summary of your generated policy for record keeping.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-600">Policy Title:</span>
-                      <p className="mt-1">{currentPolicy.title}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Framework:</span>
-                      <p className="mt-1">{frameworks.find(f => f.id === currentPolicy.framework)?.name}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Generated:</span>
-                      <p className="mt-1">{currentPolicy.generatedAt.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">Word Count:</span>
-                      <p className="mt-1">{currentPolicy.wordCount} words</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t">
-                    <span className="font-medium text-gray-600">Original Requirements:</span>
-                    <p className="mt-1 text-gray-700 bg-gray-50 p-3 rounded-lg">{currentPolicy.prompt}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Download className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Policy Ready for Export</h3>
-                  <p className="text-gray-600 mb-4">
-                    Generate and review a policy first to access export options.
-                  </p>
-                  <Button onClick={() => {
-                    const tabs = document.querySelector('[data-state="active"]')?.parentElement
-                    const generateTab = tabs?.querySelector('[value="generate"]') as HTMLElement
-                    generateTab?.click()
-                  }}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Policy
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Policy History Tab */}
-        <TabsContent value="history" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-gray-600" />
-                <span>Policy History</span>
-              </CardTitle>
-              <CardDescription>
-                View and manage your previously generated policies.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {generatedPolicies.length > 0 ? (
-                <div className="space-y-4">
-                  {generatedPolicies.map((policy) => (
-                    <Card key={policy.id} className="cursor-pointer hover:bg-gray-50 transition-colors"
-                      onClick={() => setCurrentPolicy(policy)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">{policy.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                              {policy.prompt.substring(0, 120)}...
-                            </p>
-                            <div className="flex items-center space-x-3 mt-2">
-                              <Badge variant="outline">
-                                {frameworks.find(f => f.id === policy.framework)?.name}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {policy.generatedAt.toLocaleDateString()}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {policy.wordCount} words
-                              </span>
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <Badge variant={
-                              policy.status === 'completed' ? 'default' :
-                              policy.status === 'generating' ? 'secondary' : 'destructive'
-                            }>
-                              {policy.status === 'completed' ? 'Ready' :
-                               policy.status === 'generating' ? 'Generating' : 'Error'}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Policies Generated Yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    Your generated policies will appear here for easy access and management.
-                  </p>
-                  <Button onClick={() => {
-                    const tabs = document.querySelector('[data-state="active"]')?.parentElement
-                    const generateTab = tabs?.querySelector('[value="generate"]') as HTMLElement
-                    generateTab?.click()
-                  }}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Your First Policy
-                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+
+          {/* Recent Projects */}
+          {projects.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-gray-600" />
+                  <span>Recent Projects</span>
+                </CardTitle>
+                <CardDescription>
+                  Continue working on your previous policy generation projects.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {projects.slice(0, 3).map((project) => (
+                    <div 
+                      key={project.id} 
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => {
+                        setCurrentProject(project)
+                        setActiveStep(project.status === 'Completed' ? 'export' : 'generate')
+                      }}
+                    >
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{project.title}</h4>
+                        <div className="flex items-center space-x-3 text-sm text-gray-600 mt-1">
+                          <span>{frameworks.find(f => f.id === project.framework)?.name}</span>
+                          <span>•</span>
+                          <span>
+                            {project.updated_at 
+                              ? new Date(project.updated_at).toLocaleDateString()
+                              : new Date(project.created_at).toLocaleDateString()
+                            }
+                          </span>
+                          <Badge variant={
+                            project.status === "Completed" ? "default" :
+                            project.status === "Failed" ? "destructive" :
+                            project.status === "Generating" ? "secondary" : "outline"
+                          }>
+                            {project.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-gray-400" />
+                    </div>
+                  ))}
+                  
+                  {projects.length > 3 && (
+                    <Button variant="outline" size="sm" className="w-full mt-2">
+                      View All Projects ({projects.length})
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Step 2: Generate & Review */}
+      {activeStep === "generate" && currentProject && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{currentProject.title}</h2>
+              <p className="text-gray-600">Framework: {frameworks.find(f => f.id === currentProject.framework)?.name}</p>
+            </div>
+            <Button variant="outline" onClick={resetForm}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Start New Policy
+            </Button>
+          </div>
+
+          {/* Policy Status */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <span>Generation Status</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {currentProject.status}
+                </div>
+                <Badge variant={
+                  currentProject.status === "Completed" ? "default" :
+                  currentProject.status === "Failed" ? "destructive" :
+                  currentProject.status === "Generating" ? "secondary" : "outline"
+                }>
+                  {currentProject.status === "Completed" ? "Ready for Review" :
+                   currentProject.status === "Generating" ? "In Progress" :
+                   currentProject.status === "Failed" ? "Generation Failed" : "Draft"}
+                </Badge>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <FileCheck className="h-5 w-5 text-green-600" />
+                  <span>Word Count</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  {currentProject.generated_policy?.word_count || 0}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {currentProject.generated_policy?.word_count ? "Words generated" : "Waiting for content"}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-gray-600" />
+                  <span>Generated</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium text-gray-900 mb-2">
+                  {currentProject.generated_policy?.generated_at
+                    ? new Date(currentProject.generated_policy.generated_at).toLocaleDateString()
+                    : "Not generated yet"}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {currentProject.generated_policy?.generated_at
+                    ? new Date(currentProject.generated_policy.generated_at).toLocaleTimeString()
+                    : "Waiting for generation"}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Generated Policy Content */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <span>Generated Policy</span>
+                </CardTitle>
+                {currentProject.status === "Completed" && currentProject.generated_policy && (
+                  <div className="flex space-x-2">
+                    {!isEditingPolicy ? (
+                      <>
+                        <Button variant="outline" size="sm" onClick={startEditingPolicy}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Policy
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveStep("export")}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Export Policy
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="outline" size="sm" onClick={cancelEditingPolicy}>
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={saveEditedPolicy}>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Changes
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              <CardDescription>
+                AI-generated policy content based on your requirements and selected compliance framework.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {currentProject.status === "Generating" && (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Generating Your Policy</h3>
+                    <p className="text-gray-600">
+                      Our AI is analyzing your requirements and creating a comprehensive policy document.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {currentProject.status === "Completed" && currentProject.generated_policy && (
+                <div className="space-y-4">
+                  {isEditingPolicy ? (
+                    <Textarea
+                      value={editedPolicyContent}
+                      onChange={(e) => setEditedPolicyContent(e.target.value)}
+                      rows={20}
+                      className="font-mono text-sm"
+                    />
+                  ) : (
+                    <div className="prose prose-slate max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={MarkdownComponents}
+                      >
+                        {currentProject.generated_policy.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentProject.status === "Failed" && (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <AlertCircle className="h-12 w-12 text-red-500" />
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Generation Failed</h3>
+                    <p className="text-gray-600 mb-4">
+                      {currentProject.error_message || "There was an error generating your policy."}
+                    </p>
+                    <Button onClick={() => setActiveStep("define")}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {currentProject.status === "Draft" && (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <FileText className="h-12 w-12 text-gray-400" />
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Generate</h3>
+                    <p className="text-gray-600 mb-4">
+                      Click the generate button to create your policy content.
+                    </p>
+                    <Button onClick={() => setActiveStep("define")}>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate Policy
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Step 3: Export & Implement */}
+      {activeStep === "export" && currentProject && currentProject.status === "Completed" && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
+            <p className="text-gray-600 mb-6">
+              Your policy document is complete and ready for export. Choose your preferred format below.
+            </p>
+          </div>
+
+          {/* Export Options */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Download className="h-5 w-5 text-blue-600" />
+                <span>Export Options</span>
+              </CardTitle>
+              <CardDescription>
+                Download your policy in various formats for distribution and implementation.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button
+                  onClick={exportToWord}
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  variant="outline"
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  ) : (
+                    <FileText className="h-8 w-8" />
+                  )}
+                  <span>Export as Word</span>
+                  <span className="text-xs text-gray-500">For editing & collaboration</span>
+                </Button>
+
+                <Button
+                  onClick={exportToPDF}
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  variant="outline"
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  ) : (
+                    <FileText className="h-8 w-8" />
+                  )}
+                  <span>Export as PDF</span>
+                  <span className="text-xs text-gray-500">For official records</span>
+                </Button>
+
+                <Button
+                  onClick={copyToClipboard}
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  variant="outline"
+                  disabled={isExporting}
+                >
+                  <Copy className="h-8 w-8" />
+                  <span>Copy to Clipboard</span>
+                  <span className="text-xs text-gray-500">Raw markdown text</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Policy Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-gray-600" />
+                <span>Policy Information</span>
+              </CardTitle>
+              <CardDescription>
+                Summary of your generated policy for record keeping.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-600">Policy Title:</span>
+                    <p className="mt-1">{currentProject.title}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Framework:</span>
+                    <p className="mt-1">{frameworks.find(f => f.id === currentProject.framework)?.name}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Generated:</span>
+                    <p className="mt-1">
+                      {currentProject.generated_policy?.generated_at
+                        ? new Date(currentProject.generated_policy.generated_at).toLocaleString()
+                        : 'Not available'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Word Count:</span>
+                    <p className="mt-1">{currentProject.generated_policy?.word_count || 0} words</p>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <span className="font-medium text-gray-600">Original Requirements:</span>
+                  <p className="mt-1 text-gray-700 bg-gray-50 p-3 rounded-lg">{currentProject.prompt}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center space-x-4">
+            <Button variant="outline" onClick={resetForm}>
+              Create Another Policy
+            </Button>
+            <Button onClick={() => setActiveStep("generate")}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit This Policy
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

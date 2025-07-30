@@ -45,32 +45,25 @@ const navigation = [
     badge: null,
     description: "Add compliance docs"
   },
-  // { 
-  //   name: "Policies", 
-  //   href: "/policies", 
-  //   icon: FileText,
-  //   badge: null,
-  //   description: "Manage policy documents"
-  // },
   { 
     name: "Policy Generator", 
     href: "/policy-generator", 
-    icon: Calendar,
-    badge: "Pro",
-    description: "Plan audit activities"
+    icon: Zap,
+    badge: null,
+    description: "Build custom policies"
   },
   { 
     name: "Audit Planner", 
     href: "/audit-planner", 
-    icon: Zap,
-    badge: "New",
-    description: "AI-powered policy creation"
+    icon: Calendar,
+    badge: null,
+    description: "Build audit plans"
   },
   { 
     name: "Team Management", 
     href: "/team", 
     icon: Users,
-    badge: "Admin",
+    badge: null,
     description: "Manage team access"
   },
   { 

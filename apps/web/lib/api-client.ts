@@ -542,6 +542,91 @@ class ApiClient {
     return this.makeRequestWithoutTimeout('/audit-planner/health')
   }
 
+  // Policy Generator endpoints
+  async generatePolicyFromPrompt(request: {
+    title: string
+    framework: string
+    prompt: string
+    description?: string
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/policy-generator/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: request.title,
+        framework: request.framework,
+        prompt: request.prompt,
+        description: request.description
+      })
+    })
+  }
+
+  async getPolicyProjects(): Promise<ApiResponse<any[]>> {
+    return this.makeRequestWithoutTimeout('/policy-generator/projects')
+  }
+
+  async getPolicyProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/policy-generator/projects/${projectId}`)
+  }
+
+  async updatePolicyContent(projectId: string, content: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/policy-generator/projects/${projectId}/content`, {
+      method: 'PUT',
+      body: JSON.stringify({ content })
+    })
+  }
+
+  async exportPolicyProject(projectId: string, format: 'pdf' | 'docx' | 'txt', options?: {
+    include_metadata?: boolean
+  }): Promise<ApiResponse<Blob>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/policy-generator/projects/${projectId}/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getToken()}`
+        },
+        body: JSON.stringify({
+          project_id: projectId,
+          format,
+          include_metadata: options?.include_metadata ?? true
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        return {
+          success: false,
+          error: errorData.detail || `HTTP ${response.status}`,
+          status: response.status
+        }
+      }
+
+      const blob = await response.blob()
+      return {
+        success: true,
+        data: blob,
+        status: response.status
+      }
+    } catch (error) {
+      console.error('Export policy project error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        status: 0
+      }
+    }
+  }
+
+  async deletePolicyProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/policy-generator/projects/${projectId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getPolicyFrameworks(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/policy-generator/frameworks')
+  }
+
   // Team Management endpoints
   async getTeamMembers(): Promise<ApiResponse<any[]>> {
     return this.makeRequestWithoutTimeout('/team/members')

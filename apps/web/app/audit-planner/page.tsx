@@ -35,7 +35,8 @@ import {
   ExternalLink,
   Edit,
   Sparkles,
-  BarChart3
+  BarChart3,
+  X
 } from "lucide-react"
 import { apiClient } from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
@@ -674,14 +675,17 @@ export default function AuditPlannerPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Planner</h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600">
           Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
         </p>
+      </div>
 
-        {/* Progress Indicator */}
-        <div className="flex items-center space-x-4 mb-8">
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className={`flex items-center space-x-2 ${
             activeStep === "define" ? "text-blue-600" : 
             activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
@@ -695,7 +699,7 @@ export default function AuditPlannerPage() {
             <span className="font-medium">Define Project</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200">
+          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
             <div className={`h-full transition-all duration-300 ${
               activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
             }`} />
@@ -714,7 +718,7 @@ export default function AuditPlannerPage() {
             <span className="font-medium">Generate & Review</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200">
+          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
             <div className={`h-full transition-all duration-300 ${
               activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
             }`} />
@@ -872,30 +876,38 @@ export default function AuditPlannerPage() {
                 )}
               </div>
 
-              {/* Generate Button */}
-              <div className="pt-4 border-t space-y-3">
-                <Button 
-                  onClick={generatePolicy}
-                  disabled={!projectTitle || !selectedFramework || !selectedDocument || isGenerating}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                      Generating Policy...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5 mr-2" />
-                      Generate Audit-Ready Policy
-                    </>
-                  )}
-                </Button>
+              {/* Action Buttons */}
+              <div className="pt-4 border-t">
+                <div className="flex justify-end space-x-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={resetForm}
+                    disabled={isGenerating}
+                  >
+                    Reset Form
+                  </Button>
+                  <Button 
+                    onClick={generatePolicy}
+                    disabled={!projectTitle || !selectedFramework || !selectedDocument || isGenerating}
+                    className="min-w-[140px]"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Generate Policy
+                      </>
+                    )}
+                  </Button>
+                </div>
                 
-                {/* Progress Indicator */}
+                {/* Generation Progress */}
                 {isGenerating && (
-                  <div className="mt-6 space-y-3">
+                  <div className="space-y-3 p-4 bg-blue-50 rounded-lg border mt-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">{generationStatus}</span>
                       <span className="text-gray-600">{generationProgress}%</span>
@@ -979,7 +991,7 @@ export default function AuditPlannerPage() {
             </div>
             <Button variant="outline" onClick={resetForm}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Start New Project
+              Start New Audit
             </Button>
           </div>
 
@@ -1074,7 +1086,7 @@ export default function AuditPlannerPage() {
                         size="sm"
                         onClick={startEditingPolicy}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-4 w-4 mr-2" />
                         Edit Policy
                       </Button>
                       <Button
@@ -1082,8 +1094,16 @@ export default function AuditPlannerPage() {
                         size="sm"
                         onClick={() => setShowTrackedChanges(!showTrackedChanges)}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-4 w-4 mr-2" />
                         {showTrackedChanges ? "Hide" : "Show"} Changes
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveStep("export")}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export Policy
                       </Button>
                     </>
                   ) : (
@@ -1091,27 +1111,20 @@ export default function AuditPlannerPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={saveEditedPolicy}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Save Changes
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
                         onClick={cancelEditingPolicy}
                       >
+                        <X className="h-4 w-4 mr-2" />
                         Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={saveEditedPolicy}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Save Changes
                       </Button>
                     </>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setActiveStep("export")}
-                  >
-                    Export Options
-                  </Button>
                 </div>
               </CardTitle>
               <CardDescription>
@@ -1261,7 +1274,7 @@ export default function AuditPlannerPage() {
                   variant="outline"
                 >
                   <FileText className="h-8 w-8" />
-                  <span>Download as .DOCX</span>
+                  <span>Export as Word</span>
                   <span className="text-xs text-gray-500">For editing & collaboration</span>
                 </Button>
 
@@ -1271,7 +1284,7 @@ export default function AuditPlannerPage() {
                   variant="outline"
                 >
                   <FileText className="h-8 w-8" />
-                  <span>Download as .PDF</span>
+                  <span>Export as PDF</span>
                   <span className="text-xs text-gray-500">For official records</span>
                 </Button>
 
@@ -1282,7 +1295,7 @@ export default function AuditPlannerPage() {
                 >
                   <Copy className="h-8 w-8" />
                   <span>Copy to Clipboard</span>
-                  <span className="text-xs text-gray-500">Current policy content</span>
+                  <span className="text-xs text-gray-500">Raw text content</span>
                 </Button>
               </div>
             </CardContent>
@@ -1351,10 +1364,11 @@ export default function AuditPlannerPage() {
           {/* Action Buttons */}
           <div className="flex justify-center space-x-4">
             <Button variant="outline" onClick={resetForm}>
-              Create Another Policy
+              Create Another Audit
             </Button>
-            <Button onClick={() => router.push('/policies')}>
-              View All Policies
+            <Button onClick={() => setActiveStep("generate")}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit This Policy
             </Button>
           </div>
         </div>

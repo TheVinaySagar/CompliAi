@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
+import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { 
   FileText, 
   Target, 
@@ -23,20 +25,32 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [documentsCount, setDocumentsCount] = useState(0)
   const [controlsCount, setControlsCount] = useState(0)
   const [complianceProgress, setComplianceProgress] = useState(0)
   const [activePolicies, setActivePolicies] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
   // Load dashboard statistics
   useEffect(() => {
     loadDocumentStats()
   }, [])
 
+  const retryLoadStats = () => {
+    setHasError(false)
+    setErrorMessage("")
+    loadDocumentStats()
+  }
+
   const loadDocumentStats = async () => {
     try {
       setIsLoading(true)
+      setHasError(false)
+      setErrorMessage("")
+      
       const response = await apiClient.getDocuments()
       
       if (response.success && response.data) {
@@ -62,7 +76,41 @@ export default function DashboardPage() {
         setComplianceProgress(progress)
         
       } else {
-        console.error("Failed to load documents:", response.error)
+        // Handle API response errors
+        const errorMsg = response.error || "Unknown error occurred"
+        setHasError(true)
+        setErrorMessage(errorMsg)
+        
+        // Show user-friendly error toast
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Error",
+            description: "Please log in again to access your dashboard.",
+            variant: "destructive"
+          })
+        } else if (response.status === 0 || errorMsg.includes("NetworkError") || errorMsg.includes("fetch")) {
+          toast({
+            title: "Connection Error",
+            description: "Unable to connect to the CompliAI server. Please ensure the backend is running.",
+            variant: "destructive"
+          })
+          setErrorMessage("Unable to connect to the CompliAI server")
+        } else if (response.status >= 500) {
+          toast({
+            title: "Server Error",
+            description: "The server is experiencing issues. Please try again later.",
+            variant: "destructive"
+          })
+          setErrorMessage("Server is experiencing issues")
+        } else {
+          toast({
+            title: "Error Loading Dashboard",
+            description: "Failed to load dashboard data. Please try refreshing the page.",
+            variant: "destructive"
+          })
+        }
+        
+        // Reset stats to safe defaults
         setDocumentsCount(0)
         setControlsCount(0)
         setActivePolicies(0)
@@ -70,6 +118,33 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error loading document stats:", error)
+      setHasError(true)
+      
+      // Handle different types of errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        setErrorMessage("CompliAI backend server is not responding")
+        toast({
+          title: "Backend Server Offline",
+          description: "The CompliAI backend server appears to be offline. Please ensure it's running on port 8000.",
+          variant: "destructive"
+        })
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message)
+        toast({
+          title: "Unexpected Error",
+          description: error.message,
+          variant: "destructive"
+        })
+      } else {
+        setErrorMessage("An unexpected error occurred")
+        toast({
+          title: "Unexpected Error",
+          description: "Something went wrong while loading the dashboard.",
+          variant: "destructive"
+        })
+      }
+      
+      // Reset stats to safe defaults
       setDocumentsCount(0)
       setControlsCount(0)
       setActivePolicies(0)
@@ -112,6 +187,25 @@ export default function DashboardPage() {
           </Badge>
         </div>
       </div>
+
+      {/* Error State */}
+      {hasError && !isLoading && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-800">Connection Error</AlertTitle>
+          <AlertDescription className="text-red-700">
+            {errorMessage}. 
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2 h-7 px-3 text-xs border-red-300 text-red-700 hover:bg-red-100" 
+              onClick={retryLoadStats}
+            >
+              Try Again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
