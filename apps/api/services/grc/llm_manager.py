@@ -19,7 +19,7 @@ class LLMManager:
     def __init__(self):
         self.llm_configs = {
             'google': {
-                'model': "gemini-1.5-flash",
+                'model': "gemini-2.5-pro",
                 'api_key': settings.google_api_key,
                 'temperature': 0.2
             },
