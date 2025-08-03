@@ -45,6 +45,7 @@ export default function TeamPage() {
           last_login: member.last_login ? new Date(member.last_login) : undefined,
           department: member.department,
           permissions: member.permissions,
+          added_by_name: member.added_by_name, // Include added_by_name
         }))
         
         setMembers(transformedMembers)
@@ -246,6 +247,9 @@ export default function TeamPage() {
                       {member.department && (
                         <p className="text-xs text-gray-400">{member.department}</p>
                       )}
+                      {member.added_by_name && (
+                        <p className="text-xs text-blue-500">Added by: {member.added_by_name}</p>
+                      )}
                     </div>
                   </div>
 
@@ -319,6 +323,7 @@ export default function TeamPage() {
                   <li>• Generate and edit policies and procedures</li>
                   <li>• Access compliance mapping and gap analysis</li>
                   <li>• Create and manage audit planning projects</li> 
+                  <li>• Can only see users they have added (if admin)</li>
                 </ul>
               </div>
             </div>

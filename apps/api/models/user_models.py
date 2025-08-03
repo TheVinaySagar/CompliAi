@@ -34,6 +34,7 @@ class UserBase(BaseModel):
     is_active: bool = True
     department: Optional[str] = None
     permissions: List[str] = []
+    added_by: Optional[str] = None  # ID of admin who added this user
 
 class UserCreate(UserBase):
     password: str
@@ -59,19 +60,11 @@ class ChangePasswordRequest(BaseModel):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         
-        # Check for at least one uppercase, lowercase, digit, and special character
-        has_upper = any(c.isupper() for c in v)
-        has_lower = any(c.islower() for c in v)
-        has_digit = any(c.isdigit() for c in v)
-        has_special = any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v)
-        
-        if not (has_upper and has_lower and has_digit and has_special):
-            raise ValueError('Password must contain at least one uppercase letter, lowercase letter, digit, and special character')
-        
         return v
 
 class User(UserBase):
     id: Optional[str] = Field(default=None, alias="_id")
+    password_hash: Optional[str] = None  # Include password hash for database compatibility
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime] = None

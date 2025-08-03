@@ -223,6 +223,8 @@ export interface TeamMember {
   last_login?: Date
   department?: string
   permissions?: string[]
+  added_by?: string
+  added_by_name?: string
 }
 
 export type MemberStatus = "Active" | "Pending" | "Inactive" | "Suspended"

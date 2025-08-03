@@ -26,6 +26,8 @@ class TeamMember(BaseModel):
     permissions: List[str] = []
     join_date: datetime
     last_login: Optional[datetime] = None
+    added_by: Optional[str] = None  # ID of admin who added this user
+    added_by_name: Optional[str] = None  # Name of admin who added this user
     
     class Config:
         json_schema_extra = {

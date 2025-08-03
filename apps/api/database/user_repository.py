@@ -63,6 +63,7 @@ class UserRepository:
             "is_active": user_data.is_active,
             "department": user_data.department,
             "permissions": user_data.permissions or ["chat_access"],  # Ensure default permissions
+            "added_by": user_data.added_by,  # Include the admin who added this user
             "password_hash": hashed_password,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
@@ -165,6 +166,20 @@ class UserRepository:
         
         return users
     
+    async def get_admin_users(self) -> List[User]:
+        """Get all admin users"""
+        try:
+            collection = await self.get_collection()
+            cursor = collection.find({"role": "admin"})
+            admins = []
+            async for user_doc in cursor:
+                user_doc = self._normalize_user_doc(user_doc)
+                admins.append(User(**user_doc))
+            return admins
+        except Exception as e:
+            logger.error(f"Error getting admin users: {str(e)}")
+            return []
+    
     async def check_admin_exists(self) -> bool:
         """Check if any admin user exists"""
         collection = await self.get_collection()
@@ -214,5 +229,19 @@ class UserRepository:
         except Exception as e:
             logger.error(f"Error updating password for user {user_id}: {str(e)}")
             return False
+    
+    async def get_users_by_admin(self, admin_id: str) -> List[User]:
+        """Get all users added by a specific admin"""
+        try:
+            collection = await self.get_collection()
+            cursor = collection.find({"added_by": admin_id})
+            users = []
+            async for user_doc in cursor:
+                user_doc = self._normalize_user_doc(user_doc)
+                users.append(User(**user_doc))
+            return users
+        except Exception as e:
+            logger.error(f"Error getting users by admin: {str(e)}")
+            return []
 
 user_repository = UserRepository()

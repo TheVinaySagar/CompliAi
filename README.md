@@ -411,9 +411,10 @@ Example chat request:
 
 2. **Admin**
    - All user permissions
-   - User management (view, modify roles, delete)
-   - System administration
-   - Access to system statistics and health
+   - Team management (view, modify roles, delete) for users they have added
+   - Can only see and manage users they have invited/added
+   - System administration for their team scope
+   - Access to system statistics and health for their team
 
 ### Default Admin Account
 
@@ -421,15 +422,26 @@ Example chat request:
 - **Password**: `admin123`
 - **⚠️ Security**: Change password immediately after first login!
 
+### Team Management Scope
+
+**Important**: Each admin can only see and manage users they have personally added to the system. This provides team-specific isolation where:
+
+- Admin A can only see users they invited
+- Admin B can only see users they invited  
+- Users cannot see other teams or admins
+- Each admin has their own team scope and statistics
+
 ### Role Assignment
 
-Admins can promote users to admin role via:
+Admins can promote users to roles via:
 ```bash
-PUT /admin/users/{user_id}/role
+PUT /team/members/{user_id}/role
 {
-  "role": "admin"
+  "role": "user|auditor|viewer"
 }
 ```
+
+**Note**: Admins cannot create other admins through the team interface for security reasons.
 
 ## Features
 

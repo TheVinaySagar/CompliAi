@@ -176,8 +176,8 @@ export function TeamMemberActions({ member, onMemberUpdated }: TeamMemberActions
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Viewer">Viewer</SelectItem>
-                <SelectItem value="Editor">Editor</SelectItem>
-                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="Editor">User</SelectItem>
+                <SelectItem value="Auditor">Auditor</SelectItem>
               </SelectContent>
             </Select>
           </div>

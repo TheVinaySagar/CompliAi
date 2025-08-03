@@ -18,6 +18,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+async def get_added_by_name(added_by_id: Optional[str]) -> str:
+    """Helper function to get the name of the admin who added a user"""
+    if not added_by_id:
+        return "System"
+    
+    try:
+        admin = await user_repository.get_user_by_id(added_by_id)
+        return admin.full_name if admin else "Unknown Admin"
+    except Exception:
+        return "Unknown Admin"
+
 router = APIRouter(prefix="/team", tags=["Team Management"])
 
 @router.get("/members", response_model=List[TeamMember])
@@ -27,13 +38,13 @@ async def get_team_members(
     """
     ## Get Team Members
     
-    Retrieve all team members with their roles and status.
+    Retrieve team members added by the current admin.
     
     ### Required Role: 
     **Admin** - Only administrators can view team members
     
     ### Response:
-    Returns list of team members with:
+    Returns list of team members added by the current admin with:
     - **id**: User unique identifier
     - **name**: Full name
     - **email**: Email address
@@ -43,6 +54,8 @@ async def get_team_members(
     - **permissions**: List of permissions
     - **join_date**: Account creation date
     - **last_login**: Last login timestamp
+    - **added_by**: ID of admin who added this user
+    - **added_by_name**: Name of admin who added this user
     
     ### Errors:
     - **401**: Not authenticated
@@ -50,10 +63,22 @@ async def get_team_members(
     - **500**: Server error
     """
     try:
-        users = await user_repository.list_users()
+        # Get only users added by current admin
+        users = await user_repository.get_users_by_admin(current_user.id)
         team_members = []
         
         for user in users:
+            # Skip the admin themselves from the list
+            if user.id == current_user.id:
+                continue
+            
+            # Get the admin who added this user
+            added_by_name = "Unknown"
+            if user.added_by:
+                added_by_admin = await user_repository.get_user_by_id(user.added_by)
+                if added_by_admin:
+                    added_by_name = added_by_admin.full_name
+                
             member = TeamMember(
                 id=user.id,
                 name=user.full_name,
@@ -63,7 +88,9 @@ async def get_team_members(
                 department=user.department,
                 permissions=user.permissions,
                 join_date=user.created_at,
-                last_login=user.last_login
+                last_login=user.last_login,
+                added_by=user.added_by,
+                added_by_name=added_by_name
             )
             team_members.append(member)
         
@@ -80,13 +107,13 @@ async def get_team_stats(
     """
     ## Get Team Statistics
     
-    Retrieve team statistics and metrics.
+    Retrieve team statistics for users added by the current admin.
     
     ### Required Role: 
     **Admin** - Only administrators can view team statistics
     
     ### Response:
-    - **total_members**: Total number of team members
+    - **total_members**: Total number of team members added by this admin
     - **active_members**: Number of active members
     - **pending_members**: Number of pending invitations
     - **admin_count**: Number of administrators
@@ -98,7 +125,11 @@ async def get_team_stats(
     - **500**: Server error
     """
     try:
-        users = await user_repository.list_users()
+        # Get only users added by current admin
+        users = await user_repository.get_users_by_admin(current_user.id)
+        
+        # Filter out the admin themselves
+        users = [user for user in users if user.id != current_user.id]
         
         total_members = len(users)
         active_members = sum(1 for user in users if user.is_active)
@@ -133,7 +164,7 @@ async def invite_team_member(
     """
     ## Invite Team Member
     
-    Send an invitation to join the team.
+    Send an invitation to join the team. The new user will be associated with the current admin.
     
     ### Required Role: 
     **Admin** - Only administrators can invite team members
@@ -141,14 +172,14 @@ async def invite_team_member(
     ### Request Body:
     - **email**: Email address of the invitee
     - **full_name**: Full name of the invitee
-    - **role**: Role to assign (admin, user, auditor, viewer)
+    - **role**: Role to assign (user, auditor, viewer - not admin for security)
     - **department**: Optional department name
     - **permissions**: Optional list of specific permissions
     
     ### Response:
     - **message**: Success message
-    - **invitation_id**: Unique invitation identifier
-    - **expires_at**: Invitation expiration time
+    - **user_id**: Created user ID
+    - **email**: User email
     
     ### Errors:
     - **400**: User already exists or invalid data
@@ -162,17 +193,22 @@ async def invite_team_member(
         if existing_user:
             raise HTTPException(status_code=400, detail="User with this email already exists")
         
+        # Restrict role assignment - admins can only create non-admin users
+        if invite_request.role == UserRole.ADMIN:
+            raise HTTPException(status_code=400, detail="Cannot create admin users through team invitation")
+        
         # Generate secure random password
         temporary_password = generate_random_password(length=12)
         
-        # Create user directly (simplified invitation process)
+        # Create user with current admin as the one who added them
         user_data = UserCreate(
             email=invite_request.email,
             full_name=invite_request.full_name,
             password=temporary_password,  # Secure random password
             role=invite_request.role,
             department=invite_request.department,
-            permissions=invite_request.permissions or ["chat_access"]
+            permissions=invite_request.permissions or ["chat_access"],
+            added_by=current_user.id  # Track who added this user
         )
         
         new_user = await user_repository.create_user(user_data)
@@ -208,7 +244,7 @@ async def update_member_role(
     """
     ## Update Team Member Role
     
-    Update a team member's role and permissions.
+    Update a team member's role and permissions. Can only update users added by the current admin.
     
     ### Required Role: 
     **Admin** - Only administrators can update member roles
@@ -217,7 +253,7 @@ async def update_member_role(
     - **user_id**: ID of the user to update
     
     ### Request Body:
-    - **role**: New role to assign
+    - **role**: New role to assign (user, auditor, viewer - not admin)
     - **permissions**: Optional list of specific permissions
     
     ### Response:
@@ -226,7 +262,7 @@ async def update_member_role(
     ### Errors:
     - **400**: Invalid role or cannot modify own role
     - **401**: Not authenticated
-    - **403**: Insufficient permissions (not admin)
+    - **403**: Insufficient permissions or user not added by current admin
     - **404**: User not found
     - **500**: Server error
     """
@@ -238,16 +274,26 @@ async def update_member_role(
                 detail="Cannot modify your own role"
             )
         
-        # Get current user info for email notification
+        # Get current user info for verification
         current_member = await user_repository.get_user_by_id(user_id)
         if not current_member:
             raise HTTPException(status_code=404, detail="User not found")
         
+        # Check if this user was added by the current admin
+        if current_member.added_by != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only modify users that you have added"
+            )
+        
         old_role = current_member.role.value
         
-        # Validate role
+        # Validate role - prevent creating admins
         new_role = role_update.get("role")
-        if new_role not in [role.value for role in UserRole]:
+        if new_role == "admin":
+            raise HTTPException(status_code=400, detail="Cannot promote users to admin role")
+        
+        if new_role not in [role.value for role in UserRole if role != UserRole.ADMIN]:
             raise HTTPException(status_code=400, detail="Invalid role")
         
         # Skip update if role is the same
@@ -261,7 +307,9 @@ async def update_member_role(
                 department=current_member.department,
                 permissions=current_member.permissions,
                 join_date=current_member.created_at,
-                last_login=current_member.last_login
+                last_login=current_member.last_login,
+                added_by=current_member.added_by,
+                added_by_name=await get_added_by_name(current_member.added_by)
             )
         
         # Update user
@@ -294,7 +342,9 @@ async def update_member_role(
             department=updated_user.department,
             permissions=updated_user.permissions,
             join_date=updated_user.created_at,
-            last_login=updated_user.last_login
+            last_login=updated_user.last_login,
+            added_by=updated_user.added_by,
+            added_by_name=await get_added_by_name(updated_user.added_by)
         )
         
     except HTTPException:
@@ -313,7 +363,7 @@ async def update_member_status(
     """
     ## Update Team Member Status
     
-    Activate or deactivate a team member.
+    Activate or deactivate a team member. Can only update users added by the current admin.
     
     ### Required Role: 
     **Admin** - Only administrators can update member status
@@ -330,7 +380,7 @@ async def update_member_status(
     ### Errors:
     - **400**: Cannot deactivate own account
     - **401**: Not authenticated
-    - **403**: Insufficient permissions (not admin)
+    - **403**: Insufficient permissions or user not added by current admin
     - **404**: User not found
     - **500**: Server error
     """
@@ -340,6 +390,18 @@ async def update_member_status(
             raise HTTPException(
                 status_code=400,
                 detail="Cannot deactivate your own account"
+            )
+        
+        # Get user to verify they were added by current admin
+        user_to_update = await user_repository.get_user_by_id(user_id)
+        if not user_to_update:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check if this user was added by the current admin
+        if user_to_update.added_by != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only modify users that you have added"
             )
         
         is_active = status_update.get("is_active")
@@ -376,7 +438,9 @@ async def update_member_status(
             department=updated_user.department,
             permissions=updated_user.permissions,
             join_date=updated_user.created_at,
-            last_login=updated_user.last_login
+            last_login=updated_user.last_login,
+            added_by=updated_user.added_by,
+            added_by_name=await get_added_by_name(updated_user.added_by)
         )
         
     except HTTPException:
@@ -394,7 +458,7 @@ async def remove_team_member(
     """
     ## Remove Team Member
     
-    Remove a team member from the organization.
+    Remove a team member from the organization. Can only remove users added by the current admin.
     
     ### Required Role: 
     **Admin** - Only administrators can remove team members
@@ -408,7 +472,7 @@ async def remove_team_member(
     ### Errors:
     - **400**: Cannot remove own account
     - **401**: Not authenticated
-    - **403**: Insufficient permissions (not admin)
+    - **403**: Insufficient permissions or user not added by current admin
     - **404**: User not found
     - **500**: Server error
     """
@@ -420,10 +484,17 @@ async def remove_team_member(
                 detail="Cannot remove your own account"
             )
         
-        # Get user details before removal for email notification
+        # Get user details before removal for email notification and verification
         user_to_remove = await user_repository.get_user_by_id(user_id)
         if not user_to_remove:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check if this user was added by the current admin
+        if user_to_remove.added_by != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only remove users that you have added"
+            )
         
         # Remove user
         success = await user_repository.delete_user(user_id)
@@ -449,50 +520,51 @@ async def remove_team_member(
         logger.error(f"Error removing team member: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to remove team member")
 
-@router.get("/members/{user_id}", response_model=TeamMember)
-async def get_team_member(
-    user_id: str,
-    current_user: User = Depends(require_admin_role)
-):
+@router.get("/admins")
+async def list_admins(current_user: User = Depends(require_admin_role)):
     """
-    ## Get Team Member Details
+    ## List All Admins
     
-    Retrieve detailed information about a specific team member.
+    Get a list of all admin users in the system.
     
     ### Required Role: 
-    **Admin** - Only administrators can view team member details
+    **Admin** - Only administrators can access this endpoint
     
-    ### Path Parameters:
-    - **user_id**: ID of the user to retrieve
-    
-    ### Response:
-    Returns detailed team member information
+    ### Returns:
+    List of admin users with:
+    - **id**: Unique user identifier
+    - **email**: Admin email address
+    - **full_name**: Admin full name
+    - **department**: Admin department (if available)
+    - **created_at**: When admin account was created
+    - **last_login**: Last login timestamp (if available)
     
     ### Errors:
     - **401**: Not authenticated
     - **403**: Insufficient permissions (not admin)
-    - **404**: User not found
     - **500**: Server error
     """
     try:
-        user = await user_repository.get_user_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        admins = await user_repository.get_admin_users()
         
-        return TeamMember(
-            id=user.id,
-            name=user.full_name,
-            email=user.email,
-            role=user.role,
-            status="active" if user.is_active else "inactive",
-            department=user.department,
-            permissions=user.permissions,
-            join_date=user.created_at,
-            last_login=user.last_login
-        )
+        # Return simplified admin info (exclude sensitive data)
+        admin_list = []
+        for admin in admins:
+            admin_info = {
+                "id": admin.id,
+                "email": admin.email,
+                "full_name": admin.full_name,
+                "department": admin.department,
+                "created_at": admin.created_at,
+                "last_login": admin.last_login
+            }
+            admin_list.append(admin_info)
         
-    except HTTPException:
-        raise
+        return {
+            "admins": admin_list,
+            "total": len(admin_list)
+        }
+        
     except Exception as e:
-        logger.error(f"Error retrieving team member: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve team member")
+        logger.error(f"Error listing admins: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve admin list")
