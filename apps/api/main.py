@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from mangum import Mangum
 
 from database.connection import connect_to_mongo, close_mongo_connection
 from database.user_repository import user_repository
@@ -290,6 +291,9 @@ async def api_info():
             "HIPAA"
         ]
     }
+
+# Lambda handler for AWS deployment
+handler = Mangum(app, lifespan="off")
 
 if __name__ == "__main__":
     uvicorn.run(
