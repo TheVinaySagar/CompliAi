@@ -22,6 +22,7 @@ import {
   Zap,
   BarChart3,
 } from "lucide-react"
+import Logo from "@/components/ui/logo";
 
 const navigation = [
   { 
@@ -92,9 +93,10 @@ export default function Sidebar() {
       {/* Header */}
       <div className="flex h-16 shrink-0 items-center px-6 border-b border-slate-700/50">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-            <Shield className="h-5 w-5 text-white" />
-          </div>
+          <div className="flex items-center">
+           <Logo size={46} rounded="lg" />
+          </div> 
+          
           <div>
             <span className="text-xl font-bold text-white">CompliAI</span>
             <div className="flex items-center gap-1 mt-0.5">
