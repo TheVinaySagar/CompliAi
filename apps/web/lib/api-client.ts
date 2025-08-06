@@ -260,6 +260,27 @@ class ApiClient {
     return this.makeRequestWithoutTimeout('/auth/me')
   }
 
+  async getUserProfile(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/auth/profile')
+  }
+
+  async updateUserProfile(profileData: { full_name?: string; department?: string }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    })
+  }
+
+  async changePassword(passwordData: { 
+    current_password: string; 
+    new_password: string 
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData)
+    })
+  }
+
   async logout(): Promise<void> {
     this.removeTokenFromStorage()
   }
@@ -370,6 +391,36 @@ class ApiClient {
     })
   }
 
+  async getDocumentMapping(documentId: string): Promise<ApiResponse<any>> {
+    const url = `${this.baseUrl}/chat/documents/${documentId}/mapping`
+    const headers: Record<string, string> = {}
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+    try {
+      const response = await fetch(url, { method: 'GET', headers })
+      const data = await response.json()
+      if (!response.ok) {
+        return {
+          error: data?.detail || `HTTP ${response.status}`,
+          status: response.status,
+          success: false
+        }
+      }
+      return {
+        data,
+        status: response.status,
+        success: true
+      }
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Network error',
+        status: 0,
+        success: false
+      }
+    }
+  }
+
   // System endpoints
   async getHealth(): Promise<ApiResponse<any>> {
     return this.makeRequestWithoutTimeout('/health')
@@ -390,6 +441,107 @@ class ApiClient {
 
   async getFrameworkDetails(frameworkKey: string): Promise<ApiResponse<any>> {
     return this.makeRequestWithoutTimeout(`/admin/frameworks/${frameworkKey}`)
+  }
+
+  // Audit Planner endpoints
+  async generatePolicy(request: {
+    project_title: string
+    source_document_id: string
+    target_framework: string
+    description?: string
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/audit-planner/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        project_title: request.project_title,
+        source_document_id: request.source_document_id,
+        target_framework: request.target_framework,
+        description: request.description
+      })
+    })
+  }
+
+  async getAuditProjects(): Promise<ApiResponse<any[]>> {
+    return this.makeRequestWithoutTimeout('/audit-planner/projects')
+  }
+
+  async getAuditProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/audit-planner/projects/${projectId}`)
+  }
+
+  async exportPolicy(projectId: string, format: 'pdf' | 'docx' | 'txt', options?: {
+    include_citations?: boolean
+    include_audit_trail?: boolean
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/audit-planner/projects/${projectId}/export`, {
+      method: 'POST',
+      body: JSON.stringify({
+        project_id: projectId,
+        format,
+        include_citations: options?.include_citations ?? true,
+        include_audit_trail: options?.include_audit_trail ?? true
+      })
+    })
+  }
+
+  async deleteAuditProject(projectId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/audit-planner/projects/${projectId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getSupportedFrameworks(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/audit-planner/frameworks')
+  }
+
+  async getAuditPlannerHealth(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/audit-planner/health')
+  }
+
+  // Team Management endpoints
+  async getTeamMembers(): Promise<ApiResponse<any[]>> {
+    return this.makeRequestWithoutTimeout('/team/members')
+  }
+
+  async getTeamStats(): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout('/team/stats')
+  }
+
+  async inviteTeamMember(request: {
+    email: string
+    full_name: string
+    role: string
+    department?: string
+    permissions?: string[]
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest('/team/invite', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+  }
+
+  async getTeamMember(userId: string): Promise<ApiResponse<any>> {
+    return this.makeRequestWithoutTimeout(`/team/members/${userId}`)
+  }
+
+  async updateMemberRole(userId: string, role: string, permissions?: string[]): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/team/members/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role, permissions })
+    })
+  }
+
+  async updateMemberStatus(userId: string, isActive: boolean): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/team/members/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_active: isActive })
+    })
+  }
+
+  async removeTeamMember(userId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/team/members/${userId}`, {
+      method: 'DELETE'
+    })
   }
 }
 

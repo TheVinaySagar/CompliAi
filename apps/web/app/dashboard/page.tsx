@@ -3,6 +3,23 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { 
+  FileText, 
+  Target, 
+  BarChart3, 
+  CheckCircle, 
+  Upload, 
+  MessageCircle, 
+  Map,
+  TrendingUp,
+  Clock,
+  AlertCircle
+} from "lucide-react"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -62,163 +79,234 @@ export default function DashboardPage() {
     }
   }
 
+  // Loading component for skeleton state
+  const StatCardSkeleton = () => (
+    <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-4 rounded" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-8 w-16 mb-2" />
+        <Skeleton className="h-3 w-24" />
+      </CardContent>
+    </Card>
+  )
+
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
-        <p className="text-gray-600">Here's an overview of your compliance status.</p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <span className="text-2xl">📄</span>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Documents Uploaded</dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {isLoading ? "..." : documentsCount}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-sm text-gray-500">
-                {documentsCount === 0 ? "Upload documents to get started" : `${documentsCount} document${documentsCount === 1 ? '' : 's'} processed`}
-              </p>
-            </div>
+    <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 sm:p-6 space-y-6 sm:space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col space-y-3 sm:space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Welcome back, {user?.name?.split(' ')[0] || 'User'}!
+            </h1>
+            <p className="text-slate-600 text-sm sm:text-base">
+              Here's your compliance overview for today
+            </p>
           </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Controls Mapped</dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {isLoading ? "..." : controlsCount}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-sm text-gray-500">
-                {controlsCount === 0 ? "Controls will appear after document processing" : `${controlsCount} control${controlsCount === 1 ? '' : 's'} identified`}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <span className="text-2xl">📊</span>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Compliance Progress</dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {isLoading ? "..." : `${complianceProgress}%`}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-sm text-gray-500">
-                {complianceProgress === 0 ? "Upload documents to track progress" : `${complianceProgress}% of documents processed`}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <span className="text-2xl">✅</span>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Policies Extracted</dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {isLoading ? "..." : activePolicies}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-sm text-gray-500">
-                {activePolicies === 0 ? "Policies will be extracted from documents" : `${activePolicies} polic${activePolicies === 1 ? 'y' : 'ies'} extracted`}
-              </p>
-            </div>
-          </div>
+          <Badge variant="outline" className="self-start sm:self-center flex items-center gap-1 px-3 py-1 text-xs">
+            <Clock className="h-3 w-3" />
+            <span className="hidden sm:inline">Last updated:</span> Just now
+          </Badge>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <a href="/upload" className="block w-full bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-3 rounded-md transition-colors">
-                📤 Upload New Document
-              </a>
-              <a href="/chat" className="block w-full bg-green-50 hover:bg-green-100 text-green-700 px-4 py-3 rounded-md transition-colors">
-                💬 Ask Compliance Questions
-              </a>
-              <a href="/mapping" className="block w-full bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-3 rounded-md transition-colors">
-                🗺️ View Control Mappings
-              </a>
-            </div>
-          </div>
-        </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {isLoading ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                  Documents
+                </CardTitle>
+                <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">
+                  {documentsCount}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  {documentsCount === 0 ? "Upload your first document" : `${documentsCount} processed`}
+                </p>
+              </CardContent>
+            </Card>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+            <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                  Controls Mapped
+                </CardTitle>
+                <Target className="h-4 w-4 text-green-600 flex-shrink-0" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">
+                  {controlsCount}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  {controlsCount === 0 ? "Ready to map controls" : `${controlsCount} identified`}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                  Compliance Score
+                </CardTitle>
+                <BarChart3 className="h-4 w-4 text-purple-600 flex-shrink-0" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">
+                  {`${complianceProgress}%`}
+                </div>
+                <Progress value={complianceProgress} className="mt-2 h-2" />
+                <p className="text-xs text-slate-500 mt-1">
+                  {complianceProgress === 100 ? "Fully compliant" : "Improvement needed"}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                  Policies
+                </CardTitle>
+                <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">
+                  {activePolicies}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  {activePolicies === 0 ? "No policies yet" : `${activePolicies} extracted`}
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <Card className="lg:col-span-2 border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Quick Actions
+            </CardTitle>
+            <CardDescription>
+              Get started with common compliance tasks
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-auto flex-col p-6 hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 min-h-[120px]"
+              onClick={() => window.location.href = '/upload'}
+            >
+              <Upload className="h-8 w-8 text-blue-600 mb-2" />
+              <span className="font-medium text-center">Upload Document</span>
+              <span className="text-xs text-slate-500 mt-1 text-center break-words">Add new compliance docs</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="h-auto flex-col p-6 hover:bg-green-50 hover:border-green-200 transition-all duration-200 min-h-[120px]"
+              onClick={() => window.location.href = '/chat'}
+            >
+              <MessageCircle className="h-8 w-8 text-green-600 mb-2" />
+              <span className="font-medium text-center">Ask AI</span>
+              <span className="text-xs text-slate-500 mt-1 text-center break-words">Get compliance answers</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="h-auto flex-col p-6 hover:bg-purple-50 hover:border-purple-200 transition-all duration-200 min-h-[120px]"
+              onClick={() => window.location.href = '/mapping'}
+            >
+              <Map className="h-8 w-8 text-purple-600 mb-2" />
+              <span className="font-medium text-center">View Mappings</span>
+              <span className="text-xs text-slate-500 mt-1 text-center break-words">Explore control maps</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Activity Feed */}
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>
+              Latest updates and changes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             {documentsCount === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-gray-500 mb-3">No activity yet</p>
-                <p className="text-xs text-gray-400">Upload your first document to get started</p>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="text-sm text-slate-500 mb-2">No activity yet</p>
+                <p className="text-xs text-slate-400">Upload your first document to get started</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center text-sm">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                  <span className="text-gray-600">
-                    {documentsCount} document{documentsCount === 1 ? '' : 's'} uploaded
-                  </span>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-700 break-words">
+                      Documents Processed
+                    </p>
+                    <p className="text-xs text-slate-500 break-words">
+                      {documentsCount} document{documentsCount === 1 ? '' : 's'} successfully uploaded
+                    </p>
+                  </div>
                 </div>
+                
                 {controlsCount > 0 && (
-                  <div className="flex items-center text-sm">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                    <span className="text-gray-600">
-                      {controlsCount} control{controlsCount === 1 ? '' : 's'} mapped
-                    </span>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-700 break-words">
+                        Controls Identified
+                      </p>
+                      <p className="text-xs text-slate-500 break-words">
+                        {controlsCount} control{controlsCount === 1 ? '' : 's'} mapped successfully
+                      </p>
+                    </div>
                   </div>
                 )}
+                
                 {activePolicies > 0 && (
-                  <div className="flex items-center text-sm">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
-                    <span className="text-gray-600">
-                      {activePolicies} polic{activePolicies === 1 ? 'y' : 'ies'} extracted
-                    </span>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-700 break-words">
+                        Policies Extracted
+                      </p>
+                      <p className="text-xs text-slate-500 break-words">
+                        {activePolicies} polic{activePolicies === 1 ? 'y' : 'ies'} extracted from documents
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

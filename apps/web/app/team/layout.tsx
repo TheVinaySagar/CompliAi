@@ -7,7 +7,7 @@ export default function TeamLayout({
   children: React.ReactNode
 }) {
   return (
-    <AppLayout requireRole={["Admin", "Editor"]}>
+    <AppLayout requireRole={["admin", "editor"]}>
       {children}
     </AppLayout>
   )

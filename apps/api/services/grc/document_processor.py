@@ -8,6 +8,8 @@ import uuid
 import shutil
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
+import re
+import json
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -18,7 +20,20 @@ from langchain.prompts import PromptTemplate
 from services.grc.llm_manager import llm_manager
 from utils.exceptions import DocumentNotFoundError, LLMServiceError
 from database.document_repository import document_repository    
+from services.grc.knowledge_base import grc_knowledge
 
+MAX_DOCUMENT_CHARS = 10000
+
+
+def extract_json(text):
+        """Attempts to extract valid JSON from LLM output."""
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError as e:
+                print("JSON extraction failed:", e)
+        return {}
 class DocumentProcessor:
     """Handles document processing and RAG operations"""
     
@@ -123,6 +138,8 @@ class DocumentProcessor:
             # Store references
             self.vector_stores[document_id] = vector_store
             
+            # print("hi I am here")
+            
             # Create QA chain
             qa_chain = self._create_qa_chain(vector_store)
             self.qa_chains[document_id] = qa_chain
@@ -149,18 +166,22 @@ class DocumentProcessor:
             except Exception as db_error:
                 print(f"Warning: Failed to save document metadata to database: {db_error}")
             
-            # Identify controls in document
-            controls = await self._identify_controls_in_document(document_id, qa_chain)
-            
+            controls = await self._policies(document_id)
+            # print(controls)
+            print(controls["analysis_summary"]["identified_controls_count"])
             # Update control count in metadata
-            self.document_metadata[document_id]["controls_identified"] = len(controls)
+            self.document_metadata[document_id]["controls_identified"] = controls["analysis_summary"]["identified_controls_count"]
+
+            # --- NEW: Multi-framework mapping ---
+            # mapping_results = self._map_controls_to_frameworks(controls)
+            self.document_metadata[document_id]["framework_mapping"] = controls
             
-            # Update database with control count
+            # Update database with control count and mapping
             try:
                 await document_repository.update_document_metadata(
                     document_id, 
                     user_id, 
-                    {"controls_identified": len(controls)}
+                    {"controls_identified": controls["analysis_summary"]["identified_controls_count"], "framework_mapping": controls}
                 )
             except Exception as db_error:
                 print(f"Warning: Failed to update control count in database: {db_error}")
@@ -169,7 +190,8 @@ class DocumentProcessor:
                 "document_id": document_id,
                 "status": "success",
                 "chunks_created": len(chunks),
-                "controls_identified": len(controls),
+                # "controls_identified": len(controls),
+                # "framework_mapping_summary": {fw: {"covered": len(res["covered"]), "missing": len(res["missing"])} for fw, res in mapping_results.items()},
                 "message": f"Document '{display_name}' processed successfully"
             }
             
@@ -258,7 +280,95 @@ class DocumentProcessor:
             template=template,
             input_variables=['context', 'question']
         )
-    
+
+      # prevent LLM cutoff
+
+    async def _policies(self, document_id):
+        try:
+            # 1. Retrieve all chunks
+            vector_store = self.vector_stores.get(document_id)
+            all_chunks = vector_store.get()['documents']
+            full_text = "\n".join(all_chunks)
+
+            # Optional: Trim if too large for model context
+            if len(full_text) > MAX_DOCUMENT_CHARS:
+                print(f"Document too long ({len(full_text)} chars), trimming.")
+                full_text = full_text[:MAX_DOCUMENT_CHARS]
+
+            # 2. Construct prompt
+            prompt = f"""
+            You are CompliAI, a world-class AI assistant specializing in Governance, Risk, and Compliance (GRC). Your task is to perform a detailed, automated control mapping and gap analysis based on the provided document text.
+
+            Analyze the document to identify all security controls, policies, and procedures. For each identified control, generate:
+            - Control Name/Title
+            - Description
+            - Relevant Text Excerpt
+            - Control Type (preventive, detective, corrective)
+            - Applicable Compliance Framework (if identifiable)
+
+            Then, perform a **gap analysis** against major frameworks like ISO 27001, SOC 2, and NIST. Identify any missing controls.
+
+            Only output a valid JSON object. Do not include any commentary, markdown, or explanations.
+
+            Format:
+            {{
+            "analysis_summary": {{
+                "document_character_count": <int>,
+                "identified_controls_count": <int>,
+                "frameworks_analyzed": ["ISO 27001", "SOC 2", "NIST"]
+            }},
+            "mapped_controls": [
+                {{
+                "extracted_statement": "<quote>",
+                "ai_control_summary": "<summary>",
+                "mappings": [
+                    {{
+                    "framework": "<framework>",
+                    "control_id": "<e.g., A.5.17>",
+                    "control_title": "<title>",
+                    "mapping_confidence": "<High/Medium/Low>",
+                    "rationale": "<reason>"
+                    }}
+                ]
+                }}
+            ],
+            "gap_analysis": {{
+                "ISO 27001": [
+                {{
+                    "control_id": "<missing control>",
+                    "control_title": "<title>",
+                    "description": "<description>"
+                }}
+                ]
+            }}
+            }}
+
+            DOCUMENT_TEXT:
+            \"\"\"
+            {full_text}
+            \"\"\"
+            """
+
+        # 3. Call LLM
+            llm = llm_manager.get_rag_llm()
+            print("Calling LLM...")
+            response = llm.invoke(prompt)
+            print("LLM response received.")
+
+            # 4. Clean & parse output
+            raw_text = getattr(response, "content", str(response))
+            result = extract_json(raw_text)
+
+            if not result:
+                print("Failed to parse LLM output as valid JSON.")
+                print("Raw output was:\n", raw_text)
+
+            return result
+
+        except Exception as e:
+            print(f"Error invoking LLM: {e}")
+            return {}
+
     async def query_document(self, document_id: str, query: str) -> Dict:
         """Query a specific document using RAG"""
         if document_id not in self.qa_chains:
@@ -279,59 +389,6 @@ class DocumentProcessor:
         except Exception as e:
             raise LLMServiceError(f"Error querying document: {str(e)}")
     
-    async def _identify_controls_in_document(self, document_id: str, qa_chain) -> List[Dict]:
-        """Identify controls in uploaded document"""
-        controls_query = """
-        Analyze this document and identify all internal controls, policies, procedures, and compliance requirements.
-        For each control identified, provide:
-        1. Control name/title
-        2. Brief description
-        3. Relevant text excerpt from the document
-        4. Control type (preventive, detective, or corrective)
-        5. Applicable compliance framework if identifiable (ISO 27001, SOC 2, NIST, PCI DSS, etc.)
-        
-        Format your response as a structured list with clear sections for each control.
-        """
-        
-        try:
-            response = qa_chain.invoke({"query": controls_query})
-            return self._parse_controls_response(response.get('result', ''))
-        
-        except Exception as e:
-            print(f"Error identifying controls: {e}")
-            return []
-    
-    def _parse_controls_response(self, response: str) -> List[Dict]:
-        """Parse controls from LLM response"""
-        controls = []
-        
-        # Simple parsing - can be enhanced with more sophisticated NLP
-        lines = response.split('\n')
-        current_control = {}
-        
-        for line in lines:
-            line = line.strip()
-            
-            if line.startswith(('1.', '2.', '3.', '4.', '5.')) or line.startswith('•'):
-                if current_control:
-                    controls.append(current_control)
-                    current_control = {}
-                
-                current_control['description'] = line
-                current_control['id'] = str(len(controls) + 1)
-                current_control['type'] = 'administrative'  # Default
-            
-            elif line and current_control:
-                if 'context' not in current_control:
-                    current_control['context'] = line
-                else:
-                    current_control['context'] += ' ' + line
-        
-        if current_control:
-            controls.append(current_control)
-        
-        return controls
-    
     async def get_document_info(self, document_id: str, user_id: str = None) -> Dict:
         """Get document information"""
         # First try to get from database
@@ -348,9 +405,9 @@ class DocumentProcessor:
                     "chunks_count": db_document.get("chunks_count", 0),
                     "controls_identified": db_document.get("controls_identified", 0),
                     "status": db_document.get("status", "unknown"),
-                    "file_type": db_document.get("file_type")
+                    "file_type": db_document.get("file_type"),
+                    "framework_mapping": db_document.get("framework_mapping")
                 }
-                
                 # Also store in memory for faster future access
                 self.document_metadata[document_id] = doc_info
                 return doc_info
@@ -367,6 +424,9 @@ class DocumentProcessor:
         if user_id and metadata.get('user_id') != user_id:
             raise DocumentNotFoundError(f"Document {document_id} not found")
         
+        # Ensure framework_mapping is present in returned metadata
+        if "framework_mapping" not in metadata:
+            metadata["framework_mapping"] = None
         return metadata
     
     async def list_documents(self, user_id: str = None) -> List[Dict]:
@@ -523,6 +583,5 @@ class DocumentProcessor:
             
         except Exception as e:
             print(f"Warning: Failed to load documents from database: {e}")
-
 # Global instance
 document_processor = DocumentProcessor()

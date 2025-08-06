@@ -50,6 +50,11 @@ async def create_indexes():
         await database_manager.database.documents.create_index("user_id")
         await database_manager.database.documents.create_index("document_name")
         
+        # Audit projects collection indexes
+        await database_manager.database.audit_projects.create_index("user_id")
+        await database_manager.database.audit_projects.create_index("id", unique=True)
+        await database_manager.database.audit_projects.create_index("created_at")
+        
         logger.info("Database indexes created successfully")
         
     except Exception as e:

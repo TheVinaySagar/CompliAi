@@ -1,21 +1,165 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { User, Shield, Moon, Sun } from "lucide-react"
+import { User, Shield, Moon, Sun, Key, Edit2, Save, X, Eye, EyeOff } from "lucide-react"
+import { apiClient } from "@/lib/api-client"
+import { toast } from "sonner"
+
+interface UserProfile {
+  id: string
+  email: string
+  full_name: string
+  role: string
+  is_active: boolean
+  department?: string
+  permissions: string[]
+  created_at: string
+  updated_at: string
+  last_login?: string
+}
 
 export default function SettingsPage() {
   const { user: authUser } = useAuth()
-  const [user, setUser] = useState(authUser)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [darkMode, setDarkMode] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  })
 
-  const handleRoleChange = (newRole: "Viewer" | "Admin") => {
-    if (user) {
-      setUser({ ...user, role: newRole })
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    full_name: "",
+    department: ""
+  })
+
+  // Password form state
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: ""
+  })
+
+  useEffect(() => {
+    loadUserProfile()
+  }, [])
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true)
+      const response = await apiClient.getUserProfile()
+      if (response.success && response.data) {
+        setProfile(response.data)
+        setProfileForm({
+          full_name: response.data.full_name || "",
+          department: response.data.department || ""
+        })
+      } else {
+        toast.error("Failed to load profile")
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error)
+      toast.error("Error loading profile")
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (!user) return null
+  const handleProfileUpdate = async () => {
+    try {
+      const response = await apiClient.updateUserProfile(profileForm)
+      if (response.success) {
+        setProfile(prev => prev ? {
+          ...prev,
+          full_name: profileForm.full_name,
+          department: profileForm.department
+        } : null)
+        setIsEditingProfile(false)
+        toast.success("Profile updated successfully")
+      } else {
+        toast.error(response.error || "Failed to update profile")
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      toast.error("Error updating profile")
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      toast.error("New passwords don't match")
+      return
+    }
+
+    if (passwordForm.new_password.length < 8) {
+      toast.error("Password must be at least 8 characters long")
+      return
+    }
+
+    try {
+      const response = await apiClient.changePassword({
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password
+      })
+
+      if (response.success) {
+        setPasswordForm({
+          current_password: "",
+          new_password: "",
+          confirm_password: ""
+        })
+        setIsChangingPassword(false)
+        toast.success("Password changed successfully")
+      } else {
+        toast.error(response.error || "Failed to change password")
+      }
+    } catch (error) {
+      console.error("Error changing password:", error)
+      toast.error("Error changing password")
+    }
+  }
+
+  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }))
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <p className="text-gray-500">Failed to load profile information</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6">
@@ -25,74 +169,289 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Profile Information */}
+        {/* User Profile Section */}
         <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <User className="h-5 w-5 mr-2" />
               Profile Information
             </h2>
+            <button
+              onClick={() => setIsEditingProfile(!isEditingProfile)}
+              className="flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+            >
+              {isEditingProfile ? (
+                <>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Edit
+                </>
+              )}
+            </button>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                <input
-                  type="text"
-                  value={user.name}
-                  onChange={(e) => setUser({ ...user, name: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+          <div className="p-6 space-y-4">
+            {isEditingProfile ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.full_name}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Department
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.department}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, department: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter department"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    onClick={() => setIsEditingProfile(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleProfileUpdate}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 flex items-center"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    Save Changes
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Email</label>
+                    <p className="text-gray-900">{profile.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Full Name</label>
+                    <p className="text-gray-900">{profile.full_name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Department</label>
+                    <p className="text-gray-900">{profile.department || "Not specified"}</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Role</label>
+                    <div className="flex items-center">
+                      <Shield className="h-4 w-4 mr-2 text-blue-600" />
+                      <span className="capitalize px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {profile.role}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Status</label>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${
+                      profile.is_active 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {profile.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Member Since</label>
+                    <p className="text-gray-900">{formatDate(profile.created_at)}</p>
+                  </div>
+                  {profile.last_login && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Last Login</label>
+                      <p className="text-gray-900">{formatDate(profile.last_login)}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email Address</label>
-                <input
-                  type="email"
-                  value={user.email}
-                  onChange={(e) => setUser({ ...user, email: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Role Settings */}
+        {/* Change Password Section */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <Key className="h-5 w-5 mr-2" />
+              Password Security
+            </h2>
+            <button
+              onClick={() => setIsChangingPassword(!isChangingPassword)}
+              className="flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+            >
+              {isChangingPassword ? (
+                <>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Key className="h-4 w-4 mr-1" />
+                  Change Password
+                </>
+              )}
+            </button>
+          </div>
+          <div className="p-6">
+            {isChangingPassword ? (
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.current ? "text" : "password"}
+                      value={passwordForm.current_password}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, current_password: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                      placeholder="Enter current password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('current')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      {showPasswords.current ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.new ? "text" : "password"}
+                      value={passwordForm.new_password}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, new_password: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                      placeholder="Enter new password (min 8 characters)"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('new')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      {showPasswords.new ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.confirm ? "text" : "password"}
+                      value={passwordForm.confirm_password}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, confirm_password: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('confirm')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      {showPasswords.confirm ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setIsChangingPassword(false)
+                      setPasswordForm({
+                        current_password: "",
+                        new_password: "",
+                        confirm_password: ""
+                      })
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePasswordChange}
+                    disabled={!passwordForm.current_password || !passwordForm.new_password || !passwordForm.confirm_password}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    <Key className="h-4 w-4 mr-1" />
+                    Change Password
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-600 mb-4">Keep your account secure by using a strong password.</p>
+                <p className="text-sm text-gray-500">
+                  Last password update: {formatDate(profile.updated_at)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Permissions Section */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <Shield className="h-5 w-5 mr-2" />
-              Role & Permissions
+              Permissions
             </h2>
           </div>
           <div className="p-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Current Role</label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="Viewer"
-                    checked={user.role === "Viewer"}
-                    onChange={() => handleRoleChange("Viewer")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Viewer - Read-only access to policies and reports</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="Admin"
-                    checked={user.role === "Admin"}
-                    onChange={() => handleRoleChange("Admin")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Admin - Full access to all features and settings</span>
-                </label>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {profile.permissions.map((permission) => (
+                <div
+                  key={permission}
+                  className="flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm"
+                >
+                  <Shield className="h-3 w-3 mr-2" />
+                  {permission.replace('_', ' ').toUpperCase()}
+                </div>
+              ))}
             </div>
+            <p className="text-sm text-gray-500 mt-3">
+              Permissions are managed by administrators. Contact your admin to request changes.
+            </p>
           </div>
         </div>
 
@@ -128,13 +487,6 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            Save Changes
-          </button>
         </div>
       </div>
     </div>
