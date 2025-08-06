@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Logo from "@/components/ui/logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -54,7 +55,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <Shield className="h-12 w-12 text-blue-600" />
+            <Logo size={70} rounded="full" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">CompliAI</h2>
           <p className="mt-2 text-sm text-gray-600">AI-Powered Compliance, From Policy to Audit</p>
