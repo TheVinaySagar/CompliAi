@@ -11,11 +11,11 @@ from typing import List
 from models.user_models import (
     User, UserCreate, UserLogin, UserUpdate, Token, UserRole, ChangePasswordRequest
 )
-from database.user_repository import user_repository
+from repositories.user_repository import user_repository
 from utils.auth_utils import create_token_for_user
 from utils.exceptions import AuthenticationError, UserExistsError, UserNotFoundError
-from auth import get_current_user, require_admin_role
-from config import settings
+from middleware.auth import get_current_user, require_admin_role
+from utils.config import settings
 from services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -67,7 +67,7 @@ async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks
         # Create new user
         new_user = await user_repository.create_user(user_data)
         
-        # Send welcome email (background task)
+        # Send welcome email
         background_tasks.add_task(
             email_service.send_registration_welcome_email,
             new_user.email,

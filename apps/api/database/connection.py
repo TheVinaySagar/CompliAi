@@ -1,5 +1,5 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-from config import settings
+from motor.motor_asyncio import AsyncIOMotorClient  # type: ignore
+from utils.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -8,7 +8,6 @@ class DatabaseManager:
     client: AsyncIOMotorClient = None
     database = None
 
-# Create database instance
 database_manager = DatabaseManager()
 
 async def connect_to_mongo():
@@ -16,13 +15,7 @@ async def connect_to_mongo():
     try:
         database_manager.client = AsyncIOMotorClient(settings.mongodb_url)
         database_manager.database = database_manager.client[settings.database_name]
-
-        
-        # Test connection
-        await database_manager.client.admin.command('ping')
-        logger.info(f"Connected to MongoDB at {settings.mongodb_url}")
-        
-        # Create indexes
+        logger.info("Connected to MongoDB.")
         await create_indexes()
         
     except Exception as e:

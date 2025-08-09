@@ -3,22 +3,22 @@ CompliAI API
 Main FastAPI application with authentication, authorization, and modular architecture.
 """
 
-import uvicorn
+import uvicorn #type: ignore
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException #type: ignore
+from fastapi.middleware.cors import CORSMiddleware #type: ignore
 
 from database.connection import connect_to_mongo, close_mongo_connection
-from database.user_repository import user_repository
+from repositories.user_repository import user_repository
 from routes.auth_routes import router as auth_router
 from routes.chat_routes import router as chat_router
 from routes.admin_routes import router as admin_router
 from routes.audit_planner_routes import router as audit_planner_router
 from routes.team_routes import router as team_router
 from routes.policy_generator_routes import router as policy_generator_router
-from config import settings
+from utils.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -64,45 +64,45 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="CompliAI API",
     description="""
-## CompliAI - Advanced GRC AI Assistant
+    ## CompliAI - Advanced GRC AI Assistant
 
-### Intelligent Governance, Risk, and Compliance Management
+    ### Intelligent Governance, Risk, and Compliance Management
 
-CompliAI is your comprehensive AI-powered assistant for navigating complex compliance frameworks. 
-Built with cutting-edge LLM technology and deep GRC expertise.
+    CompliAI is your comprehensive AI-powered assistant for navigating complex compliance frameworks. 
+    Built with cutting-edge LLM technology and deep GRC expertise.
 
-#### Key Features:
-- **Multi-Framework Support**: ISO 27001, SOC 2, NIST CSF, PCI DSS, GDPR, HIPAA
-- **Intelligent Chat**: Context-aware conversations with compliance expertise
-- **Document Processing**: Upload and analyze policy documents with RAG
-- **User Management**: Role-based access control and authentication
-- **Real-time Responses**: Fast, accurate compliance guidance
-- **Conversation History**: Track and manage compliance discussions
+    #### Key Features:
+    - **Multi-Framework Support**: ISO 27001, SOC 2, NIST CSF, PCI DSS, GDPR, HIPAA
+    - **Intelligent Chat**: Context-aware conversations with compliance expertise
+    - **Document Processing**: Upload and analyze policy documents with RAG
+    - **User Management**: Role-based access control and authentication
+    - **Real-time Responses**: Fast, accurate compliance guidance
+    - **Conversation History**: Track and manage compliance discussions
 
-#### Authentication:
-All endpoints require JWT Bearer token authentication (except login).
+    #### Authentication:
+    All endpoints require JWT Bearer token authentication (except login).
 
-**Default Admin Credentials:**
-- Email: `admin@compliai.com`
-- Password: `admin123` **Change immediately!**
+    **Default Admin Credentials:**
+    - Email: `admin@compliai.com`
+    - Password: `admin123` **Change immediately!**
 
-#### API Health:
-- Database: MongoDB Atlas
-- LLM: Google Generative AI
-- Vector Store: ChromaDB
-- Framework Coverage: 6+ major standards
+    #### API Health:
+    - Database: MongoDB Atlas
+    - LLM: Google Generative AI
+    - Vector Store: ChromaDB
+    - Framework Coverage: 6+ major standards
 
-#### Quick Start:
-1. Login via `/auth/login` to get JWT token
-2. Use token in `Authorization: Bearer <token>` header
-3. Start chatting via `/chat/` endpoints
-4. Upload documents via `/chat/documents/upload`
+    #### Quick Start:
+    1. Login via `/auth/login` to get JWT token
+    2. Use token in `Authorization: Bearer <token>` header
+    3. Start chatting via `/chat/` endpoints
+    4. Upload documents via `/chat/documents/upload`
 
-#### Documentation:
-- **Interactive Docs**: Available at `/docs`
-- **ReDoc**: Available at `/redoc`
-- **OpenAPI Schema**: Available at `/openapi.json`
-    """,
+    #### Documentation:
+    - **Interactive Docs**: Available at `/docs`
+    - **ReDoc**: Available at `/redoc`
+    - **OpenAPI Schema**: Available at `/openapi.json`
+        """,
     version="2.0.0",
     contact={
         "name": "CompliAI Support",

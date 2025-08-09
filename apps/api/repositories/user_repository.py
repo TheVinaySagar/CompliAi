@@ -1,8 +1,8 @@
 from typing import Optional, List
 from datetime import datetime
-from pymongo import ReturnDocument
-from bson import ObjectId
-from passlib.context import CryptContext
+from pymongo import ReturnDocument #type: ignore
+from bson import ObjectId #type: ignore
+from passlib.context import CryptContext #type: ignore
 import logging
 
 from database.connection import get_database
@@ -62,8 +62,8 @@ class UserRepository:
             "role": user_data.role,
             "is_active": user_data.is_active,
             "department": user_data.department,
-            "permissions": user_data.permissions or ["chat_access"],  # Ensure default permissions
-            "added_by": user_data.added_by,  # Include the admin who added this user
+            "permissions": user_data.permissions or ["chat_access"],
+            "added_by": user_data.added_by,
             "password_hash": hashed_password,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),

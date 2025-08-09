@@ -15,7 +15,7 @@ from models.policy_models import (
 )
 from models.user_models import User
 from services.policy_generator_service import policy_generator_service
-from auth import get_current_user
+from middleware.auth import get_current_user
 import logging
 
 logger = logging.getLogger(__name__)

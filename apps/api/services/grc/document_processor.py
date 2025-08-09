@@ -19,7 +19,7 @@ from langchain.prompts import PromptTemplate
 
 from services.grc.llm_manager import llm_manager
 from utils.exceptions import DocumentNotFoundError, LLMServiceError
-from database.document_repository import document_repository    
+from repositories.document_repository import document_repository    
 from services.grc.knowledge_base import grc_knowledge
 
 MAX_DOCUMENT_CHARS = 10000

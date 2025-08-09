@@ -10,7 +10,7 @@ from datetime import datetime
 
 from models.chatModels import ChatRequest, ChatResponse
 from models.conversation_models import ConversationCreate, MessageCreate
-from database.conversation_repository import conversation_repository
+from repositories.conversation_repository import conversation_repository
 from services.grc.knowledge_base import grc_knowledge
 from services.grc.llm_manager import llm_manager
 from services.grc.document_processor import document_processor

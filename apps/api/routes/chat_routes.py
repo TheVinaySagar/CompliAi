@@ -10,7 +10,7 @@ from models.chatModels import ChatRequest, ChatResponse
 from models.user_models import User
 from services.chat_service_v2 import chat_service
 from services.grc.document_processor import document_processor
-from auth import require_chat_permission
+from middleware.auth import require_chat_permission
 from utils.exceptions import LLMServiceError, DocumentNotFoundError
 
 router = APIRouter(prefix="/chat", tags=["Chat"])

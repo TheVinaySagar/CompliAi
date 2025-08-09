@@ -11,7 +11,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from typing import Optional
 import asyncio
-from config import settings
+from utils.config import settings
 
 logger = logging.getLogger(__name__)
 

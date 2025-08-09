@@ -9,9 +9,9 @@ from datetime import datetime
 
 from models.user_models import User, UserCreate, UserUpdate, UserRole
 from models.team_models import TeamMember, TeamInvitation, TeamStats, InviteUserRequest
-from database.user_repository import user_repository
-from database.team_repository import team_repository
-from auth import require_admin_role, get_current_user
+from repositories.user_repository import user_repository
+from repositories.team_repository import team_repository
+from middleware.auth import require_admin_role, get_current_user
 from services.email_service import email_service
 from utils.auth_utils import generate_random_password
 import logging

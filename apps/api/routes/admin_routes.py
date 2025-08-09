@@ -9,8 +9,8 @@ from typing import List, Dict, Any
 from models.user_models import User
 from services.grc.llm_manager import llm_manager
 from services.grc.knowledge_base import grc_knowledge
-from auth import require_admin_role
-from config import settings
+from middleware.auth import require_admin_role
+from utils.config import settings
 
 router = APIRouter(prefix="/admin", tags=["Administration"])
 

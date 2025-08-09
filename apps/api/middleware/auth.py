@@ -2,7 +2,7 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 
-from database.user_repository import user_repository
+from repositories.user_repository import user_repository
 from utils.auth_utils import verify_access_token
 from utils.exceptions import AuthenticationError, AuthorizationError
 from models.user_models import User

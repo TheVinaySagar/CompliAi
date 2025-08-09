@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain.schema import HumanMessage, SystemMessage
 
-from config import settings
+from utils.config import settings
 from utils.exceptions import LLMServiceError
 
 class LLMManager:

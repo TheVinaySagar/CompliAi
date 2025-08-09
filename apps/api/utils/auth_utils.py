@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from config import settings
+from utils.config import settings
 from models.user_models import TokenPayload
 import secrets
 import string

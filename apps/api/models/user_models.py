@@ -34,7 +34,7 @@ class UserBase(BaseModel):
     is_active: bool = True
     department: Optional[str] = None
     permissions: List[str] = []
-    added_by: Optional[str] = None  # ID of admin who added this user
+    added_by: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
