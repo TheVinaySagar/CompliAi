@@ -176,22 +176,41 @@ const ChatPage = memo(() => {
     <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100/50">
       {/* Enhanced Header */}
       <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200/60 px-4 sm:px-6 py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center min-w-0 gap-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shrink-0">
               <Bot className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">AI Compliance Assistant</h1>
-              <p className="text-sm text-slate-600">Ask questions about compliance frameworks, policies, and requirements</p>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-slate-900 truncate">AI Compliance Assistant</h1>
+              <p className="text-xs sm:text-sm text-slate-600">Ask questions about compliance frameworks, policies, and requirements</p>
             </div>
           </div>
+          {/* Mobile Action Buttons (shown only on mobile) */}
+      <div className="flex gap-2 sm:hidden">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearMessages}
+          className="p-2 hover:bg-slate-100"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.open('/upload', '_blank')}
+          className="p-2 hover:bg-blue-50"
+        >
+          <Upload className="h-4 w-4" />
+        </Button>
+      </div>
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch">
             {/* Document Selection */}
-            <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 min-w-0">
               <Select value={selectedDocument} onValueChange={setSelectedDocument} disabled={loadingDocuments}>
-                <SelectTrigger className="w-48 bg-white border-slate-200 hover:border-slate-300 transition-colors">
+                <SelectTrigger className="w-full sm:w-48 bg-white border-slate-200 hover:border-slate-300 transition-colors">
                   <SelectValue placeholder={loadingDocuments ? "Loading documents..." : "Select document"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -229,12 +248,12 @@ const ChatPage = memo(() => {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearMessages}
-                className="hidden sm:flex hover:bg-slate-50 border-slate-200"
+                className=" hover:bg-slate-50 border-slate-200"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Clear
