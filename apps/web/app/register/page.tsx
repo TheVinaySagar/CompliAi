@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Logo from "@/components/ui/logo"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -118,64 +119,66 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <Shield className="h-12 w-12 text-blue-600" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="flex justify-center mb-4">
+            <Logo className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 rounded-full" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">CompliAI</h2>
-          <p className="mt-2 text-sm text-gray-600">AI-Powered Compliance, From Policy to Audit</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Compli<span className="text-gray-900">AI</span></h2>
+          <p className="mt-2 sm:mt-3 text-sm sm:text-base text-gray-600">AI-Powered Compliance, From Policy to Audit</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Create your account</CardTitle>
-            <CardDescription>Get started with CompliAI compliance management</CardDescription>
+        {/* Registration Card */}
+        <Card className="shadow-lg">
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">Create your account</CardTitle>
+            <CardDescription className="text-sm sm:text-base">Get started with CompliAI compliance management</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {displayError && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="text-sm sm:text-base">
                   <AlertDescription>{displayError}</AlertDescription>
                 </Alert>
               )}
-
-              <div>
-                <Label htmlFor="name">Full name</Label>
+              {/* Name Field */}
+              <div className="space-y-1">
+                <Label htmlFor="name" className="text-sm sm:text-base">Full name</Label>
                 <Input
                   id="name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   required
-                  className="mt-1"
+                  className="h-10 sm:h-11 text-sm sm:text-base"
                   placeholder="Enter your full name"
                 />
               </div>
-
-              <div>
-                <Label htmlFor="email">Email address</Label>
+              {/* Email Field */}
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-sm sm:text-base">Email address</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   required
-                  className="mt-1"
+                  className="h-10 sm:h-11 text-sm sm:text-base"
                   placeholder="Enter your email"
                 />
               </div>
-
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <div className="relative mt-1">
+              {/* Password Field */}
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
+                <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     required
+                    className="h-10 sm:h-11 text-sm sm:text-base pr-10"
                     placeholder="Create a password"
                   />
                   <button
@@ -184,22 +187,22 @@ export default function RegisterPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     )}
                   </button>
                 </div>
                 {/* Password Strength Indicator */}
                 {formData.password && passwordStrength && (
                   <div className="mt-2">
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="flex justify-between text-xs sm:text-sm mb-1">
                       <span className="text-gray-600">Password strength:</span>
                       <span className={passwordStrength.color}>{passwordStrength.level}</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-300 ${
+                        className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                           passwordStrength.level === 'Weak' ? 'bg-red-500' :
                           passwordStrength.level === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
                         }`}
@@ -213,15 +216,16 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="confirmPassword">Confirm password</Label>
-                <div className="relative mt-1">
+              <div className="space-y-1">
+                <Label htmlFor="confirmPassword" className="text-sm sm:text-base">Confirm password</Label>
+                <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     required
+                    className="h-10 sm:h-11 text-sm sm:text-base pr-10"
                     placeholder="Confirm your password"
                   />
                   <button
@@ -230,36 +234,37 @@ export default function RegisterPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     )}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-2 sm:space-x-3">
                 <Checkbox
                   id="terms"
                   checked={formData.agreeToTerms}
                   onCheckedChange={(checked) => handleInputChange("agreeToTerms", checked as boolean)}
+                  className="mt-0.5"
                 />
-                <Label htmlFor="terms" className="text-sm">
+                <Label htmlFor="terms" className="text-xs sm:text-sm leading-snug">
                   I agree to the{" "}
-                  <Link href="#" className="text-blue-600 hover:text-blue-500">
+                  <Link href="#" className="text-blue-600 hover:text-blue-500 font-medium">
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="#" className="text-blue-600 hover:text-blue-500">
+                  <Link href="#" className="text-blue-600 hover:text-blue-500 font-medium">
                     Privacy Policy
                   </Link>
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                     Creating account...
                   </>
                 ) : (
@@ -268,8 +273,8 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="mt-4 sm:mt-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Already have an account?{" "}
                 <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
                   Sign in

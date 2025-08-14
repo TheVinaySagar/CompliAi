@@ -513,80 +513,85 @@ Non-compliance with this policy may result in disciplinary action up to and incl
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Planner & Policy Generator</h1>
-        <p className="text-gray-600 mb-6">
+    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="mb-8 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Audit Planner & Policy Generator</h1>
+        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
           Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
         </p>
 
         {/* Progress Indicator */}
-        <div className="flex items-center space-x-4 mb-8">
-          <div className={`flex items-center space-x-2 ${
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 mb-6 md:mb-8">
+          <div className={`flex items-center gap-2 ${
             activeStep === "define" ? "text-blue-600" : 
             activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={`relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
               activeStep === "define" ? "bg-blue-100 text-blue-600" :
               activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
             }`}>
-              {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
+              {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> : "1"}
             </div>
-            <span className="font-medium">Define Project</span>
+            <span className="text-sm sm:text-base font-medium whitespace-nowrap">Define Project</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200">
+         <div className="hidden sm:block flex-1 mx-2 relative">
+            <div className="absolute inset-0 flex items-center">
             <div className={`h-full transition-all duration-300 ${
               activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
             }`} />
           </div>
+         </div>
 
-          <div className={`flex items-center space-x-2 ${
+          <div className={`flex items-center gap-2 ${
             activeStep === "generate" ? "text-blue-600" : 
             activeStep === "export" ? "text-green-600" : "text-gray-400"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={`relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
               activeStep === "generate" ? "bg-blue-100 text-blue-600" :
               activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
             }`}>
-              {activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "2"}
+              {activeStep === "export" ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> : "2"}
             </div>
-            <span className="font-medium">Generate & Review</span>
+            <span className="text-sm sm:text-base font-medium whitespace-nowrap">Generate & Review</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200">
+          <div className="hidden sm:block flex-1 mx-2 relative">
+            <div className="absolute inset-0 flex items-center">
             <div className={`h-full transition-all duration-300 ${
               activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
             }`} />
+            </div>
           </div>
 
-          <div className={`flex items-center space-x-2 ${
+
+          <div className={`flex items-center gap-2 ${
             activeStep === "export" ? "text-blue-600" : "text-gray-400"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={`relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
               activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-gray-100"
             }`}>
               3
             </div>
-            <span className="font-medium">Export & Implement</span>
+            <span className="text-sm sm:text-base font-medium whitespace-nowrap">Export & Implement</span>
           </div>
         </div>
       </div>
 
       {/* Step 1: Define Your Audit Project */}
       {activeStep === "define" && (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Target className="h-5 w-5 text-blue-600" />
-                <span>Step 1: Define Your Audit Project</span>
+                <span className="text-lg sm:text-xl">Step 1: Define Your Audit Project</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Provide the basic information for your compliance project and upload your source document.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 md:space-y-6">
               {/* Project Title */}
               <div className="space-y-2">
                 <Label htmlFor="projectTitle">Project Title *</Label>
@@ -622,7 +627,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                       <SelectItem key={framework.id} value={framework.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{framework.name}</span>
-                          <span className="text-sm text-gray-500">{framework.description}</span>
+                          <span className="text-xs sm:text-sm text-gray-500">{framework.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -636,7 +641,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 
                 {/* Upload New Document */}
                 <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-4 md:p-6 lg:p-8 text-center transition-colors ${
                     isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
                   } ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}
                   onDragOver={(e) => {
@@ -646,11 +651,11 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={handleDrop}
                 >
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Upload className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                     Upload Your Current Policy
                   </h3>
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                     Drag and drop your existing policy document (PDF, DOCX) or click to browse
                   </p>
                   <input
@@ -665,6 +670,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                     variant="outline" 
                     disabled={isGenerating}
                     onClick={() => document.getElementById('fileInput')?.click()}
+                    className="w-full sm:w-auto"
                   >
                     {isGenerating ? (
                       <>
@@ -694,7 +700,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                             <div className="flex items-center space-x-2">
                               <FileText className="h-4 w-4" />
                               <span>{doc.name}</span>
-                              <Badge variant="outline" className="ml-auto">
+                              <Badge variant="outline" className="ml-auto hidden sm:flex">
                                 {doc.status}
                               </Badge>
                             </div>
@@ -745,12 +751,12 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                 
                 {/* Progress Indicator */}
                 {isGenerating && (
-                  <div className="mt-6 space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">{generationStatus}</span>
+                  <div className="mt-4 md:mt-6 space-y-3">
+                    <div className="flex justify-between text-xs sm:text-sm">
+                      <span className="text-gray-600 truncate max-w-[180px] sm:max-w-none">{generationStatus}</span>
                       <span className="text-gray-600">{generationProgress}%</span>
                     </div>
-                    <Progress value={generationProgress} className="h-3" />
+                    <Progress value={generationProgress} className="h-2 sm:h-3" />
                     <p className="text-xs text-gray-500 text-center">
                       This may take 2-3 minutes for comprehensive analysis and policy generation.
                     </p>
@@ -766,29 +772,29 @@ Non-compliance with this policy may result in disciplinary action up to and incl
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Clock className="h-5 w-5 text-gray-600" />
-                  <span>Recent Projects</span>
+                  <span className="text-lg sm:text-xl">Recent Projects</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm sm:text-base">
                   Continue working on your previous audit planning projects.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {projects.slice(0, 3).map((project) => (
                     <div 
                       key={project.id} 
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
                       onClick={() => {
                         setCurrentProject(project)
                         setActiveStep("generate")
                       }}
                     >
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{project.title}</h4>
-                        <div className="flex items-center space-x-3 text-sm text-gray-600 mt-1">
-                          <span>{project.framework}</span>
-                          <span>•</span>
-                          <span>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm sm:text-base font-medium text-gray-900 truncate">{project.title}</h4>
+                        <div className="flex flex-wrap items-center gap-x-3 text-xs sm:text-sm text-gray-600 mt-1">
+                          <span className="truncate max-w-[120px] sm:max-w-none">{project.framework}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="whitespace-nowrap">
                             {project.updatedAt 
                               ? new Date(project.updatedAt).toLocaleDateString()
                               : 'No date'
@@ -821,11 +827,11 @@ Non-compliance with this policy may result in disciplinary action up to and incl
 
       {/* Step 2: Generate & Review */}
       {activeStep === "generate" && currentProject && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">{currentProject.title}</h2>
-              <p className="text-gray-600">Framework: {currentProject.framework}</p>
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="max-w-full">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 truncate">{currentProject.title}</h2>
+              <p className="text-sm sm:text-base text-gray-600">Framework: {currentProject.framework}</p>
             </div>
             <Button variant="outline" onClick={resetForm}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -834,20 +840,20 @@ Non-compliance with this policy may result in disciplinary action up to and incl
           </div>
 
           {/* Compliance Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
+                <CardTitle className="text-base md:text-lg flex items-center space-x-2">
                   <BarChart3 className="h-5 w-5 text-blue-600" />
                   <span>Compliance Score</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-600 mb-2">
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
                   {currentProject.complianceScore}%
                 </div>
                 <Progress value={currentProject.complianceScore} className="h-2" />
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
                   Based on framework requirements analysis
                 </p>
               </CardContent>
@@ -855,23 +861,23 @@ Non-compliance with this policy may result in disciplinary action up to and incl
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
+                <CardTitle className="text-base md:text-lg flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-green-600" />
                   <span>Covered Controls</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600 mb-2">
+                <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">
                   {currentProject.coveredControls?.length || 0}
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-wrap gap-1">
                   {(currentProject.coveredControls || []).slice(0, 3).map((control, index) => (
-                    <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
+                    <Badge key={`covered-${index}-${control}`} variant="outline" className="text-xs">
                       {control}
                     </Badge>
                   ))}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
                   Controls identified in your document
                 </p>
               </CardContent>
@@ -879,23 +885,23 @@ Non-compliance with this policy may result in disciplinary action up to and incl
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
+                <CardTitle className="text-base md:text-lg flex items-center space-x-2">
                   <AlertCircle className="h-5 w-5 text-amber-600" />
                   <span>Missing Controls</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-amber-600 mb-2">
+                <div className="text-2xl sm:text-3xl font-bold text-amber-600 mb-2">
                   {currentProject.missingControls?.length || 0}
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-wrap gap-1">
                   {(currentProject.missingControls || []).slice(0, 3).map((control, index) => (
-                    <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
+                    <Badge key={`missing-${index}-${control}`} variant="destructive" className="text-xs">
                       {control}
                     </Badge>
                   ))}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
                   Gaps addressed in generated policy
                 </p>
               </CardContent>
@@ -905,19 +911,20 @@ Non-compliance with this policy may result in disciplinary action up to and incl
           {/* Policy Editor */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center space-x-2">
                   <FileCheck className="h-5 w-5 text-green-600" />
-                  <span>Generated Policy Document</span>
+                  <span className="text-base md:text-lg">Generated Policy Document</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="outline">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="text-xs sm:text-sm">
                     {currentProject.generatedPolicy?.wordCount} words
                   </Badge>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowTrackedChanges(!showTrackedChanges)}
+                    className="flex-1 sm:flex-none"
                   >
                     <Edit className="h-4 w-4 mr-1" />
                     {showTrackedChanges ? "Hide" : "Show"} Changes
@@ -926,20 +933,21 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                     variant="outline"
                     size="sm"
                     onClick={() => setActiveStep("export")}
+                    className="flex-1 sm:flex-none"
                   >
                     Export Options
                   </Button>
                 </div>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Your audit-ready policy with framework citations. You can edit the content below.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+              <div className="border rounded-lg p-3 sm:p-4 bg-gray-50 max-h-[500px] overflow-y-auto">
                 {showTrackedChanges ? (
                   <div className="space-y-2">
-                    <div className="text-xs text-gray-500 mb-3 flex items-center space-x-4">
+                    <div className="text-xs text-gray-500 mb-3 flex flex-wrap gap-x-4 gap-y-2">
                       <div className="flex items-center space-x-1">
                         <div className="w-3 h-3 bg-green-200 rounded"></div>
                         <span>AI Generated Content</span>
@@ -950,7 +958,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                       </div>
                     </div>
                     <div 
-                      className="whitespace-pre-wrap font-mono text-sm"
+                      className="whitespace-pre-wrap font-mono text-xs sm:text-sm"
                       dangerouslySetInnerHTML={{
                         __html: (currentProject.generatedPolicy?.content || '')
                           .replace(/\*\*Framework Alignment:\*\*/g, '<span class="bg-blue-200 px-1 rounded"><strong>Framework Alignment:</strong></span>')
@@ -959,7 +967,7 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                     />
                   </div>
                 ) : (
-                  <pre className="whitespace-pre-wrap font-mono text-sm">
+                  <pre className="whitespace-pre-wrap font-mono text-xs sm:text-sm">
                     {currentProject.generatedPolicy?.content}
                   </pre>
                 )}
@@ -993,10 +1001,10 @@ Non-compliance with this policy may result in disciplinary action up to and incl
 
       {/* Step 3: Export & Implement */}
       {activeStep === "export" && currentProject && (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
               Your audit-ready policy is complete with framework citations. Choose your export format below.
             </p>
           </div>
@@ -1006,41 +1014,41 @@ Non-compliance with this policy may result in disciplinary action up to and incl
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Download className="h-5 w-5 text-blue-600" />
-                <span>Export Options</span>
+                <span className="text-lg sm:text-xl">Export Options</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Download your policy in various formats for distribution and implementation.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <Button
                   onClick={exportToWord}
-                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
                   variant="outline"
                 >
-                  <FileText className="h-8 w-8" />
-                  <span>Download as .DOCX</span>
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
+                  <span className="text-sm sm:text-base">Download as .DOCX</span>
                   <span className="text-xs text-gray-500">For editing & collaboration</span>
                 </Button>
 
                 <Button
                   onClick={exportToPDF}
-                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
                   variant="outline"
                 >
-                  <FileText className="h-8 w-8" />
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
                   <span>Download as .PDF</span>
                   <span className="text-xs text-gray-500">For official records</span>
                 </Button>
 
                 <Button
                   onClick={copyToClipboard}
-                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
                   variant="outline"
                 >
-                  <Copy className="h-8 w-8" />
-                  <span>Copy to Clipboard</span>
+                  <Copy className="h-6 w-6 sm:h-8 sm:w-8" />
+                  <span className="text-sm sm:text-base">Copy to Clipboard</span>
                   <span className="text-xs text-gray-500">For quick pasting</span>
                 </Button>
               </div>
@@ -1052,18 +1060,18 @@ Non-compliance with this policy may result in disciplinary action up to and incl
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Clock className="h-5 w-5 text-gray-600" />
-                <span>Audit Trail</span>
+                <span className="text-lg sm:text-xl">Audit Trail</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 Governance metadata for your compliance records.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-600">Project Title:</span>
-                    <p>{currentProject.title}</p>
+                    <p className="truncate">{currentProject.title}</p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">Framework:</span>
@@ -1084,16 +1092,16 @@ Non-compliance with this policy may result in disciplinary action up to and incl
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
+                <div className="border-t pt-3 sm:pt-4">
                   <h4 className="font-medium text-gray-900 mb-2">Activity Log</h4>
                   <div className="space-y-2">
                     {(currentProject.auditTrail || []).map((entry) => (
-                      <div key={entry.id} className="flex items-center justify-between text-sm">
-                        <div>
+                      <div key={entry.id} className="flex lex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm gap-1 sm:gap-0">
+                        <div className="flex-1 min-w-0">
                           <span className="font-medium">{entry.action}</span>
-                          <span className="text-gray-600 ml-2">{entry.details}</span>
+                          <span className="text-gray-600 ml-2 truncate">{entry.details}</span>
                         </div>
-                        <span className="text-gray-500">
+                        <span className="text-gray-500 text-xs sm:text-sm">
                           {entry.timestamp 
                             ? new Date(entry.timestamp).toLocaleString()
                             : 'No timestamp'
@@ -1108,11 +1116,11 @@ Non-compliance with this policy may result in disciplinary action up to and incl
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex justify-center space-x-4">
-            <Button variant="outline" onClick={resetForm}>
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
               Create Another Policy
             </Button>
-            <Button onClick={() => router.push('/policies')}>
+            <Button onClick={() => router.push('/policies')} className="w-full sm:w-auto">
               View All Policies
             </Button>
           </div>

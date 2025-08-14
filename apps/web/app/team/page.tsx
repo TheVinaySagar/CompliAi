@@ -126,64 +126,64 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
+    <div className="p-4 sm:p-6">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Team Management</h1>
-            <p className="text-gray-600">Manage team members and their access permissions</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Team Management</h1>
+            <p className="text-sm sm:text-base text-gray-600">Manage team members and their access permissions</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+          <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="w-full sm:w-auto">
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            <InviteMemberDialog onMemberInvited={loadTeamData} />
+            <InviteMemberDialog onMemberInvited={loadTeamData} triggerClassName="w-full sm:w-auto" />
           </div>
         </div>
       </div>
 
       {/* Team Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+        <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Members</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Total Members</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-600">
               {isLoading ? "-" : teamStats?.total_members || members.length}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Active</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
+            <div className="text-2xl sm:text-3xl font-bold text-green-600">
               {isLoading ? "-" : teamStats?.active_members || members.filter((m) => m.status === "Active").length}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Pending</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">
+            <div className="text-2xl sm:text-3xl font-bold text-yellow-600">
               {isLoading ? "-" : teamStats?.pending_members || members.filter((m) => m.status === "Pending").length}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Admins</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Admins</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">
+            <div className="text-2xl sm:text-3xl font-bold text-purple-600">
               {isLoading ? "-" : teamStats?.admin_count || members.filter((m) => m.role === "Admin").length}
             </div>
           </CardContent>
@@ -193,88 +193,96 @@ export default function TeamPage() {
       {/* Team Members Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Team Members</CardTitle>
-          <CardDescription>Manage roles and permissions for your team</CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Team Members</CardTitle>
+          <CardDescription className="text-sm sm:text-base">Manage roles and permissions for your team</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg animate-pulse">
-                  <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-                    <div className="h-3 bg-gray-300 rounded w-1/3"></div>
+                <div key={i} className="flex items-center p-3 sm:p-4 border border-gray-200 rounded-lg animate-pulse">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gray-300 rounded-full"></div>
+                  <div className="ml-3 sm:ml-4 flex-1 space-y-2">
+                    <div className="h-3 sm:h-4 bg-gray-300 rounded w-1/3 sm:w-1/4"></div>
+                    <div className="h-2 sm:h-3  bg-gray-300 rounded w-1/2 sm:w-1/3"></div>
                   </div>
-                  <div className="h-6 bg-gray-300 rounded w-16"></div>
-                  <div className="h-6 bg-gray-300 rounded w-20"></div>
-                  <div className="h-8 w-8 bg-gray-300 rounded"></div>
+                  <div className="hidden sm:flex gap-2 ml-4"> 
+                   <div className="h-6 bg-gray-300 rounded w-16"></div>
+                   <div className="h-6 bg-gray-300 rounded w-20"></div>
+                  </div>
+                   <div className="h-6 w-6 sm:h-8 sm:w-8 bg-gray-300 rounded ml-auto"></div>
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={loadTeamData} variant="outline">
+            <div className="text-center py-6 sm:py-8">
+              <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
+              <p className="text-sm sm:text-base text-red-600 mb-3 sm:mb-4">{error}</p>
+              <Button onClick={loadTeamData} variant="outline" size="sm">
                 Try Again
               </Button>
             </div>
           ) : members.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
-                <UserCheck className="h-12 w-12" />
+            <div className="text-center py-6 sm:py-8">
+              <div className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4">
+                <UserCheck className="h-full w-full" />
               </div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">No team members yet</h3>
-              <p className="text-sm text-gray-500 mb-4">Get started by inviting your first team member.</p>
+              <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-2">No team members yet</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">Get started by inviting your first team member.</p>
               <InviteMemberDialog onMemberInvited={loadTeamData} />
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+                <div key={member.id} className="lex flex-col xs:flex-row xs:items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                      <AvatarFallback className="bg-blue-100 text-blue-600 font-medium text-xs sm:text-sm">
                         {getInitials(member.name)}
                       </AvatarFallback>
                     </Avatar>
 
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">{member.name}</h3>
-                      <p className="text-sm text-gray-500">{member.email}</p>
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-base font-medium text-gray-900 truncate">{member.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{member.email}</p>
                       {member.department && (
-                        <p className="text-xs text-gray-400">{member.department}</p>
+                        <p className="text-xs text-gray-400 truncate">{member.department}</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getRoleColor(member.role)} variant="secondary">
+                  <div className="flex flex-col xs:flex-row xs:items-center gap-2 sm:gap-4 ml-0 xs:ml-4">
+                    <div className="flex gap-1 sm:gap-2">
+                      <Badge className={`${getRoleColor(member.role)} text-xs sm:text-sm`} variant="secondary">
                         <span className="flex items-center gap-1">
                           {getRoleIcon(member.role)}
                           {member.role}
                         </span>
                       </Badge>
-                      <Badge className={getStatusColor(member.status)} variant="secondary">
+                      <Badge className={`${getStatusColor(member.status)} text-xs sm:text-sm`} variant="secondary">
                         {member.status}
                       </Badge>
                     </div>
 
-                    <div className="text-right min-w-[120px]">
-                      <p className="text-xs text-gray-500 flex items-center">
-                        <Calendar className="h-3 w-3 inline mr-1" />
+                    <div className="flex flex-col xs:flex-row items-start xs:items-center gap-1 sm:gap-2">
+                     <div className="flex items-center">
+                      <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-500 mr-1" />
+                      <span className="text-xs sm:text-sm text-gray-500">
                         Joined {member.joinDate.toLocaleDateString()}
-                      </p>
+                      </span>
+                      </div>
                       {member.last_login && (
-                        <p className="text-xs text-gray-400">
-                          Last login {member.last_login.toLocaleDateString()}
-                        </p>
+                        <div className="flex items-center">
+                          <span className="hidden xs:inline text-gray-300 mx-1">•</span>
+                          <span className="text-xs sm:text-sm text-gray-400">
+                            Last login {member.last_login.toLocaleDateString()}
+                          </span>
+                        </div>
                       )}
                     </div>
-
-                    <TeamMemberActions member={member} onMemberUpdated={loadTeamData} />
+                    <div className="ml-auto">
+                    <TeamMemberActions member={member} onMemberUpdated={loadTeamData}/>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -284,21 +292,21 @@ export default function TeamPage() {
       </Card>
 
       {/* Role Permissions Information */}
-      <Card className="mt-6">
+      <Card className="mt-4 sm:mt-6">
         <CardHeader>
-          <CardTitle>Role Permissions</CardTitle>
-          <CardDescription>Understanding different permission levels</CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Role Permissions</CardTitle>
+          <CardDescription className="text-sm sm:text-base">Understanding different permission levels</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-4">
-              <Badge className="bg-purple-100 text-purple-800" variant="secondary">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+              <Badge className="bg-purple-100 text-purple-800 w-fit" variant="secondary">
                 <Shield className="h-3 w-3 mr-1" />
                 Admin
               </Badge>
               <div>
-                <h4 className="text-sm font-medium text-gray-900">Administrator</h4>
-                <ul className="text-xs text-gray-500 mt-1 space-y-1">
+                <h4 className="text-sm sm:text-base font-medium text-gray-900">Administrator</h4>
+                <ul className="text-xs sm:text-sm text-gray-500 mt-1 space-y-1">
                   <li>• Full access to all features and settings</li>
                   <li>• Manage team members and permissions</li>
                   <li>• Configure system settings and integrations</li>
@@ -307,14 +315,14 @@ export default function TeamPage() {
               </div>
             </div>
             
-            <div className="flex items-start space-x-4">
-              <Badge className="bg-blue-100 text-blue-800" variant="secondary">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+              <Badge className="bg-blue-100 text-blue-800 w-fit" variant="secondary">
                 <Users className="h-3 w-3 mr-1" />
                 Editor  
               </Badge>
               <div>
-                <h4 className="text-sm font-medium text-gray-900">Editor</h4>
-                <ul className="text-xs text-gray-500 mt-1 space-y-1">
+                <h4 className="text-sm sm:text-base font-medium text-gray-900">Editor</h4>
+                <ul className="text-xs sm:text-sm text-gray-500 mt-1 space-y-1">
                   <li>• Upload and manage compliance documents</li>
                   <li>• Generate and edit policies and procedures</li>
                   <li>• Access compliance mapping and gap analysis</li>
@@ -323,14 +331,14 @@ export default function TeamPage() {
               </div>
             </div>
             
-            <div className="flex items-start space-x-4">
-              <Badge className="bg-gray-100 text-gray-800" variant="secondary">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+              <Badge className="bg-gray-100 text-gray-800 w-fit" variant="secondary">
                 <Eye className="h-3 w-3 mr-1" />
                 Viewer
               </Badge>
               <div>
-                <h4 className="text-sm font-medium text-gray-900">Viewer</h4>
-                <ul className="text-xs text-gray-500 mt-1 space-y-1">
+                <h4 className="text-sm sm:text-base font-medium text-gray-900">Viewer</h4>
+                <ul className="text-xs sm:text-sm text-gray-500 mt-1 space-y-1">
                   <li>• View uploaded documents and policies</li>
                   <li>• Access generated compliance reports</li>
                   <li>• View compliance status and frameworks</li>

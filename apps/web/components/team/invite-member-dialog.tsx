@@ -63,9 +63,10 @@ const permissionLabels = {
 
 interface InviteMemberDialogProps {
   onMemberInvited?: () => void
+  triggerClassName?: string
 }
 
-export function InviteMemberDialog({ onMemberInvited }: InviteMemberDialogProps) {
+export function InviteMemberDialog({ onMemberInvited, triggerClassName }: InviteMemberDialogProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -118,7 +119,7 @@ export function InviteMemberDialog({ onMemberInvited }: InviteMemberDialogProps)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className={triggerClassName}>
           <Plus className="h-4 w-4 mr-2" />
           Invite Member
         </Button>
