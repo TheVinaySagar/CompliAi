@@ -240,45 +240,50 @@ export default function UploadPage() {
             {isLoading ? (
               <div className="p-4 text-center">
                 <Loader className="h-5 w-5 text-gray-400 animate-spin mx-auto" />
+                <p className="mt-2 text-sm text-gray-500">Loading documents...</p>
               </div>
             ) : uploadedFiles.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-500">
-                No documents uploaded yet
+              <div className="p-4 text-center">
+                <FileText className="h-8 w-8 text-gray-400 mx-auto" />
+                <p className="mt-2 text-sm text-gray-500">No documents uploaded yet</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className="space-y-3 p-4">
                 {uploadedFiles.map((file) => (
-                  <div key={file.id} className="p-4">
-                    <div className="flex items-start">
-                      <FileText className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                  <div key={file.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                        <h3 className="text-sm font-medium text-gray-900 break-words mb-2">
                           {file.name}
                         </h3>
-                        <div className="mt-1 flex flex-wrap gap-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {file.uploadDate.toLocaleDateString()}
-                          </span>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        <div className="space-y-2">
+                          <div className="flex items-center text-xs text-gray-600">
+                            <Calendar className="h-3 w-3 mr-2 text-gray-400" />
+                            <span> {file.uploadDate.toLocaleDateString()} </span>
+                         </div>
+
+                         <div className="flex items-center text-xs">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-md mr-2 ${
                             file.status === "Completed" ? "bg-green-100 text-green-800" :
                             file.status === "Processing" ? "bg-yellow-100 text-yellow-800" :
                             "bg-red-100 text-red-800"
                           }`}>
-                            {file.status === "Processing" && <Loader className="h-3 w-3 mr-1 animate-spin" />}
+                            {file.status === "Processing" && <Loader className="h-3 w-3 mr-1.5 animate-spin" />}
                             {file.status}
                           </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            <Database className="h-3 w-3 mr-1" />
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800">
+                            <Database className="h-3 w-3 mr-1.5" />
                             {file.mappedControls} controls
                           </span>
                         </div>
+                      </div>
                         <button
-                          className="mt-2 w-full inline-flex justify-center items-center px-3 py-1.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200"
+                          className="mt-3 w-full inline-flex justify-center items-center px-3 py-2 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium border border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => router.push(`/mapping/${file.id}`)}
                           disabled={file.status !== "Completed"}
                         >
-                          <Database className="h-3.5 w-3.5 mr-1.5" />
+                          <Database className="h-3 w-3 mr-1.5" />
                           View Mapping
                         </button>
                       </div>
