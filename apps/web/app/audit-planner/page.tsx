@@ -652,6 +652,7 @@ export default function AuditPlannerPage() {
         })
       }
     }
+  }
 
   const cancelEditingPolicy = () => {
     setIsEditingPolicy(false)
@@ -684,18 +685,18 @@ export default function AuditPlannerPage() {
 
       {/* Progress Steps */}
       <div className="mb-8">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className={`flex items-center space-x-2 ${
             activeStep === "define" ? "text-blue-600" : 
             activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
           }`}>
-            <div className={`relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
               activeStep === "define" ? "bg-blue-100 text-blue-600" :
               activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
             }`}>
-              {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> : "1"}
+              {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
             </div>
-            <span className="text-sm sm:text-base font-medium whitespace-nowrap">Define Project</span>
+            <span className="font-medium">Define Project</span>
           </div>
 
           <div className="flex-1 h-0.5 bg-gray-200 mx-4">
@@ -704,17 +705,17 @@ export default function AuditPlannerPage() {
             }`} />
           </div>
 
-          <div className={`flex items-center gap-2 ${
+          <div className={`flex items-center space-x-2 ${
             activeStep === "generate" ? "text-blue-600" : 
             activeStep === "export" ? "text-green-600" : "text-gray-400"
           }`}>
-            <div className={`relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
               activeStep === "generate" ? "bg-blue-100 text-blue-600" :
               activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
             }`}>
-              {activeStep === "export" ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> : "2"}
+              {activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "2"}
             </div>
-            <span className="text-sm sm:text-base font-medium whitespace-nowrap">Generate & Review</span>
+            <span className="font-medium">Generate & Review</span>
           </div>
 
           <div className="flex-1 h-0.5 bg-gray-200 mx-4">
@@ -723,33 +724,33 @@ export default function AuditPlannerPage() {
             }`} />
           </div>
 
-          <div className={`flex items-center gap-2 ${
+          <div className={`flex items-center space-x-2 ${
             activeStep === "export" ? "text-blue-600" : "text-gray-400"
           }`}>
-            <div className={`relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
               activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-gray-100"
             }`}>
               3
             </div>
-            <span className="text-sm sm:text-base font-medium whitespace-nowrap">Export & Implement</span>
+            <span className="font-medium">Export & Implement</span>
           </div>
         </div>
       </div>
 
       {/* Step 1: Define Your Audit Project */}
       {activeStep === "define" && (
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Target className="h-5 w-5 text-blue-600" />
-                <span className="text-lg sm:text-xl">Step 1: Define Your Audit Project</span>
+                <span>Step 1: Define Your Audit Project</span>
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
+              <CardDescription>
                 Provide the basic information for your compliance project and upload your source document.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6">
+            <CardContent className="space-y-6">
               {/* Project Title */}
               <div className="space-y-2">
                 <Label htmlFor="projectTitle">Project Title *</Label>
@@ -785,7 +786,7 @@ export default function AuditPlannerPage() {
                       <SelectItem key={framework.id} value={framework.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{framework.name}</span>
-                          <span className="text-xs sm:text-sm text-gray-500">{framework.description}</span>
+                          <span className="text-sm text-gray-500">{framework.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -799,7 +800,7 @@ export default function AuditPlannerPage() {
                 
                 {/* Upload New Document */}
                 <div
-                  className={`border-2 border-dashed rounded-lg p-4 md:p-6 lg:p-8 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                     isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
                   } ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}
                   onDragOver={(e) => {
@@ -809,11 +810,11 @@ export default function AuditPlannerPage() {
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={handleDrop}
                 >
-                  <Upload className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Upload Your Current Policy
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
+                  <p className="text-gray-500 mb-4">
                     Drag and drop your existing policy document (PDF, DOCX) or click to browse
                   </p>
                   <input
@@ -828,7 +829,6 @@ export default function AuditPlannerPage() {
                     variant="outline" 
                     disabled={isGenerating}
                     onClick={() => document.getElementById('fileInput')?.click()}
-                    className="w-full sm:w-auto"
                   >
                     {isGenerating ? (
                       <>
@@ -858,7 +858,7 @@ export default function AuditPlannerPage() {
                             <div className="flex items-center space-x-2">
                               <FileText className="h-4 w-4" />
                               <span>{doc.name}</span>
-                              <Badge variant="outline" className="ml-auto hidden sm:flex">
+                              <Badge variant="outline" className="ml-auto">
                                 {doc.status}
                               </Badge>
                             </div>
@@ -912,7 +912,7 @@ export default function AuditPlannerPage() {
                       <span className="text-gray-600">{generationStatus}</span>
                       <span className="text-gray-600">{generationProgress}%</span>
                     </div>
-                    <Progress value={generationProgress} className="h-2 sm:h-3" />
+                    <Progress value={generationProgress} className="h-3" />
                     <p className="text-xs text-gray-500 text-center">
                       This may take 2-3 minutes for comprehensive analysis and policy generation.
                     </p>
@@ -928,18 +928,18 @@ export default function AuditPlannerPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Clock className="h-5 w-5 text-gray-600" />
-                  <span className="text-lg sm:text-xl">Recent Projects</span>
+                  <span>Recent Projects</span>
                 </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
+                <CardDescription>
                   Continue working on your previous audit planning projects.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3">
                   {projects.slice(0, 3).map((project) => (
                     <div 
                       key={project.id} 
-                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
                       onClick={() => {
                         setCurrentProject(project)
                         setActiveStep("generate")
@@ -983,11 +983,11 @@ export default function AuditPlannerPage() {
 
       {/* Step 2: Generate & Review */}
       {activeStep === "generate" && currentProject && (
-        <div className="space-y-4 md:space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="max-w-full">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 truncate">{currentProject.title}</h2>
-              <p className="text-sm sm:text-base text-gray-600">Framework: {currentProject.framework}</p>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{currentProject.title}</h2>
+              <p className="text-gray-600">Framework: {currentProject.framework}</p>
             </div>
             <Button variant="outline" onClick={resetForm}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -996,10 +996,10 @@ export default function AuditPlannerPage() {
           </div>
 
           {/* Compliance Dashboard */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base md:text-lg flex items-center space-x-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
                   <BarChart3 className="h-5 w-5 text-blue-600" />
                   <span>Compliance Score</span>
                 </CardTitle>
@@ -1017,7 +1017,7 @@ export default function AuditPlannerPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base md:text-lg flex items-center space-x-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-green-600" />
                   <span>Covered Controls</span>
                 </CardTitle>
@@ -1033,7 +1033,7 @@ export default function AuditPlannerPage() {
                     </Badge>
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-600 mt-2">
                   Controls identified in your document
                 </p>
               </CardContent>
@@ -1041,7 +1041,7 @@ export default function AuditPlannerPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base md:text-lg flex items-center space-x-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
                   <AlertCircle className="h-5 w-5 text-amber-600" />
                   <span>Missing Controls</span>
                 </CardTitle>
@@ -1057,7 +1057,7 @@ export default function AuditPlannerPage() {
                     </Badge>
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-600 mt-2">
                   Gaps addressed in generated policy
                 </p>
               </CardContent>
@@ -1067,10 +1067,10 @@ export default function AuditPlannerPage() {
           {/* Policy Editor */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <FileCheck className="h-5 w-5 text-green-600" />
-                  <span className="text-base md:text-lg">Generated Policy Document</span>
+                  <span>Generated Policy Document</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline">
@@ -1247,10 +1247,10 @@ export default function AuditPlannerPage() {
 
       {/* Step 3: Export & Implement */}
       {activeStep === "export" && currentProject && (
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
+            <p className="text-gray-600 mb-6">
               Your audit-ready policy is complete with framework citations. Choose your export format below.
             </p>
           </div>
@@ -1260,17 +1260,17 @@ export default function AuditPlannerPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Download className="h-5 w-5 text-blue-600" />
-                <span className="text-lg sm:text-xl">Export Options</span>
+                <span>Export Options</span>
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
+              <CardDescription>
                 Download your policy in various formats for distribution and implementation.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button
                   onClick={exportToWord}
-                  className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                   variant="outline"
                 >
                   <FileText className="h-8 w-8" />
@@ -1280,7 +1280,7 @@ export default function AuditPlannerPage() {
 
                 <Button
                   onClick={exportToPDF}
-                  className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                   variant="outline"
                 >
                   <FileText className="h-8 w-8" />
@@ -1290,7 +1290,7 @@ export default function AuditPlannerPage() {
 
                 <Button
                   onClick={copyToClipboard}
-                  className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                   variant="outline"
                 >
                   <Copy className="h-8 w-8" />
@@ -1306,18 +1306,18 @@ export default function AuditPlannerPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Clock className="h-5 w-5 text-gray-600" />
-                <span className="text-lg sm:text-xl">Audit Trail</span>
+                <span>Audit Trail</span>
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
+              <CardDescription>
                 Governance metadata for your compliance records.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-600">Project Title:</span>
-                    <p className="truncate">{currentProject.title}</p>
+                    <p>{currentProject.title}</p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">Framework:</span>
@@ -1338,16 +1338,16 @@ export default function AuditPlannerPage() {
                   </div>
                 </div>
 
-                <div className="border-t pt-3 sm:pt-4">
+                <div className="border-t pt-4">
                   <h4 className="font-medium text-gray-900 mb-2">Activity Log</h4>
                   <div className="space-y-2">
                     {(currentProject.audit_trail || []).map((entry) => (
                       <div key={entry.id} className="flex items-center justify-between text-sm">
                         <div>
                           <span className="font-medium">{entry.action}</span>
-                          <span className="text-gray-600 ml-2 truncate">{entry.details}</span>
+                          <span className="text-gray-600 ml-2">{entry.details}</span>
                         </div>
-                        <span className="text-gray-500 text-xs sm:text-sm">
+                        <span className="text-gray-500">
                           {entry.timestamp 
                             ? new Date(entry.timestamp).toLocaleString()
                             : 'No timestamp'
@@ -1375,5 +1375,4 @@ export default function AuditPlannerPage() {
       )}
     </div>
   )
-}
 }
