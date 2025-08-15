@@ -441,18 +441,6 @@ const ChatPage = memo(() => {
               )}
             </Button>
           </div>
-          
-          {/* Quick tips */}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span className="font-medium">Tips:</span>
-            <Badge variant="outline" className="text-xs">Press Enter to send</Badge>
-            <Badge variant="outline" className="text-xs">Shift + Enter for new line</Badge>
-            {selectedDocument !== "general" && (
-              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                Document mode active
-              </Badge>
-            )}
-          </div>
         </form>
       </div>
     </div>

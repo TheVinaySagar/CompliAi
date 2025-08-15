@@ -652,7 +652,6 @@ export default function AuditPlannerPage() {
         })
       }
     }
-  }
 
   const cancelEditingPolicy = () => {
     setIsEditingPolicy(false)
@@ -674,32 +673,19 @@ export default function AuditPlannerPage() {
   }
 
   return (
-<<<<<<< HEAD
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Planner</h1>
         <p className="text-gray-600">
-=======
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-8 md:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Audit Planner & Policy Generator</h1>
-        <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
           Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
         </p>
       </div>
 
-<<<<<<< HEAD
       {/* Progress Steps */}
       <div className="mb-8">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+        <div className="flex items-center justify-between max-w-3xl mx-auto">
           <div className={`flex items-center space-x-2 ${
-=======
-        {/* Progress Indicator */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 mb-6 md:mb-8">
-          <div className={`flex items-center gap-2 ${
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
             activeStep === "define" ? "text-blue-600" : 
             activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
           }`}>
@@ -712,17 +698,11 @@ export default function AuditPlannerPage() {
             <span className="text-sm sm:text-base font-medium whitespace-nowrap">Define Project</span>
           </div>
 
-<<<<<<< HEAD
           <div className="flex-1 h-0.5 bg-gray-200 mx-4">
-=======
-         <div className="hidden sm:block flex-1 mx-2 relative">
-            <div className="absolute inset-0 flex items-center">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
             <div className={`h-full transition-all duration-300 ${
               activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
             }`} />
           </div>
-         </div>
 
           <div className={`flex items-center gap-2 ${
             activeStep === "generate" ? "text-blue-600" : 
@@ -737,18 +717,11 @@ export default function AuditPlannerPage() {
             <span className="text-sm sm:text-base font-medium whitespace-nowrap">Generate & Review</span>
           </div>
 
-<<<<<<< HEAD
           <div className="flex-1 h-0.5 bg-gray-200 mx-4">
-=======
-          <div className="hidden sm:block flex-1 mx-2 relative">
-            <div className="absolute inset-0 flex items-center">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
             <div className={`h-full transition-all duration-300 ${
               activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
             }`} />
-            </div>
           </div>
-
 
           <div className={`flex items-center gap-2 ${
             activeStep === "export" ? "text-blue-600" : "text-gray-400"
@@ -934,15 +907,9 @@ export default function AuditPlannerPage() {
                 
                 {/* Generation Progress */}
                 {isGenerating && (
-<<<<<<< HEAD
                   <div className="space-y-3 p-4 bg-blue-50 rounded-lg border mt-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">{generationStatus}</span>
-=======
-                  <div className="mt-4 md:mt-6 space-y-3">
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600 truncate max-w-[180px] sm:max-w-none">{generationStatus}</span>
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                       <span className="text-gray-600">{generationProgress}%</span>
                     </div>
                     <Progress value={generationProgress} className="h-2 sm:h-3" />
@@ -978,7 +945,6 @@ export default function AuditPlannerPage() {
                         setActiveStep("generate")
                       }}
                     >
-<<<<<<< HEAD
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900">{project.title}</h4>
                         <div className="flex items-center space-x-3 text-sm text-gray-600 mt-1">
@@ -988,17 +954,6 @@ export default function AuditPlannerPage() {
                             {project.updated_at 
                               ? new Date(project.updated_at).toLocaleDateString()
                               : new Date(project.created_at).toLocaleDateString()
-=======
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm sm:text-base font-medium text-gray-900 truncate">{project.title}</h4>
-                        <div className="flex flex-wrap items-center gap-x-3 text-xs sm:text-sm text-gray-600 mt-1">
-                          <span className="truncate max-w-[120px] sm:max-w-none">{project.framework}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span className="whitespace-nowrap">
-                            {project.updatedAt 
-                              ? new Date(project.updatedAt).toLocaleDateString()
-                              : 'No date'
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                             }
                           </span>
                           <Badge variant={
@@ -1050,19 +1005,11 @@ export default function AuditPlannerPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-<<<<<<< HEAD
                 <div className="text-3xl font-bold text-blue-600 mb-2">
                   {currentProject.compliance_score}%
                 </div>
                 <Progress value={currentProject.compliance_score} className="h-2" />
                 <p className="text-sm text-gray-600 mt-2">
-=======
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
-                  {currentProject.complianceScore}%
-                </div>
-                <Progress value={currentProject.complianceScore} className="h-2" />
-                <p className="text-xs sm:text-sm text-gray-600 mt-2">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                   Based on framework requirements analysis
                 </p>
               </CardContent>
@@ -1076,21 +1023,12 @@ export default function AuditPlannerPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-<<<<<<< HEAD
                 <div className="text-3xl font-bold text-green-600 mb-2">
                   {currentProject.covered_controls?.length || 0}
                 </div>
                 <div className="space-y-1">
                   {(currentProject.covered_controls || []).slice(0, 3).map((control, index) => (
                     <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
-=======
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">
-                  {currentProject.coveredControls?.length || 0}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {(currentProject.coveredControls || []).slice(0, 3).map((control, index) => (
-                    <Badge key={`covered-${index}-${control}`} variant="outline" className="text-xs">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                       {control}
                     </Badge>
                   ))}
@@ -1109,21 +1047,12 @@ export default function AuditPlannerPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-<<<<<<< HEAD
                 <div className="text-3xl font-bold text-amber-600 mb-2">
                   {currentProject.missing_controls?.length || 0}
                 </div>
                 <div className="space-y-1">
                   {(currentProject.missing_controls || []).slice(0, 3).map((control, index) => (
                     <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
-=======
-                <div className="text-2xl sm:text-3xl font-bold text-amber-600 mb-2">
-                  {currentProject.missingControls?.length || 0}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {(currentProject.missingControls || []).slice(0, 3).map((control, index) => (
-                    <Badge key={`missing-${index}-${control}`} variant="destructive" className="text-xs">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                       {control}
                     </Badge>
                   ))}
@@ -1143,7 +1072,6 @@ export default function AuditPlannerPage() {
                   <FileCheck className="h-5 w-5 text-green-600" />
                   <span className="text-base md:text-lg">Generated Policy Document</span>
                 </div>
-<<<<<<< HEAD
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline">
                     {isEditingPolicy 
@@ -1290,64 +1218,6 @@ export default function AuditPlannerPage() {
                   )}
                 </div>
               )}
-=======
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-xs sm:text-sm">
-                    {currentProject.generatedPolicy?.wordCount} words
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTrackedChanges(!showTrackedChanges)}
-                    className="flex-1 sm:flex-none"
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    {showTrackedChanges ? "Hide" : "Show"} Changes
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setActiveStep("export")}
-                    className="flex-1 sm:flex-none"
-                  >
-                    Export Options
-                  </Button>
-                </div>
-              </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
-                Your audit-ready policy with framework citations. You can edit the content below.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-lg p-3 sm:p-4 bg-gray-50 max-h-[500px] overflow-y-auto">
-                {showTrackedChanges ? (
-                  <div className="space-y-2">
-                    <div className="text-xs text-gray-500 mb-3 flex flex-wrap gap-x-4 gap-y-2">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-3 h-3 bg-green-200 rounded"></div>
-                        <span>AI Generated Content</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-3 h-3 bg-blue-200 rounded"></div>
-                        <span>Framework Citations</span>
-                      </div>
-                    </div>
-                    <div 
-                      className="whitespace-pre-wrap font-mono text-xs sm:text-sm"
-                      dangerouslySetInnerHTML={{
-                        __html: (currentProject.generatedPolicy?.content || '')
-                          .replace(/\*\*Framework Alignment:\*\*/g, '<span class="bg-blue-200 px-1 rounded"><strong>Framework Alignment:</strong></span>')
-                          .replace(/(## \d+\. [A-Z\s]+)/g, '<span class="bg-green-200 px-1 rounded font-semibold">$1</span>')
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <pre className="whitespace-pre-wrap font-mono text-xs sm:text-sm">
-                    {currentProject.generatedPolicy?.content}
-                  </pre>
-                )}
-              </div>
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
 
               {/* Framework Citations */}
               <div className="mt-6">
@@ -1403,13 +1273,8 @@ export default function AuditPlannerPage() {
                   className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
                   variant="outline"
                 >
-<<<<<<< HEAD
                   <FileText className="h-8 w-8" />
                   <span>Export as Word</span>
-=======
-                  <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
-                  <span className="text-sm sm:text-base">Download as .DOCX</span>
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                   <span className="text-xs text-gray-500">For editing & collaboration</span>
                 </Button>
 
@@ -1418,13 +1283,8 @@ export default function AuditPlannerPage() {
                   className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
                   variant="outline"
                 >
-<<<<<<< HEAD
                   <FileText className="h-8 w-8" />
                   <span>Export as PDF</span>
-=======
-                  <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
-                  <span>Download as .PDF</span>
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                   <span className="text-xs text-gray-500">For official records</span>
                 </Button>
 
@@ -1433,15 +1293,9 @@ export default function AuditPlannerPage() {
                   className="h-20 sm:h-24 flex flex-col items-center justify-center space-y-1 sm:space-y-2"
                   variant="outline"
                 >
-<<<<<<< HEAD
                   <Copy className="h-8 w-8" />
                   <span>Copy to Clipboard</span>
                   <span className="text-xs text-gray-500">Raw text content</span>
-=======
-                  <Copy className="h-6 w-6 sm:h-8 sm:w-8" />
-                  <span className="text-sm sm:text-base">Copy to Clipboard</span>
-                  <span className="text-xs text-gray-500">For quick pasting</span>
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                 </Button>
               </div>
             </CardContent>
@@ -1487,15 +1341,9 @@ export default function AuditPlannerPage() {
                 <div className="border-t pt-3 sm:pt-4">
                   <h4 className="font-medium text-gray-900 mb-2">Activity Log</h4>
                   <div className="space-y-2">
-<<<<<<< HEAD
                     {(currentProject.audit_trail || []).map((entry) => (
                       <div key={entry.id} className="flex items-center justify-between text-sm">
                         <div>
-=======
-                    {(currentProject.auditTrail || []).map((entry) => (
-                      <div key={entry.id} className="flex lex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm gap-1 sm:gap-0">
-                        <div className="flex-1 min-w-0">
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
                           <span className="font-medium">{entry.action}</span>
                           <span className="text-gray-600 ml-2 truncate">{entry.details}</span>
                         </div>
@@ -1514,7 +1362,6 @@ export default function AuditPlannerPage() {
           </Card>
 
           {/* Action Buttons */}
-<<<<<<< HEAD
           <div className="flex justify-center space-x-4">
             <Button variant="outline" onClick={resetForm}>
               Create Another Audit
@@ -1522,18 +1369,11 @@ export default function AuditPlannerPage() {
             <Button onClick={() => setActiveStep("generate")}>
               <Edit className="h-4 w-4 mr-2" />
               Edit This Policy
-=======
-          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
-              Create Another Policy
-            </Button>
-            <Button onClick={() => router.push('/policies')} className="w-full sm:w-auto">
-              View All Policies
->>>>>>> 43de3a631a72a6c2d8721a3e60e858796b0d16af
             </Button>
           </div>
         </div>
       )}
     </div>
   )
+}
 }
