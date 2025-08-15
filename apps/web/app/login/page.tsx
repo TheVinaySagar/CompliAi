@@ -52,44 +52,46 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
+      <div className="max-w-[420px] sm:max-w-md lg:max-w-lg w-full space-y-8">
+        <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <Logo size={70} rounded="full" />
+            <Logo className="w-16 h-16 m:w-20 sm:h-20 md:w-20 md:h-20 lg:w-16 lg:h-16 rounded-full" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">CompliAI</h2>
-          <p className="mt-2 text-sm text-gray-600">AI-Powered Compliance, From Policy to Audit</p>
+          <div className="space-y-2">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">CompliAI</h2>
+          <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">AI-Powered Compliance, From Policy to Audit</p>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign in to your account</CardTitle>
-            <CardDescription>Enter your credentials to access the compliance platform</CardDescription>
+        <Card className="shadow-lg border-0 sm:border">
+          <CardHeader className="space-y-2 sm:space-y-3 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
+            <CardTitle className="text-xl sm:text-2xl">Sign in to your account</CardTitle>
+            <CardDescription className="text-sm sm:text-base">Enter your credentials to access the compliance platform</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-6">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="text-sm">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div>
-                <Label htmlFor="email">Email address</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm sm:text-base">Email address</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="mt-1"
+                  className="h-10 sm:h-12 text-sm sm:text-base"
                   placeholder="Enter your email"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <div className="relative mt-1">
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
+                <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -97,25 +99,27 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Enter your password"
+                    className="h-10 sm:h-12 text-sm sm:text-base pr-10"
                   />
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     )}
                   </button>
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full h-10 sm:h-12 text-sm sm:text-base font-medium" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                     Signing in...
                   </>
                 ) : (
@@ -124,10 +128,10 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="mt-4 sm:mt-6 text-center">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
                   Create account
                 </Link>
               </p>

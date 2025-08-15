@@ -1,5 +1,5 @@
 "use client"
-
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -21,6 +21,8 @@ import {
   ChevronRight,
   Zap,
   BarChart3,
+  X,
+  Menu
 } from "lucide-react"
 import Logo from "@/components/ui/logo";
 
@@ -79,6 +81,11 @@ const navigation = [
 export default function Sidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
 
   const handleLogout = async () => {
     try {
@@ -89,14 +96,41 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700/50">
+    <>
+     {/* Hamburger button: show only when sidebar closed */}
+      {!sidebarOpen && (
+        <button
+          className="fixed top-4 left-4 z-[1100] md:hidden flex items-center justify-center rounded-md p-2 text-slate-300 hover:bg-slate-700/70 hover:text-white transition-colors duration-200"
+          aria-label="Open sidebar"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+      )}
+
+      {/* Sidebar Overlay for mobile */}
+      <div
+        className={cn(
+          "fixed inset-0 z-[1000] bg-black/40 transition-opacity md:hidden",
+          sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden={!sidebarOpen}
+      />
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-[1001] h-full w-64 flex-col bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700/50 transition-transform duration-300 ease-in-out",
+          "md:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+        aria-label="Sidebar navigation"
+      >
       {/* Header */}
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-slate-700/50">
+      <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-slate-700/50">
         <div className="flex items-center space-x-3">
-          <div className="flex items-center">
            <Logo size={46} rounded="lg" />
-          </div> 
-          
           <div>
             <span className="text-xl font-bold text-white">CompliAI</span>
             <div className="flex items-center gap-1 mt-0.5">
@@ -105,6 +139,14 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
+        {/* Close button inside sidebar header (mobile only) */}
+          <button
+            className="md:hidden flex items-center justify-center rounded-md p-2 text-slate-300 hover:bg-slate-700/70 hover:text-white transition-colors duration-200"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </button>
       </div>
 
       {/* Navigation */}
@@ -184,6 +226,7 @@ export default function Sidebar() {
           Sign Out
         </Button> */}
       </nav>
-    </div>
+    </aside>
+    </>
   )
 }

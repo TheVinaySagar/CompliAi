@@ -1,4 +1,32 @@
 """
+High-Level Feature Overview
+
+This API provides advanced compliance chat and document management capabilities for GRC (Governance, Risk, and Compliance) use cases. Key features include:
+
+1. AI-Powered Compliance Chat:
+   - Natural language chat endpoint for compliance-related queries.
+   - Supports multiple frameworks: ISO 27001, SOC 2, NIST CSF, PCI DSS, GDPR, HIPAA.
+   - Contextual conversation management with conversation history and deletion.
+   - Framework and document-specific querying with clause and control references.
+
+2. Document Upload & Processing:
+   - Secure upload of compliance documents (PDF, DOCX, TXT).
+   - Automated extraction, chunking, embedding, and storage for RAG-based analysis.
+   - Document listing, retrieval, and deletion with strict user access controls.
+   - Framework mapping and compliance control identification per document.
+
+3. Security & Permissions:
+   - All endpoints protected by authentication and fine-grained permission checks.
+   - Users can only access or modify their own conversations and documents (unless admin).
+
+4. Error Handling & Limits:
+   - Comprehensive error responses for authentication, permissions, file validation, and processing failures.
+   - Enforced limits on file size, document count, and processing time.
+
+This API enables organizations to leverage AI for compliance guidance, document analysis, and framework mapping, streamlining GRC workflows and improving audit readiness.
+"""
+
+"""
 Chat Routes
 Handles chat requests with proper authentication and authorization.
 """
@@ -376,6 +404,6 @@ async def get_document_mapping(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
-    
+
+

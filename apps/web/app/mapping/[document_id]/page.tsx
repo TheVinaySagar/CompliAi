@@ -1093,77 +1093,80 @@ export default function GRCAnalysis() {
   } = analysisData.framework_mapping;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="flex items-center mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1800px] mx-auto">
+      <div className="flex items-center mb-4 sm:mb-6">
         <button 
           onClick={() => router.back()} 
-          className="flex items-center text-blue-600 hover:text-blue-800 mr-4"
+          className="flex items-center text-blue-600 hover:text-blue-800 mr-2 sm:mr-4"
         >
           <ChevronLeft className="h-5 w-5" />
+          <span className="hidden sm:inline ml-1">Back</span>
         </button>
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-          <BarChart2 className="h-6 w-6 mr-2 text-blue-500" />
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+          <BarChart2 className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-500" />
           Compliance Analysis
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-blue-100 p-3 rounded-lg mr-4">
-              <FileText className="h-6 w-6 text-blue-600" />
+          <CardContent className="p-3 sm:p-4 flex items-center">
+            <div className="bg-blue-100 p-2 sm:p-3 rounded-lg mr-3 sm:mr-4">
+              <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Document Size</p>
-              <p className="text-xl font-bold">{analysis_summary.document_character_count.toLocaleString()} characters</p>
+              <p className="text-xs sm:text-sm text-gray-600">Document Size</p>
+              <p className="text-lg sm:text-xl font-bold">{analysis_summary.document_character_count.toLocaleString()} characters</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-4 flex items-center">
-            <div className="bg-green-100 p-3 rounded-lg mr-4">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+          <CardContent className="p-3 sm:p-4 flex items-center">
+            <div className="bg-green-100 p-2 sm:p-3 rounded-lg mr-3 sm:mr-4">
+              <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Controls Identified</p>
-              <p className="text-xl font-bold">{analysis_summary.identified_controls_count}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Controls Identified</p>
+              <p className="text-lg sm:text-xl font-bold">{analysis_summary.identified_controls_count}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-purple-50 border-purple-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-600 mb-2">Frameworks Analyzed</p>
-            <div className="flex flex-wrap">
-              {analysis_summary.frameworks_analyzed.map(f => 
-                <FrameworkTag key={f} name={f} />
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Frameworks Analyzed</p>
+            <div className="flex flex-wrap gap-1 sm:gap-2">
+              {analysis_summary.frameworks_analyzed.map(f =>
+                <Badge key={f} variant="secondary" className="text-xs py-1 px-2">
+                  {f}
+                </Badge> 
               )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="mapped" className="mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-          <TabsList>
-            <TabsTrigger value="mapped" className="flex items-center">
-              <ListChecks className="h-4 w-4 mr-2" /> Mapped Controls
-              <Badge variant="outline" className="ml-2">{mapped_controls.length}</Badge>
+      <Tabs defaultValue="mapped" className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 gap-3">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="mapped" className="text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2">
+              <ListChecks className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Mapped Controls
+              <Badge variant="outline" className="ml-1 sm:ml-2 text-xs">{mapped_controls.length}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="gap" className="flex items-center">
-              <XCircle className="h-4 w-4 mr-2" /> Gap Analysis
-              <Badge variant="destructive" className="ml-2">
+            <TabsTrigger value="gap" className="text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2r">
+              <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Gap Analysis
+              <Badge variant="destructive" className="ml-1 sm:ml-2 text-xs">
                 {Object.values(gap_analysis).reduce((sum, gaps) => sum + gaps.length, 0)}
               </Badge>
             </TabsTrigger>
           </TabsList>
           
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
             <Input
               placeholder="Search controls..."
-              className="pl-10"
+              className="pl-8 sm:pl-10 h-9 sm:h-10 text-xs sm:text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -1171,41 +1174,41 @@ export default function GRCAnalysis() {
         </div>
 
         <TabsContent value="mapped">
-          <ScrollArea className="h-[calc(100vh-280px)] pr-4">
+          <ScrollArea className="h-[calc(100vh-220px)] sm:h-[calc(100vh-280px)] pr-2 sm:pr-4">
             {filteredMappedControls.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {filteredMappedControls.map((control, idx) => (
                   <Card key={idx} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-4 space-y-4">
+                    <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                       <div>
-                        <h3 className="font-semibold text-base text-gray-800 mb-1">{control.ai_control_summary}</h3>
-                        <div className="text-sm text-gray-600 italic bg-gray-50 p-3 rounded-md">
+                        <h3 className="font-semibold text-sm sm:text-base text-gray-800 mb-1 line-clamp-2">{control.ai_control_summary}</h3>
+                        <div className="text-xs sm:text-sm text-gray-600 italic bg-gray-50 p-2 sm:p-3 rounded-md line-clamp-3">
                           "{control.extracted_statement}"
                         </div>
                       </div>
                       
-                      <div className="border-t pt-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">Mappings</span>
+                      <div className="border-t pt-3 sm:pt-4">
+                        <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3 flex items-center">
+                          <span className="bg-blue-100 text-blue-800 px-2 py-0.5 sm:py-1 rounded mr-2">Mappings</span>
                           {control.mappings.length} framework matches
                         </h4>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                           {control.mappings.map((map, i) => (
                             <div 
                               key={i} 
-                              className="border-l-4 border-blue-400 pl-4 py-3 bg-blue-50 rounded-r-md"
+                              className="border-l-4 border-blue-400 l-2 sm:pl-4 py-2 sm:py-3 bg-blue-50 rounded-r-md"
                             >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <p className="font-medium">
+                                  <p className="text-xs sm:text-sm font-medium">
                                     <span className="font-semibold text-gray-900">{map.framework}</span> - {map.control_id}
                                   </p>
-                                  <p className="text-sm text-gray-700 mb-2">{map.control_title}</p>
+                                  <p className="text-xs text-gray-700 mb-1 sm:mb-2 line-clamp-2">{map.control_title}</p>
                                 </div>
                                 {/* <ConfidenceBadge level={map.mapping_confidence} /> */}
                               </div>
-                              <p className="text-xs text-gray-600 bg-white p-2 rounded mt-1">{map.rationale}</p>
+                              <p className="ext-xs text-gray-600 bg-white p-1 sm:p-2 rounded mt-1 line-clamp-2">{map.rationale}</p>
                             </div>
                           ))}
                         </div>
@@ -1215,41 +1218,41 @@ export default function GRCAnalysis() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900">No matching controls found</h3>
-                <p className="text-gray-500 mt-1">Try adjusting your search term</p>
+              <div className="text-center py-8 sm:py-12">
+                <Search className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-gray-400 mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900">No matching controls found</h3>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Try adjusting your search term</p>
               </div>
             )}
           </ScrollArea>
         </TabsContent>
 
         <TabsContent value="gap">
-          <ScrollArea className="h-[calc(100vh-280px)] pr-4">
+          <ScrollArea className="h-[calc(100vh-220px)] sm:h-[calc(100vh-280px)] pr-2 sm:pr-4">
             {Object.keys(filteredGaps).length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4">
                 {Object.entries(filteredGaps).map(([framework, gaps], i) => (
                   <Card key={i} className="border border-gray-200 shadow-sm">
                     <CardContent className="p-0">
-                      <div className="bg-gray-50 px-4 py-3 border-b">
-                        <h3 className="font-semibold text-gray-800 flex items-center">
-                          <XCircle className="h-5 w-5 text-red-500 mr-2" />
+                      <div className="bg-gray-50 px-3 sm:px-4 py-2 sm:py-3 border-b">
+                        <h3 className="font-semibold text-sm sm:text-base text-gray-800 flex items-center">
+                          <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 mr-2" />
                           {framework} 
-                          <Badge variant="destructive" className="ml-2">{gaps.length} gaps</Badge>
+                          <Badge variant="destructive" className="ml-2 text-xs">{gaps.length} gaps</Badge>
                         </h3>
                       </div>
                       
                       <div className="divide-y">
                         {gaps.map((gap, j) => (
-                          <div key={j} className="p-4 hover:bg-gray-50">
+                          <div key={j} className="p-3 sm:p-4 hover:bg-gray-50">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="font-medium">
+                                <p className="font-medium text-xs sm:text-sm">
                                   <span className="text-red-600">{gap.control_id}</span>: {gap.control_title}
                                 </p>
-                                <p className="text-sm text-gray-600 mt-1">{gap.description}</p>
+                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{gap.description}</p>
                               </div>
-                              <Badge variant="destructive">Gap</Badge>
+                              <Badge variant="destructive" className="text-xs">Gap</Badge>
                             </div>
                           </div>
                         ))}
@@ -1259,10 +1262,10 @@ export default function GRCAnalysis() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900">No gaps found</h3>
-                <p className="text-gray-500 mt-1">Great job! All controls are covered</p>
+              <div className="text-center py-8 sm:py-12">
+                <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-green-500 mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900">No gaps found</h3>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Great job! All controls are covered</p>
               </div>
             )}
           </ScrollArea>

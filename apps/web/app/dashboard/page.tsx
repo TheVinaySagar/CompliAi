@@ -174,10 +174,10 @@ export default function DashboardPage() {
       <div className="flex flex-col space-y-3 sm:space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               Welcome back, {user?.name?.split(' ')[0] || 'User'}!
             </h1>
-            <p className="text-slate-600 text-sm sm:text-base">
+            <p className="text-slate-600 text-sm sm:text-base md:text-base">
               Here's your compliance overview for today
             </p>
           </div>
@@ -208,7 +208,7 @@ export default function DashboardPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
           <>
             <StatCardSkeleton />
@@ -295,22 +295,22 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <Card className="lg:col-span-2 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingUp className="h-5 w-5 text-blue-600" />
               Quick Actions
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm md:text-base">
               Get started with common compliance tasks
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Button 
               variant="outline" 
               className="h-auto flex-col p-6 hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 min-h-[120px]"
               onClick={() => window.location.href = '/upload'}
             >
               <Upload className="h-8 w-8 text-blue-600 mb-2" />
-              <span className="font-medium text-center">Upload Document</span>
+              <span className="font-medium text-center text-sm">Upload Document</span>
               <span className="text-xs text-slate-500 mt-1 text-center break-words">Add new compliance docs</span>
             </Button>
             
@@ -320,7 +320,7 @@ export default function DashboardPage() {
               onClick={() => window.location.href = '/chat'}
             >
               <MessageCircle className="h-8 w-8 text-green-600 mb-2" />
-              <span className="font-medium text-center">Ask AI</span>
+              <span className="font-medium text-center text-sm">Ask AI</span>
               <span className="text-xs text-slate-500 mt-1 text-center break-words">Get compliance answers</span>
             </Button>
             
@@ -330,7 +330,7 @@ export default function DashboardPage() {
               onClick={() => window.location.href = '/mapping'}
             >
               <Map className="h-8 w-8 text-purple-600 mb-2" />
-              <span className="font-medium text-center">View Mappings</span>
+              <span className="font-medium text-center text-sm">View Mappings</span>
               <span className="text-xs text-slate-500 mt-1 text-center break-words">Explore control maps</span>
             </Button>
           </CardContent>
@@ -339,11 +339,11 @@ export default function DashboardPage() {
         {/* Activity Feed */}
         <Card className="border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <AlertCircle className="h-5 w-5 text-amber-600" />
               Recent Activity
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm md:text-base">
               Latest updates and changes
             </CardDescription>
           </CardHeader>
