@@ -323,16 +323,6 @@ export default function DashboardPage() {
               <span className="font-medium text-center text-sm">Ask AI</span>
               <span className="text-xs text-slate-500 mt-1 text-center break-words">Get compliance answers</span>
             </Button>
-            
-            <Button 
-              variant="outline" 
-              className="h-auto flex-col p-6 hover:bg-purple-50 hover:border-purple-200 transition-all duration-200 min-h-[120px]"
-              onClick={() => window.location.href = '/mapping'}
-            >
-              <Map className="h-8 w-8 text-purple-600 mb-2" />
-              <span className="font-medium text-center text-sm">View Mappings</span>
-              <span className="text-xs text-slate-500 mt-1 text-center break-words">Explore control maps</span>
-            </Button>
           </CardContent>
         </Card>
 
