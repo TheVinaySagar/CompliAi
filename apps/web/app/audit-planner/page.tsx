@@ -674,11 +674,11 @@ export default function AuditPlannerPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">Audit Planner</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
         </p>
       </div>
@@ -984,96 +984,98 @@ export default function AuditPlannerPage() {
       {/* Step 2: Generate & Review */}
       {activeStep === "generate" && currentProject && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h2 className="text-xl font-semibold text-foreground">{currentProject.title}</h2>
-              <p className="text-muted-foreground">Framework: {currentProject.framework}</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">{currentProject.title}</h2>
+              <p className="text-sm text-muted-foreground">Framework: {currentProject.framework}</p>
             </div>
-            <Button variant="outline" onClick={resetForm}>
+            <Button variant="outline" onClick={resetForm} className="self-start sm:self-auto">
               <RefreshCw className="h-4 w-4 mr-2" />
               Start New Audit
             </Button>
           </div>
 
           {/* Compliance Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
-                  <span>Compliance Score</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {currentProject.compliance_score}%
-                </div>
-                <Progress value={currentProject.compliance_score} className="h-2" />
-                <p className="text-sm text-muted-foreground mt-2">
-                  Based on framework requirements analysis
-                </p>
-              </CardContent>
-            </Card>
+          <div className="overflow-x-auto pb-4">
+            <div className="flex space-x-4 min-w-max md:grid md:grid-cols-3 md:gap-6">
+              <Card className="min-w-72 md:min-w-0 flex-shrink-0">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5 text-blue-600" />
+                    <span>Compliance Score</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                    {currentProject.compliance_score}%
+                  </div>
+                  <Progress value={currentProject.compliance_score} className="h-2" />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Based on framework requirements analysis
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-green-600" />
-                  <span>Covered Controls</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-green-600 mb-2">
-                  {currentProject.covered_controls?.length || 0}
-                </div>
-                <div className="space-y-1">
-                  {(currentProject.covered_controls || []).slice(0, 3).map((control, index) => (
-                    <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
-                      {control}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Controls identified in your document
-                </p>
-              </CardContent>
-            </Card>
+              <Card className="min-w-72 md:min-w-0 flex-shrink-0">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <span>Covered Controls</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600 mb-2">
+                    {currentProject.covered_controls?.length || 0}
+                  </div>
+                  <div className="space-y-1">
+                    {(currentProject.covered_controls || []).slice(0, 3).map((control, index) => (
+                      <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
+                        {control}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Controls identified in your document
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
-                  <span>Missing Controls</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-amber-600 mb-2">
-                  {currentProject.missing_controls?.length || 0}
-                </div>
-                <div className="space-y-1">
-                  {(currentProject.missing_controls || []).slice(0, 3).map((control, index) => (
-                    <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
-                      {control}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Gaps addressed in generated policy
-                </p>
-              </CardContent>
-            </Card>
+              <Card className="min-w-72 md:min-w-0 flex-shrink-0">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                    <span>Missing Controls</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">
+                    {currentProject.missing_controls?.length || 0}
+                  </div>
+                  <div className="space-y-1">
+                    {(currentProject.missing_controls || []).slice(0, 3).map((control, index) => (
+                      <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
+                        {control}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Gaps addressed in generated policy
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Policy Editor */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div className="flex items-center space-x-2">
                   <FileCheck className="h-5 w-5 text-green-600" />
                   <span>Generated Policy Document</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="outline">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
                     {isEditingPolicy 
                       ? `${editedPolicyContent.split(/\s+/).length} words`
                       : `${currentProject.generated_policy?.word_count} words`
@@ -1085,24 +1087,27 @@ export default function AuditPlannerPage() {
                         variant="outline"
                         size="sm"
                         onClick={startEditingPolicy}
+                        className="text-xs"
                       >
-                        <Edit className="h-4 w-4 mr-2" />
+                        <Edit className="h-3 w-3 mr-1" />
                         Edit Policy
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setShowTrackedChanges(!showTrackedChanges)}
+                        className="text-xs"
                       >
-                        <Edit className="h-4 w-4 mr-2" />
+                        <Edit className="h-3 w-3 mr-1" />
                         {showTrackedChanges ? "Hide" : "Show"} Changes
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setActiveStep("export")}
+                        className="text-xs"
                       >
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-3 w-3 mr-1" />
                         Export Policy
                       </Button>
                     </>
@@ -1112,15 +1117,17 @@ export default function AuditPlannerPage() {
                         variant="outline"
                         size="sm"
                         onClick={cancelEditingPolicy}
+                        className="text-xs"
                       >
-                        <X className="h-4 w-4 mr-2" />
+                        <X className="h-3 w-3 mr-1" />
                         Cancel
                       </Button>
                       <Button
                         size="sm"
                         onClick={saveEditedPolicy}
+                        className="text-xs"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <CheckCircle className="h-3 w-3 mr-1" />
                         Save Changes
                       </Button>
                     </>
@@ -1151,33 +1158,35 @@ export default function AuditPlannerPage() {
                     </ul>
                   </div>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Editor */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-foreground">Edit Content</h4>
-                      <Textarea
-                        value={editedPolicyContent}
-                        onChange={(e) => setEditedPolicyContent(e.target.value)}
-                        className="min-h-96 font-mono text-sm resize-none"
-                        placeholder="Enter your policy content here..."
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Characters: {editedPolicyContent.length}</span>
-                        <span>Words: {editedPolicyContent.split(/\s+/).filter(word => word.length > 0).length}</span>
+                  <div className="overflow-x-auto pb-4">
+                    <div className="flex space-x-4 min-w-max lg:grid lg:grid-cols-2 lg:gap-4 lg:min-w-0">
+                      {/* Editor */}
+                      <div className="min-w-96 lg:min-w-0 flex-shrink-0 space-y-2">
+                        <h4 className="text-sm font-medium text-foreground">Edit Content</h4>
+                        <Textarea
+                          value={editedPolicyContent}
+                          onChange={(e) => setEditedPolicyContent(e.target.value)}
+                          className="min-h-96 font-mono text-sm resize-none"
+                          placeholder="Enter your policy content here..."
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Characters: {editedPolicyContent.length}</span>
+                          <span>Words: {editedPolicyContent.split(/\s+/).filter(word => word.length > 0).length}</span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* Preview */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-foreground">Preview</h4>
-                      <div className="border rounded-lg p-4 bg-background min-h-96 max-h-96 overflow-y-auto">
-                        <div className="prose prose-sm max-w-none">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={MarkdownComponents}
-                          >
-                            {editedPolicyContent || "Start typing to see the preview..."}
-                          </ReactMarkdown>
+                      
+                      {/* Preview */}
+                      <div className="min-w-96 lg:min-w-0 flex-shrink-0 space-y-2">
+                        <h4 className="text-sm font-medium text-foreground">Preview</h4>
+                        <div className="border rounded-lg p-4 bg-background min-h-96 max-h-96 overflow-y-auto">
+                          <div className="prose prose-sm max-w-none">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={MarkdownComponents}
+                            >
+                              {editedPolicyContent || "Start typing to see the preview..."}
+                            </ReactMarkdown>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1222,22 +1231,24 @@ export default function AuditPlannerPage() {
               {/* Framework Citations */}
               <div className="mt-6">
                 <h4 className="font-medium text-foreground mb-3">Framework Citations</h4>
-                <div className="space-y-2">
-                  {(currentProject.generated_policy?.citations || []).map((citation, index) => (
-                    <div key={index} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Badge>{citation.control_id}</Badge>
-                          <span className="font-medium">{citation.control_title}</span>
+                <div className="overflow-x-auto pb-2">
+                  <div className="flex space-x-3 lg:flex-col lg:space-x-0 lg:space-y-2 min-w-max lg:min-w-0">
+                    {(currentProject.generated_policy?.citations || []).map((citation, index) => (
+                      <div key={index} className="min-w-80 lg:min-w-0 flex-shrink-0 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                          <div className="flex items-center space-x-2">
+                            <Badge className="flex-shrink-0">{citation.control_id}</Badge>
+                            <span className="font-medium text-sm">{citation.control_title}</span>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         </div>
-                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground mt-1">{citation.description}</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Referenced in: {citation.policy_section}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{citation.description}</p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Referenced in: {citation.policy_section}
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -1267,36 +1278,38 @@ export default function AuditPlannerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button
-                  onClick={exportToWord}
-                  className="h-24 flex flex-col items-center justify-center space-y-2"
-                  variant="outline"
-                >
-                  <FileText className="h-8 w-8" />
-                  <span>Export as Word</span>
-                  <span className="text-xs text-muted-foreground">For editing & collaboration</span>
-                </Button>
+              <div className="overflow-x-auto pb-4">
+                <div className="flex space-x-4 min-w-max md:grid md:grid-cols-3 md:gap-4 md:min-w-0">
+                  <Button
+                    onClick={exportToWord}
+                    className="min-w-48 md:min-w-0 flex-shrink-0 h-24 flex flex-col items-center justify-center space-y-2"
+                    variant="outline"
+                  >
+                    <FileText className="h-8 w-8" />
+                    <span>Export as Word</span>
+                    <span className="text-xs text-muted-foreground">For editing & collaboration</span>
+                  </Button>
 
-                <Button
-                  onClick={exportToPDF}
-                  className="h-24 flex flex-col items-center justify-center space-y-2"
-                  variant="outline"
-                >
-                  <FileText className="h-8 w-8" />
-                  <span>Export as PDF</span>
-                  <span className="text-xs text-muted-foreground">For official records</span>
-                </Button>
+                  <Button
+                    onClick={exportToPDF}
+                    className="min-w-48 md:min-w-0 flex-shrink-0 h-24 flex flex-col items-center justify-center space-y-2"
+                    variant="outline"
+                  >
+                    <FileText className="h-8 w-8" />
+                    <span>Export as PDF</span>
+                    <span className="text-xs text-muted-foreground">For official records</span>
+                  </Button>
 
-                <Button
-                  onClick={copyToClipboard}
-                  className="h-24 flex flex-col items-center justify-center space-y-2"
-                  variant="outline"
-                >
-                  <Copy className="h-8 w-8" />
-                  <span>Copy to Clipboard</span>
-                  <span className="text-xs text-muted-foreground">Raw text content</span>
-                </Button>
+                  <Button
+                    onClick={copyToClipboard}
+                    className="min-w-48 md:min-w-0 flex-shrink-0 h-24 flex flex-col items-center justify-center space-y-2"
+                    variant="outline"
+                  >
+                    <Copy className="h-8 w-8" />
+                    <span>Copy to Clipboard</span>
+                    <span className="text-xs text-muted-foreground">Raw text content</span>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1362,11 +1375,11 @@ export default function AuditPlannerPage() {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex justify-center space-x-4">
-            <Button variant="outline" onClick={resetForm}>
+          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
               Create Another Audit
             </Button>
-            <Button onClick={() => setActiveStep("generate")}>
+            <Button onClick={() => setActiveStep("generate")} className="w-full sm:w-auto">
               <Edit className="h-4 w-4 mr-2" />
               Edit This Policy
             </Button>
