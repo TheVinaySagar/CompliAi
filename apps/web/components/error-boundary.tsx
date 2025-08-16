@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
 function DefaultErrorFallback({ error, retry }: { error?: Error; retry: () => void }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -73,7 +73,7 @@ function DefaultErrorFallback({ error, retry }: { error?: Error; retry: () => vo
         </CardHeader>
         <CardContent className="space-y-4">
           {process.env.NODE_ENV === 'development' && error && (
-            <div className="p-3 bg-gray-100 rounded-md">
+            <div className="p-3 bg-muted rounded-md">
               <p className="text-xs font-mono text-gray-700 break-all">
                 {error.message}
               </p>

@@ -173,26 +173,17 @@ const ChatPage = memo(() => {
   }, [inputValue, debouncedValidation])
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100/50">
+    <div className="flex flex-col h-full bg-background">
       {/* Enhanced Header */}
-      <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200/60 px-4 sm:px-6 py-4">
+      <div className="bg-background/80 backdrop-blur-sm shadow-sm border-b border-border px-4 sm:px-6 py-2">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center min-w-0 gap-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shrink-0">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold text-slate-900 truncate">AI Compliance Assistant</h1>
-              <p className="text-xs sm:text-sm text-slate-600">Ask questions about compliance frameworks, policies, and requirements</p>
-            </div>
-          </div>
           {/* Mobile Action Buttons (shown only on mobile) */}
       <div className="flex gap-2 sm:hidden">
         <Button
           variant="ghost"
           size="sm"
           onClick={clearMessages}
-          className="p-2 hover:bg-slate-100"
+          className="p-2 hover:bg-accent"
         >
           <RefreshCw className="h-4 w-4" />
         </Button>
@@ -200,7 +191,7 @@ const ChatPage = memo(() => {
           variant="ghost"
           size="sm"
           onClick={() => window.open('/upload', '_blank')}
-          className="p-2 hover:bg-blue-50"
+          className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
         >
           <Upload className="h-4 w-4" />
         </Button>
@@ -210,7 +201,7 @@ const ChatPage = memo(() => {
             {/* Document Selection */}
             <div className="flex-1 flex items-center gap-2 min-w-0">
               <Select value={selectedDocument} onValueChange={setSelectedDocument} disabled={loadingDocuments}>
-                <SelectTrigger className="w-full sm:w-48 bg-white border-slate-200 hover:border-slate-300 transition-colors">
+                <SelectTrigger className="w-full sm:w-48 bg-background border-border hover:border-border/80 transition-colors">
                   <SelectValue placeholder={loadingDocuments ? "Loading documents..." : "Select document"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,7 +231,7 @@ const ChatPage = memo(() => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedDocument("general")}
-                  className="hover:bg-slate-100"
+                  className="hover:bg-accent"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -253,7 +244,7 @@ const ChatPage = memo(() => {
                 variant="outline"
                 size="sm"
                 onClick={clearMessages}
-                className=" hover:bg-slate-50 border-slate-200"
+                className="hover:bg-accent border-border"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Clear
@@ -262,7 +253,7 @@ const ChatPage = memo(() => {
                 variant="outline"
                 size="sm"
                 onClick={() => window.open('/upload', '_blank')}
-                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800 dark:hover:text-blue-300 transition-colors"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload
@@ -273,23 +264,23 @@ const ChatPage = memo(() => {
         
         {/* Selected Document Info */}
         {selectedDocument !== "general" && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             {(() => {
               const doc = documents.find(d => d.id === selectedDocument)
               return doc ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FileText className="h-5 w-5 text-blue-600" />
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                      <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-blue-900">Chatting with: {doc.name}</p>
-                      <p className="text-xs text-blue-600">
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Chatting with: {doc.name}</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-300">
                         {doc.chunks_created} chunks • {doc.controls_identified} controls identified
                       </p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800">
                     Document Mode
                   </Badge>
                 </div>
@@ -304,15 +295,15 @@ const ChatPage = memo(() => {
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 && (
             <div className="text-center py-8 sm:py-12">
-              <Card className="mx-auto max-w-2xl border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <Card className="mx-auto max-w-2xl border-0 shadow-lg bg-card/80 backdrop-blur-sm">
                 <CardHeader className="text-center pb-4">
                   <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full w-fit">
                     <Sparkles className="h-8 w-8 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-bold text-slate-900">
+                  <CardTitle className="text-2xl font-bold text-foreground">
                     Welcome to CompliAI
                   </CardTitle>
-                  <CardDescription className="text-base text-slate-600 mt-2">
+                  <CardDescription className="text-base text-muted-foreground mt-2">
                     {selectedDocument !== "general"
                       ? "Ask questions about your uploaded document" 
                       : "I'm here to help you navigate compliance requirements, create policies, and understand regulatory frameworks."
@@ -321,7 +312,7 @@ const ChatPage = memo(() => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="text-center">
-                    <p className="text-sm font-medium text-slate-700 mb-4">
+                    <p className="text-sm font-medium text-foreground mb-4">
                       {selectedDocument !== "general" ? "Try asking about your document:" : "Try asking one of these questions:"}
                     </p>
                   </div>
@@ -331,13 +322,13 @@ const ChatPage = memo(() => {
                       <Button
                         key={index}
                         variant="outline"
-                        className="text-left justify-start h-auto p-4 bg-transparent hover:bg-slate-50 border-slate-200"
+                        className="text-left justify-start h-auto p-4 bg-transparent hover:bg-accent border-border"
                         onClick={() => setInputValue(question.text)}
                       >
                         <div className="flex items-center gap-3 w-full">
                           <div className="flex-1 text-left min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{question.text}</p>
-                            <p className="text-xs text-slate-500 mt-1">{question.category}</p>
+                            <p className="text-sm font-medium text-foreground truncate">{question.text}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{question.category}</p>
                           </div>
                         </div>
                       </Button>
@@ -346,18 +337,18 @@ const ChatPage = memo(() => {
                   
                   {/* Document Upload CTA when no document selected */}
                   {selectedDocument === "general" && documents.length === 0 && (
-                    <div className="mt-6 p-6 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border-2 border-dashed border-slate-300">
+                    <div className="mt-6 p-6 bg-gradient-to-r from-muted/50 to-muted rounded-lg border-2 border-dashed border-border">
                       <div className="text-center">
-                        <div className="mx-auto mb-3 p-3 bg-slate-200 rounded-full w-fit">
-                          <FileText className="h-6 w-6 text-slate-500" />
+                        <div className="mx-auto mb-3 p-3 bg-muted rounded-full w-fit">
+                          <FileText className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <p className="text-sm font-semibold text-slate-900 mb-1">No documents uploaded</p>
-                        <p className="text-xs text-slate-600 mb-4">Upload compliance documents to chat with them</p>
+                        <p className="text-sm font-semibold text-foreground mb-1">No documents uploaded</p>
+                        <p className="text-xs text-muted-foreground mb-4">Upload compliance documents to chat with them</p>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => window.open('/upload', '_blank')}
-                          className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                          className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800 dark:hover:text-blue-300 transition-colors"
                         >
                           <Upload className="h-4 w-4 mr-2" />
                           Upload Document
@@ -371,14 +362,14 @@ const ChatPage = memo(() => {
           )}
 
           {error && (
-            <Alert className="max-w-2xl mx-auto mb-6 border-red-200 bg-red-50">
+            <Alert className="max-w-2xl mx-auto mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-red-800">
+              <AlertDescription className="text-red-800 dark:text-red-200">
                 {error}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-2 text-red-600 hover:text-red-800"
+                  className="ml-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
                   onClick={() => setError(null)}
                 >
                   Dismiss
@@ -398,7 +389,7 @@ const ChatPage = memo(() => {
       </div>
 
       {/* Enhanced Input Area */}
-      <div className="bg-white/80 backdrop-blur-sm border-t border-slate-200/60 p-4 sm:p-6">
+      <div className="bg-background/80 backdrop-blur-sm border-t border-border p-4 sm:p-2">
         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -410,7 +401,7 @@ const ChatPage = memo(() => {
                   ? "Ask questions about this document..." 
                   : "Ask about compliance requirements, policies, or controls..."
                 }
-                className="min-h-[3rem] max-h-32 resize-none border-slate-200 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                className="min-h-[3rem] max-h-32 resize-none border-input focus:border-ring focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed bg-background"
                 maxLength={CHAT_CONFIG.MAX_MESSAGE_LENGTH}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -419,7 +410,7 @@ const ChatPage = memo(() => {
                   }
                 }}
               />
-              <div className="absolute bottom-2 right-2 text-xs text-slate-400">
+              <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
                 {inputValue.length}/{CHAT_CONFIG.MAX_MESSAGE_LENGTH}
               </div>
             </div>

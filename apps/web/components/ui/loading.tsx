@@ -70,25 +70,14 @@ export function Skeleton({ className }: SkeletonProps) {
 
 export function ChatMessageSkeleton() {
   return (
-    <div className="flex justify-start mb-6">
-      <div className="max-w-4xl rounded-2xl px-6 py-5 bg-white/80 backdrop-blur-sm border border-slate-200 shadow-md">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
-            <Skeleton className="h-3 w-20" />
-          </div>
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-5/6" />
-          <div className="flex space-x-2 mt-4">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-          </div>
-        </div>
-      </div>
+    <div className="inline-flex items-center bg-gray-200 px-4 py-2 rounded-2xl">
+      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150" />
+      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300" />
     </div>
-  )
+  );
 }
+
 
 export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (

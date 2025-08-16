@@ -131,8 +131,8 @@ export default function TeamPage() {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Team Management</h1>
-            <p className="text-sm sm:text-base text-gray-600">Manage team members and their access permissions</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">Team Management</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage team members and their access permissions</p>
           </div>
           <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
             <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="w-full sm:w-auto">
@@ -148,7 +148,7 @@ export default function TeamPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
         <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Total Members</CardTitle>
+            <CardTitle className="text-sm sm:text-base text-muted-foreground">Total Members</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl sm:text-3xl font-bold text-blue-600">
@@ -159,7 +159,7 @@ export default function TeamPage() {
 
         <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Active</CardTitle>
+            <CardTitle className="text-sm sm:text-base text-muted-foreground">Active</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl sm:text-3xl font-bold text-green-600">
@@ -170,7 +170,7 @@ export default function TeamPage() {
 
         <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Pending</CardTitle>
+            <CardTitle className="text-sm sm:text-base text-muted-foreground">Pending</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl sm:text-3xl font-bold text-yellow-600">
@@ -181,7 +181,7 @@ export default function TeamPage() {
 
         <Card className="min-h-[100px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500">Admins</CardTitle>
+            <CardTitle className="text-sm sm:text-base text-muted-foreground">Admins</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl sm:text-3xl font-bold text-purple-600">
@@ -228,7 +228,7 @@ export default function TeamPage() {
               <div className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4">
                 <UserCheck className="h-full w-full" />
               </div>
-              <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-2">No team members yet</h3>
+              <h3 className="text-sm sm:text-base text-muted-foreground">No team members yet</h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">Get started by inviting your first team member.</p>
               <InviteMemberDialog onMemberInvited={loadTeamData} />
             </div>
@@ -296,7 +296,7 @@ export default function TeamPage() {
       </Card>
 
       {/* Role Permissions Information */}
-      <Card className="mt-4 sm:mt-6">
+      {/* <Card className="mt-4 sm:mt-6">
         <CardHeader>
           <CardTitle className="text-lg sm:text-xl">Role Permissions</CardTitle>
           <CardDescription className="text-sm sm:text-base">Understanding different permission levels</CardDescription>
@@ -353,7 +353,7 @@ export default function TeamPage() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 }

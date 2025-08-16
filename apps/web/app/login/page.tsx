@@ -51,15 +51,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[420px] sm:max-w-md lg:max-w-lg w-full space-y-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <Logo className="w-16 h-16 m:w-20 sm:h-20 md:w-20 md:h-20 lg:w-16 lg:h-16 rounded-full" />
           </div>
           <div className="space-y-2">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">CompliAI</h2>
-          <p className="text-sm sm:text-base text-gray-600 max-w-sm mx-auto">AI-Powered Compliance, From Policy to Audit</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">CompliAI</h2>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-sm mx-auto">AI-Powered Compliance, From Policy to Audit</p>
           </div>
         </div>
 
@@ -108,9 +108,9 @@ export default function LoginPage() {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     )}
                   </button>
                 </div>
@@ -129,9 +129,9 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-4 sm:mt-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                <Link href="/register" className="font-medium text-primary hover:text-primary/80 transition-colors">
                   Create account
                 </Link>
               </p>

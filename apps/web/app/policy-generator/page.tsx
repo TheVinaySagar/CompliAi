@@ -83,11 +83,11 @@ export default function PolicyGeneratorPage() {
 
       if (!inline) {
         return (
-          <div className="relative rounded-lg overflow-hidden bg-slate-100 my-4">
-            <div className="flex items-center justify-between px-4 py-2 text-xs bg-slate-200 text-slate-600 border-b">
+          <div className="relative rounded-lg overflow-hidden bg-muted my-4 border border-border">
+            <div className="flex items-center justify-between px-4 py-2 text-xs bg-muted/50 text-muted-foreground border-b border-border">
               <span className="font-medium">{language}</span>
             </div>
-            <div className="p-4 text-sm font-mono text-slate-800">
+            <div className="p-4 text-sm font-mono text-foreground">
               <pre className="whitespace-pre-wrap overflow-x-auto">
                 <code {...props}>{children}</code>
               </pre>
@@ -97,7 +97,7 @@ export default function PolicyGeneratorPage() {
       }
 
       return (
-        <code className="px-2 py-1 text-sm font-mono rounded bg-slate-200 text-slate-800" {...props}>
+        <code className="px-2 py-1 text-sm font-mono rounded bg-muted text-foreground border border-border" {...props}>
           {children}
         </code>
       )
@@ -105,19 +105,19 @@ export default function PolicyGeneratorPage() {
 
     // Custom styling for different elements
     h1: ({ children }: any) => (
-      <h1 className="text-2xl font-bold mt-6 mb-4 text-slate-900">{children}</h1>
+      <h1 className="text-2xl font-bold mt-6 mb-4 text-foreground">{children}</h1>
     ),
     h2: ({ children }: any) => (
-      <h2 className="text-xl font-bold mt-6 mb-3 text-slate-900 border-b border-slate-300 pb-2">{children}</h2>
+      <h2 className="text-xl font-bold mt-6 mb-3 text-foreground border-b border-border pb-2">{children}</h2>
     ),
     h3: ({ children }: any) => (
-      <h3 className="text-lg font-semibold mt-4 mb-2 text-slate-800">{children}</h3>
+      <h3 className="text-lg font-semibold mt-4 mb-2 text-foreground">{children}</h3>
     ),
     h4: ({ children }: any) => (
-      <h4 className="text-base font-semibold mt-3 mb-2 text-slate-800">{children}</h4>
+      <h4 className="text-base font-semibold mt-3 mb-2 text-foreground">{children}</h4>
     ),
     p: ({ children }: any) => (
-      <p className="leading-relaxed text-base mb-3 text-gray-700">{children}</p>
+      <p className="leading-relaxed text-base mb-3 text-foreground">{children}</p>
     ),
     ul: ({ children }: any) => (
       <ul className="space-y-1 ml-4 mb-4 list-disc">{children}</ul>
@@ -133,52 +133,52 @@ export default function PolicyGeneratorPage() {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-500 transition-colors"
+        className="text-primary hover:text-primary/80 underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
       >
         {children}
       </a>
     ),
     blockquote: ({ children }: any) => (
-      <blockquote className="border-l-4 border-blue-500 pl-4 italic text-slate-700 my-4 bg-blue-50/50 py-2 rounded-r">
+      <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground my-4 bg-primary/5 py-2 rounded-r">
         {children}
       </blockquote>
     ),
     hr: () => (
-      <hr className="my-4 border-t border-slate-300" />
+      <hr className="my-4 border-t border-border" />
     ),
     strong: ({ children }: any) => {
       // Special handling for Framework Alignment
       if (typeof children === 'string' && children.includes('Framework Alignment:')) {
         return (
-          <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 text-sm font-medium my-1">
+          <span className="inline-block bg-primary/10 px-2 py-1 rounded text-primary text-sm font-medium my-1">
             {children}
           </span>
         )
       }
-      return <strong className="font-semibold text-slate-900">{children}</strong>
+      return <strong className="font-semibold text-foreground">{children}</strong>
     },
     em: ({ children }: any) => (
-      <em className="italic text-slate-700">{children}</em>
+      <em className="italic text-foreground">{children}</em>
     ),
     table: ({ children }: any) => (
       <div className="overflow-x-auto my-4">
-        <table className="min-w-full border border-slate-300">{children}</table>
+        <table className="min-w-full border border-border">{children}</table>
       </div>
     ),
     thead: ({ children }: any) => (
-      <thead className="bg-slate-100">{children}</thead>
+      <thead className="bg-muted/50">{children}</thead>
     ),
     tbody: ({ children }: any) => (
       <tbody>{children}</tbody>
     ),
     tr: ({ children }: any) => (
-      <tr className="border-b border-slate-300">{children}</tr>
+      <tr className="border-b border-border">{children}</tr>
     ),
     th: ({ children }: any) => (
-      <th className="px-4 py-2 text-left font-semibold text-slate-900">{children}</th>
+      <th className="px-4 py-2 text-left font-semibold text-foreground">{children}</th>
     ),
     td: ({ children }: any) => (
-      <td className="px-4 py-2 text-slate-700">{children}</td>
+      <td className="px-4 py-2 text-foreground">{children}</td>
     ),
   }
 
@@ -539,65 +539,65 @@ export default function PolicyGeneratorPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 w-full max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Policy Generator</h1>
-        <p className="text-gray-600">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">Policy Generator</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Generate comprehensive compliance policies. Define your requirements, generate content, and export professional documents.
         </p>
       </div>
 
       {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-2xl mx-auto space-y-4 sm:space-y-0">
           <div className={`flex items-center space-x-2 ${
-            activeStep === "define" ? "text-blue-600" : 
-            activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
+            activeStep === "define" ? "text-primary" : 
+            activeStep === "generate" || activeStep === "export" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              activeStep === "define" ? "bg-blue-100 text-blue-600" :
-              activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+              activeStep === "define" ? "bg-primary/10 text-primary" :
+              activeStep === "generate" || activeStep === "export" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted"
             }`}>
               {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
             </div>
-            <span className="font-medium">Define Requirements</span>
+            <span className="font-medium text-sm sm:text-base">Define Requirements</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+          <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
             <div className={`h-full transition-all duration-300 ${
-              activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
+              activeStep === "generate" || activeStep === "export" ? "bg-emerald-500 w-full" : "bg-border w-0"
             }`} />
           </div>
 
           <div className={`flex items-center space-x-2 ${
-            activeStep === "generate" ? "text-blue-600" : 
-            activeStep === "export" ? "text-green-600" : "text-gray-400"
+            activeStep === "generate" ? "text-primary" : 
+            activeStep === "export" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              activeStep === "generate" ? "bg-blue-100 text-blue-600" :
-              activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+              activeStep === "generate" ? "bg-primary/10 text-primary" :
+              activeStep === "export" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted"
             }`}>
-              {activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "2"}
+              {activeStep === "export" ? <CheckCircle className="w-4 w-4" /> : "2"}
             </div>
-            <span className="font-medium">Generate & Review</span>
+            <span className="font-medium text-sm sm:text-base">Generate & Review</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+          <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
             <div className={`h-full transition-all duration-300 ${
-              activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
+              activeStep === "export" ? "bg-emerald-500 w-full" : "bg-border w-0"
             }`} />
           </div>
 
           <div className={`flex items-center space-x-2 ${
-            activeStep === "export" ? "text-blue-600" : "text-gray-400"
+            activeStep === "export" ? "text-primary" : "text-muted-foreground"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-gray-100"
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+              activeStep === "export" ? "bg-primary/10 text-primary" : "bg-muted"
             }`}>
               3
             </div>
-            <span className="font-medium">Export & Implement</span>
+            <span className="font-medium text-sm sm:text-base">Export & Implement</span>
           </div>
         </div>
       </div>
@@ -608,7 +608,7 @@ export default function PolicyGeneratorPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Target className="h-5 w-5 text-blue-600" />
+                <Target className="h-5 w-5 text-primary" />
                 <span>Step 1: Define Your Policy Requirements</span>
               </CardTitle>
               <CardDescription>
@@ -651,7 +651,7 @@ export default function PolicyGeneratorPage() {
                       <SelectItem key={framework.id} value={framework.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{framework.name}</span>
-                          <span className="text-sm text-gray-500">{framework.description}</span>
+                          <span className="text-sm text-muted-foreground">{framework.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -669,24 +669,25 @@ export default function PolicyGeneratorPage() {
                   placeholder="Describe what your policy should cover. Include specific requirements, scope, audience, and any particular compliance needs..."
                   rows={6}
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Be specific about your organization's needs, industry requirements, and any particular compliance objectives.
                 </p>
               </div>
 
               {/* Generate Button */}
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
                 <Button 
                   variant="outline" 
                   onClick={resetForm}
                   disabled={isGenerating}
+                  className="w-full sm:w-auto"
                 >
                   Reset Form
                 </Button>
                 <Button 
                   onClick={generatePolicy}
                   disabled={isGenerating || !projectTitle || !selectedFramework || !prompt}
-                  className="min-w-[140px]"
+                  className="w-full sm:w-auto sm:min-w-[140px]"
                 >
                   {isGenerating ? (
                     <>
@@ -704,13 +705,13 @@ export default function PolicyGeneratorPage() {
 
               {/* Generation Progress */}
               {isGenerating && (
-                <div className="space-y-3 p-4 bg-blue-50 rounded-lg border">
+                <div className="space-y-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{generationStatus}</span>
-                    <span className="text-gray-600">{generationProgress}%</span>
+                    <span className="text-muted-foreground">{generationStatus}</span>
+                    <span className="text-muted-foreground">{generationProgress}%</span>
                   </div>
                   <Progress value={generationProgress} className="h-3" />
-                  <p className="text-xs text-gray-500 text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     This may take 1-2 minutes for comprehensive policy generation.
                   </p>
                 </div>
@@ -723,7 +724,7 @@ export default function PolicyGeneratorPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-gray-600" />
+                  <Clock className="h-5 w-5 text-muted-foreground" />
                   <span>Recent Projects</span>
                 </CardTitle>
                 <CardDescription>
@@ -735,17 +736,17 @@ export default function PolicyGeneratorPage() {
                   {projects.slice(0, 3).map((project) => (
                     <div 
                       key={project.id} 
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                       onClick={() => {
                         setCurrentProject(project)
                         setActiveStep(project.status === 'Completed' ? 'export' : 'generate')
                       }}
                     >
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{project.title}</h4>
-                        <div className="flex items-center space-x-3 text-sm text-gray-600 mt-1">
+                        <h4 className="font-medium text-foreground">{project.title}</h4>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
                           <span>{frameworks.find(f => f.id === project.framework)?.name}</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>
                             {project.updated_at 
                               ? new Date(project.updated_at).toLocaleDateString()
@@ -761,7 +762,7 @@ export default function PolicyGeneratorPage() {
                           </Badge>
                         </div>
                       </div>
-                      <ExternalLink className="h-4 w-4 text-gray-400" />
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
                     </div>
                   ))}
                   
@@ -780,28 +781,28 @@ export default function PolicyGeneratorPage() {
       {/* Step 2: Generate & Review */}
       {activeStep === "generate" && currentProject && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{currentProject.title}</h2>
-              <p className="text-gray-600">Framework: {frameworks.find(f => f.id === currentProject.framework)?.name}</p>
+              <h2 className="text-xl font-semibold text-foreground">{currentProject.title}</h2>
+              <p className="text-muted-foreground">Framework: {frameworks.find(f => f.id === currentProject.framework)?.name}</p>
             </div>
-            <Button variant="outline" onClick={resetForm}>
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
               <RefreshCw className="h-4 w-4 mr-2" />
               Start New Policy
             </Button>
           </div>
 
           {/* Policy Status */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                   <span>Generation Status</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600 mb-2">
+                <div className="text-2xl font-bold text-primary mb-2">
                   {currentProject.status}
                 </div>
                 <Badge variant={
@@ -818,16 +819,16 @@ export default function PolicyGeneratorPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <FileCheck className="h-5 w-5 text-green-600" />
+                <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
+                  <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                   <span>Word Count</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600 mb-2">
+                <div className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">
                   {currentProject.generated_policy?.word_count || 0}
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {currentProject.generated_policy?.word_count ? "Words generated" : "Waiting for content"}
                 </p>
               </CardContent>
@@ -835,18 +836,18 @@ export default function PolicyGeneratorPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-gray-600" />
+                <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                   <span>Generated</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm font-medium text-gray-900 mb-2">
+                <div className="text-sm font-medium text-foreground mb-2">
                   {currentProject.generated_policy?.generated_at
                     ? new Date(currentProject.generated_policy.generated_at).toLocaleDateString()
                     : "Not generated yet"}
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {currentProject.generated_policy?.generated_at
                     ? new Date(currentProject.generated_policy.generated_at).toLocaleTimeString()
                     : "Waiting for generation"}
@@ -858,31 +859,31 @@ export default function PolicyGeneratorPage() {
           {/* Generated Policy Content */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
                 <CardTitle className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                   <span>Generated Policy</span>
                 </CardTitle>
                 {currentProject.status === "Completed" && currentProject.generated_policy && (
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     {!isEditingPolicy ? (
                       <>
-                        <Button variant="outline" size="sm" onClick={startEditingPolicy}>
+                        <Button variant="outline" size="sm" onClick={startEditingPolicy} className="flex-1 sm:flex-none">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Policy
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setActiveStep("export")}>
+                        <Button variant="outline" size="sm" onClick={() => setActiveStep("export")} className="flex-1 sm:flex-none">
                           <Download className="h-4 w-4 mr-2" />
                           Export Policy
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button variant="outline" size="sm" onClick={cancelEditingPolicy}>
+                        <Button variant="outline" size="sm" onClick={cancelEditingPolicy} className="flex-1 sm:flex-none">
                           <X className="h-4 w-4 mr-2" />
                           Cancel
                         </Button>
-                        <Button size="sm" onClick={saveEditedPolicy}>
+                        <Button size="sm" onClick={saveEditedPolicy} className="flex-1 sm:flex-none">
                           <Save className="h-4 w-4 mr-2" />
                           Save Changes
                         </Button>
@@ -898,10 +899,10 @@ export default function PolicyGeneratorPage() {
             <CardContent>
               {currentProject.status === "Generating" && (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Generating Your Policy</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-lg font-medium text-foreground mb-2">Generating Your Policy</h3>
+                    <p className="text-muted-foreground">
                       Our AI is analyzing your requirements and creating a comprehensive policy document.
                     </p>
                   </div>
@@ -932,10 +933,10 @@ export default function PolicyGeneratorPage() {
 
               {currentProject.status === "Failed" && (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <AlertCircle className="h-12 w-12 text-red-500" />
+                  <AlertCircle className="h-12 w-12 text-destructive" />
                   <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Generation Failed</h3>
-                    <p className="text-gray-600 mb-4">
+                    <h3 className="text-lg font-medium text-foreground mb-2">Generation Failed</h3>
+                    <p className="text-muted-foreground mb-4">
                       {currentProject.error_message || "There was an error generating your policy."}
                     </p>
                     <Button onClick={() => setActiveStep("define")}>
@@ -948,10 +949,10 @@ export default function PolicyGeneratorPage() {
 
               {currentProject.status === "Draft" && (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <FileText className="h-12 w-12 text-gray-400" />
+                  <FileText className="h-12 w-12 text-muted-foreground" />
                   <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Generate</h3>
-                    <p className="text-gray-600 mb-4">
+                    <h3 className="text-lg font-medium text-foreground mb-2">Ready to Generate</h3>
+                    <p className="text-muted-foreground mb-4">
                       Click the generate button to create your policy content.
                     </p>
                     <Button onClick={() => setActiveStep("define")}>
@@ -970,8 +971,8 @@ export default function PolicyGeneratorPage() {
       {activeStep === "export" && currentProject && currentProject.status === "Completed" && (
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-semibold text-foreground mb-2">Policy Generated Successfully!</h2>
+            <p className="text-muted-foreground mb-6">
               Your policy document is complete and ready for export. Choose your preferred format below.
             </p>
           </div>
@@ -980,7 +981,7 @@ export default function PolicyGeneratorPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Download className="h-5 w-5 text-blue-600" />
+                <Download className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                 <span>Export Options</span>
               </CardTitle>
               <CardDescription>
@@ -988,7 +989,7 @@ export default function PolicyGeneratorPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Button
                   onClick={exportToWord}
                   className="h-24 flex flex-col items-center justify-center space-y-2"
@@ -1001,7 +1002,7 @@ export default function PolicyGeneratorPage() {
                     <FileText className="h-8 w-8" />
                   )}
                   <span>Export as Word</span>
-                  <span className="text-xs text-gray-500">For editing & collaboration</span>
+                  <span className="text-xs text-muted-foreground">For editing & collaboration</span>
                 </Button>
 
                 <Button
@@ -1016,7 +1017,7 @@ export default function PolicyGeneratorPage() {
                     <FileText className="h-8 w-8" />
                   )}
                   <span>Export as PDF</span>
-                  <span className="text-xs text-gray-500">For official records</span>
+                  <span className="text-xs text-muted-foreground">For official records</span>
                 </Button>
 
                 <Button
@@ -1027,7 +1028,7 @@ export default function PolicyGeneratorPage() {
                 >
                   <Copy className="h-8 w-8" />
                   <span>Copy to Clipboard</span>
-                  <span className="text-xs text-gray-500">Raw markdown text</span>
+                  <span className="text-xs text-muted-foreground">Raw markdown text</span>
                 </Button>
               </div>
             </CardContent>
@@ -1037,7 +1038,7 @@ export default function PolicyGeneratorPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-gray-600" />
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                 <span>Policy Information</span>
               </CardTitle>
               <CardDescription>
@@ -1046,17 +1047,17 @@ export default function PolicyGeneratorPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-600">Policy Title:</span>
+                    <span className="font-medium text-muted-foreground">Policy Title:</span>
                     <p className="mt-1">{currentProject.title}</p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Framework:</span>
+                    <span className="font-medium text-muted-foreground">Framework:</span>
                     <p className="mt-1">{frameworks.find(f => f.id === currentProject.framework)?.name}</p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Generated:</span>
+                    <span className="font-medium text-muted-foreground">Generated:</span>
                     <p className="mt-1">
                       {currentProject.generated_policy?.generated_at
                         ? new Date(currentProject.generated_policy.generated_at).toLocaleString()
@@ -1064,25 +1065,25 @@ export default function PolicyGeneratorPage() {
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Word Count:</span>
+                    <span className="font-medium text-muted-foreground">Word Count:</span>
                     <p className="mt-1">{currentProject.generated_policy?.word_count || 0} words</p>
                   </div>
                 </div>
 
                 <div className="border-t pt-4">
-                  <span className="font-medium text-gray-600">Original Requirements:</span>
-                  <p className="mt-1 text-gray-700 bg-gray-50 p-3 rounded-lg">{currentProject.prompt}</p>
+                  <span className="font-medium text-muted-foreground">Original Requirements:</span>
+                  <p className="mt-1 text-foreground bg-muted p-3 rounded-lg">{currentProject.prompt}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex justify-center space-x-4">
-            <Button variant="outline" onClick={resetForm}>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
               Create Another Policy
             </Button>
-            <Button onClick={() => setActiveStep("generate")}>
+            <Button onClick={() => setActiveStep("generate")} className="w-full sm:w-auto">
               <Edit className="h-4 w-4 mr-2" />
               Edit This Policy
             </Button>

@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -78,14 +78,14 @@ const navigation = [
   },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
+}
+
+export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [pathname])
 
   const handleLogout = async () => {
     try {
@@ -97,17 +97,6 @@ export default function Sidebar() {
 
   return (
     <>
-     {/* Hamburger button: show only when sidebar closed */}
-      {!sidebarOpen && (
-        <button
-          className="fixed top-4 left-4 z-[1100] md:hidden flex items-center justify-center rounded-md p-2 text-slate-300 hover:bg-slate-700/70 hover:text-white transition-colors duration-200"
-          aria-label="Open sidebar"
-          onClick={() => setSidebarOpen(true)}
-        >
-          <Menu className="h-4 w-4" />
-        </button>
-      )}
-
       {/* Sidebar Overlay for mobile */}
       <div
         className={cn(

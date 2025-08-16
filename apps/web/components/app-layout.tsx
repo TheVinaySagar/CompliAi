@@ -1,6 +1,7 @@
 "use client"
 
-import React, { memo } from "react"
+import React, { memo, useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import AuthGuard from "@/components/auth-guard"
 import Sidebar from "@/components/sidebar"
 import Header from "@/components/header"
@@ -24,14 +25,21 @@ const AppLayout = memo(({
   showSidebar = true,
   showHeader = true,
 }: AppLayoutProps) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
+
   return (
     <ErrorBoundary>
       <AuthGuard requireRole={requireRole} requirePermission={requirePermission}>
-        <div className={cn("relative h-screen bg-slate-50", className)}>
-          {showSidebar && <Sidebar />}
+        <div className={cn("relative h-screen bg-background", className)}>
+          {showSidebar && <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}
           <div className="flex flex-1 flex-col overflow-hidden md:ml-64 h-full">
-            {showHeader && <Header />}
-            <main className="flex-1 overflow-y-auto">{children}</main>
+            {showHeader && <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}
+            <main className="flex-1 overflow-y-auto bg-background">{children}</main>
           </div>
         </div>
       </AuthGuard>

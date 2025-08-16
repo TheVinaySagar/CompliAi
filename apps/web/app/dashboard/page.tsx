@@ -169,15 +169,15 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 sm:p-6 space-y-6 sm:space-y-8">
+    <div className="min-h-full bg-background p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Header Section */}
       <div className="flex flex-col space-y-3 sm:space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Welcome back, {user?.name?.split(' ')[0] || 'User'}!
             </h1>
-            <p className="text-slate-600 text-sm sm:text-base md:text-base">
+            <p className="text-muted-foreground text-sm sm:text-base md:text-base">
               Here's your compliance overview for today
             </p>
           </div>
@@ -220,16 +220,16 @@ export default function DashboardPage() {
           <>
             <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                <CardTitle className="text-sm font-medium text-muted-foreground truncate">
                   Documents
                 </CardTitle>
-                <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <FileText className="h-4 w-4 text-primary flex-shrink-0" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold text-foreground">
                   {documentsCount}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {documentsCount === 0 ? "Upload your first document" : `${documentsCount} processed`}
                 </p>
               </CardContent>
@@ -237,16 +237,16 @@ export default function DashboardPage() {
 
             <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                <CardTitle className="text-sm font-medium text-muted-foreground truncate">
                   Controls Mapped
                 </CardTitle>
-                <Target className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <Target className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold text-foreground">
                   {controlsCount}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {controlsCount === 0 ? "Ready to map controls" : `${controlsCount} identified`}
                 </p>
               </CardContent>
@@ -254,17 +254,17 @@ export default function DashboardPage() {
 
             <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                <CardTitle className="text-sm font-medium text-muted-foreground truncate">
                   Compliance Score
                 </CardTitle>
                 <BarChart3 className="h-4 w-4 text-purple-600 flex-shrink-0" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold text-foreground">
                   {`${complianceProgress}%`}
                 </div>
                 <Progress value={complianceProgress} className="mt-2 h-2" />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {complianceProgress === 100 ? "Fully compliant" : "Improvement needed"}
                 </p>
               </CardContent>
@@ -272,16 +272,16 @@ export default function DashboardPage() {
 
             <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600 truncate">
+                <CardTitle className="text-sm font-medium text-muted-foreground truncate">
                   Policies
                 </CardTitle>
                 <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold text-foreground">
                   {activePolicies}
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {activePolicies === 0 ? "No policies yet" : `${activePolicies} extracted`}
                 </p>
               </CardContent>
@@ -296,7 +296,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2 border-0 shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+              <TrendingUp className="h-5 w-5 text-primary" />
               Quick Actions
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm md:text-base">
@@ -306,22 +306,22 @@ export default function DashboardPage() {
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Button 
               variant="outline" 
-              className="h-auto flex-col p-6 hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 min-h-[120px]"
+              className="h-auto flex-col p-6 hover:bg-primary/5 hover:border-primary/20 transition-all duration-200 min-h-[120px]"
               onClick={() => window.location.href = '/upload'}
             >
-              <Upload className="h-8 w-8 text-blue-600 mb-2" />
+              <Upload className="h-8 w-8 text-primary mb-2" />
               <span className="font-medium text-center text-sm">Upload Document</span>
-              <span className="text-xs text-slate-500 mt-1 text-center break-words">Add new compliance docs</span>
+              <span className="text-xs text-muted-foreground mt-1 text-center break-words">Add new compliance docs</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="h-auto flex-col p-6 hover:bg-green-50 hover:border-green-200 transition-all duration-200 min-h-[120px]"
+              className="h-auto flex-col p-6 hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/10 dark:hover:border-green-800/20 transition-all duration-200 min-h-[120px]"
               onClick={() => window.location.href = '/chat'}
             >
-              <MessageCircle className="h-8 w-8 text-green-600 mb-2" />
+              <MessageCircle className="h-8 w-8 text-green-600 dark:text-green-400 mb-2" />
               <span className="font-medium text-center text-sm">Ask AI</span>
-              <span className="text-xs text-slate-500 mt-1 text-center break-words">Get compliance answers</span>
+              <span className="text-xs text-muted-foreground mt-1 text-center break-words">Get compliance answers</span>
             </Button>
           </CardContent>
         </Card>
@@ -340,34 +340,34 @@ export default function DashboardPage() {
           <CardContent>
             {documentsCount === 0 ? (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="h-8 w-8 text-slate-400" />
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-slate-500 mb-2">No activity yet</p>
-                <p className="text-xs text-slate-400">Upload your first document to get started</p>
+                <p className="text-sm text-muted-foreground mb-2">No activity yet</p>
+                <p className="text-xs text-muted-foreground">Upload your first document to get started</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                  <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-700 break-words">
+                    <p className="text-sm font-medium text-foreground break-words">
                       Documents Processed
                     </p>
-                    <p className="text-xs text-slate-500 break-words">
+                    <p className="text-xs text-muted-foreground break-words">
                       {documentsCount} document{documentsCount === 1 ? '' : 's'} successfully uploaded
                     </p>
                   </div>
                 </div>
                 
                 {controlsCount > 0 && (
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-700 break-words">
+                      <p className="text-sm font-medium text-foreground break-words">
                         Controls Identified
                       </p>
-                      <p className="text-xs text-slate-500 break-words">
+                      <p className="text-xs text-muted-foreground break-words">
                         {controlsCount} control{controlsCount === 1 ? '' : 's'} mapped successfully
                       </p>
                     </div>
@@ -375,13 +375,13 @@ export default function DashboardPage() {
                 )}
                 
                 {activePolicies > 0 && (
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                    <div className="w-2 h-2 bg-purple-500 dark:bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-700 break-words">
+                      <p className="text-sm font-medium text-foreground break-words">
                         Policies Extracted
                       </p>
-                      <p className="text-xs text-slate-500 break-words">
+                      <p className="text-xs text-muted-foreground break-words">
                         {activePolicies} polic{activePolicies === 1 ? 'y' : 'ies'} extracted from documents
                       </p>
                     </div>

@@ -75,11 +75,11 @@ export default function AuditPlannerPage() {
 
       if (!inline) {
         return (
-          <div className="relative rounded-lg overflow-hidden bg-slate-100 my-4">
-            <div className="flex items-center justify-between px-4 py-2 text-xs bg-slate-200 text-slate-600 border-b">
+          <div className="relative rounded-lg overflow-hidden bg-muted my-4">
+            <div className="flex items-center justify-between px-4 py-2 text-xs bg-muted text-muted-foreground border-b">
               <span className="font-medium">{language}</span>
             </div>
-            <div className="p-4 text-sm font-mono text-slate-800">
+            <div className="p-4 text-sm font-mono text-foreground">
               <pre className="whitespace-pre-wrap overflow-x-auto">
                 <code {...props}>{children}</code>
               </pre>
@@ -89,7 +89,7 @@ export default function AuditPlannerPage() {
       }
 
       return (
-        <code className="px-2 py-1 text-sm font-mono rounded bg-slate-200 text-slate-800" {...props}>
+        <code className="px-2 py-1 text-sm font-mono rounded bg-muted text-foreground" {...props}>
           {children}
         </code>
       )
@@ -97,19 +97,19 @@ export default function AuditPlannerPage() {
 
     // Custom styling for different elements
     h1: ({ children }: any) => (
-      <h1 className="text-2xl font-bold mt-6 mb-4 text-slate-900">{children}</h1>
+      <h1 className="text-2xl font-bold mt-6 mb-4 text-foreground">{children}</h1>
     ),
     h2: ({ children }: any) => (
-      <h2 className="text-xl font-bold mt-6 mb-3 text-slate-900 border-b border-slate-300 pb-2">{children}</h2>
+      <h2 className="text-xl font-bold mt-6 mb-3 text-foreground border-b border-border pb-2">{children}</h2>
     ),
     h3: ({ children }: any) => (
-      <h3 className="text-lg font-semibold mt-4 mb-2 text-slate-800">{children}</h3>
+      <h3 className="text-lg font-semibold mt-4 mb-2 text-foreground">{children}</h3>
     ),
     h4: ({ children }: any) => (
-      <h4 className="text-base font-semibold mt-3 mb-2 text-slate-800">{children}</h4>
+      <h4 className="text-base font-semibold mt-3 mb-2 text-foreground">{children}</h4>
     ),
     p: ({ children }: any) => (
-      <p className="leading-relaxed text-base mb-3 text-gray-700">{children}</p>
+      <p className="leading-relaxed text-base mb-3 text-foreground">{children}</p>
     ),
     ul: ({ children }: any) => (
       <ul className="space-y-1 ml-4 mb-4 list-disc">{children}</ul>
@@ -131,46 +131,46 @@ export default function AuditPlannerPage() {
       </a>
     ),
     blockquote: ({ children }: any) => (
-      <blockquote className="border-l-4 border-blue-500 pl-4 italic text-slate-700 my-4 bg-blue-50/50 py-2 rounded-r">
+      <blockquote className="border-l-4 border-blue-500 pl-4 italic text-muted-foreground my-4 bg-blue-50/50 dark:bg-blue-900/20 py-2 rounded-r">
         {children}
       </blockquote>
     ),
     hr: () => (
-      <hr className="my-4 border-t border-slate-300" />
+      <hr className="my-4 border-t border-border" />
     ),
     strong: ({ children }: any) => {
       // Special handling for Framework Alignment
       if (typeof children === 'string' && children.includes('Framework Alignment:')) {
         return (
-          <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 text-sm font-medium my-1">
+          <span className="inline-block bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded text-blue-800 dark:text-blue-200 text-sm font-medium my-1">
             {children}
           </span>
         )
       }
-      return <strong className="font-semibold text-slate-900">{children}</strong>
+      return <strong className="font-semibold text-foreground">{children}</strong>
     },
     em: ({ children }: any) => (
-      <em className="italic text-slate-700">{children}</em>
+      <em className="italic text-muted-foreground">{children}</em>
     ),
     table: ({ children }: any) => (
       <div className="overflow-x-auto my-4">
-        <table className="min-w-full border border-slate-300">{children}</table>
+        <table className="min-w-full border border-border">{children}</table>
       </div>
     ),
     thead: ({ children }: any) => (
-      <thead className="bg-slate-100">{children}</thead>
+      <thead className="bg-muted">{children}</thead>
     ),
     tbody: ({ children }: any) => (
       <tbody>{children}</tbody>
     ),
     tr: ({ children }: any) => (
-      <tr className="border-b border-slate-300">{children}</tr>
+      <tr className="border-b border-border">{children}</tr>
     ),
     th: ({ children }: any) => (
-      <th className="px-4 py-2 text-left font-semibold text-slate-900">{children}</th>
+      <th className="px-4 py-2 text-left font-semibold text-foreground">{children}</th>
     ),
     td: ({ children }: any) => (
-      <td className="px-4 py-2 text-slate-700">{children}</td>
+      <td className="px-4 py-2 text-foreground">{children}</td>
     ),
   }
 
@@ -677,62 +677,62 @@ export default function AuditPlannerPage() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Planner</h1>
-        <p className="text-gray-600">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">Audit Planner</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
         </p>
       </div>
 
       {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-2xl mx-auto space-y-4 sm:space-y-0">
           <div className={`flex items-center space-x-2 ${
             activeStep === "define" ? "text-blue-600" : 
-            activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-gray-400"
+            activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-muted-foreground"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
               activeStep === "define" ? "bg-blue-100 text-blue-600" :
-              activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
+              activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-muted"
             }`}>
               {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
             </div>
-            <span className="font-medium">Define Project</span>
+            <span className="font-medium text-sm sm:text-base">Define Project</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+          <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
             <div className={`h-full transition-all duration-300 ${
-              activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
+              activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-border w-0"
             }`} />
           </div>
 
           <div className={`flex items-center space-x-2 ${
             activeStep === "generate" ? "text-blue-600" : 
-            activeStep === "export" ? "text-green-600" : "text-gray-400"
+            activeStep === "export" ? "text-green-600" : "text-muted-foreground"
           }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
               activeStep === "generate" ? "bg-blue-100 text-blue-600" :
-              activeStep === "export" ? "bg-green-100 text-green-600" : "bg-gray-100"
+              activeStep === "export" ? "bg-green-100 text-green-600" : "bg-muted"
             }`}>
-              {activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "2"}
+              {activeStep === "export" ? <CheckCircle className="w-4 w-4" /> : "2"}
             </div>
             <span className="font-medium">Generate & Review</span>
           </div>
 
-          <div className="flex-1 h-0.5 bg-gray-200 mx-4">
+          <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
             <div className={`h-full transition-all duration-300 ${
-              activeStep === "export" ? "bg-green-500 w-full" : "bg-gray-200 w-0"
+              activeStep === "export" ? "bg-green-500 w-full" : "bg-border w-0"
             }`} />
           </div>
 
           <div className={`flex items-center space-x-2 ${
-            activeStep === "export" ? "text-blue-600" : "text-gray-400"
+            activeStep === "export" ? "text-blue-600" : "text-muted-foreground"
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-gray-100"
+              activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-muted"
             }`}>
               3
             </div>
-            <span className="font-medium">Export & Implement</span>
+            <span className="font-medium text-sm sm:text-base">Export & Implement</span>
           </div>
         </div>
       </div>
@@ -786,7 +786,7 @@ export default function AuditPlannerPage() {
                       <SelectItem key={framework.id} value={framework.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{framework.name}</span>
-                          <span className="text-sm text-gray-500">{framework.description}</span>
+                          <span className="text-sm text-muted-foreground">{framework.description}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -810,11 +810,11 @@ export default function AuditPlannerPage() {
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={handleDrop}
                 >
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
                     Upload Your Current Policy
                   </h3>
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Drag and drop your existing policy document (PDF, DOCX) or click to browse
                   </p>
                   <input
@@ -869,7 +869,7 @@ export default function AuditPlannerPage() {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       No documents uploaded yet. Upload your first document above to get started.
                     </p>
                   </div>
@@ -907,13 +907,13 @@ export default function AuditPlannerPage() {
                 
                 {/* Generation Progress */}
                 {isGenerating && (
-                  <div className="space-y-3 p-4 bg-blue-50 rounded-lg border mt-4">
+                  <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border mt-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">{generationStatus}</span>
-                      <span className="text-gray-600">{generationProgress}%</span>
+                      <span className="text-muted-foreground">{generationStatus}</span>
+                      <span className="text-muted-foreground">{generationProgress}%</span>
                     </div>
                     <Progress value={generationProgress} className="h-3" />
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-muted-foreground text-center">
                       This may take 2-3 minutes for comprehensive analysis and policy generation.
                     </p>
                   </div>
@@ -927,7 +927,7 @@ export default function AuditPlannerPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-gray-600" />
+                  <Clock className="h-5 w-5 text-muted-foreground" />
                   <span>Recent Projects</span>
                 </CardTitle>
                 <CardDescription>
@@ -939,15 +939,15 @@ export default function AuditPlannerPage() {
                   {projects.slice(0, 3).map((project) => (
                     <div 
                       key={project.id} 
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                       onClick={() => {
                         setCurrentProject(project)
                         setActiveStep("generate")
                       }}
                     >
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{project.title}</h4>
-                        <div className="flex items-center space-x-3 text-sm text-gray-600 mt-1">
+                        <h4 className="font-medium text-foreground">{project.title}</h4>
+                        <div className="flex items-center space-x-3 text-sm text-muted-foreground mt-1">
                           <span>{project.framework}</span>
                           <span>•</span>
                           <span>
@@ -965,7 +965,7 @@ export default function AuditPlannerPage() {
                           </Badge>
                         </div>
                       </div>
-                      <ExternalLink className="h-4 w-4 text-gray-400" />
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
                     </div>
                   ))}
                   
@@ -986,8 +986,8 @@ export default function AuditPlannerPage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{currentProject.title}</h2>
-              <p className="text-gray-600">Framework: {currentProject.framework}</p>
+              <h2 className="text-xl font-semibold text-foreground">{currentProject.title}</h2>
+              <p className="text-muted-foreground">Framework: {currentProject.framework}</p>
             </div>
             <Button variant="outline" onClick={resetForm}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -1009,7 +1009,7 @@ export default function AuditPlannerPage() {
                   {currentProject.compliance_score}%
                 </div>
                 <Progress value={currentProject.compliance_score} className="h-2" />
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   Based on framework requirements analysis
                 </p>
               </CardContent>
@@ -1033,7 +1033,7 @@ export default function AuditPlannerPage() {
                     </Badge>
                   ))}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   Controls identified in your document
                 </p>
               </CardContent>
@@ -1057,7 +1057,7 @@ export default function AuditPlannerPage() {
                     </Badge>
                   ))}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   Gaps addressed in generated policy
                 </p>
               </CardContent>
@@ -1137,7 +1137,7 @@ export default function AuditPlannerPage() {
             <CardContent>
               {isEditingPolicy ? (
                 <div className="space-y-4">
-                  <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                     <p className="font-medium mb-1">Markdown Formatting Tips:</p>
                     <ul className="text-xs space-y-1">
                       <li>• Use # for main headings, ## for subheadings, ### for sub-subheadings</li>
@@ -1154,14 +1154,14 @@ export default function AuditPlannerPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Editor */}
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-700">Edit Content</h4>
+                      <h4 className="text-sm font-medium text-foreground">Edit Content</h4>
                       <Textarea
                         value={editedPolicyContent}
                         onChange={(e) => setEditedPolicyContent(e.target.value)}
                         className="min-h-96 font-mono text-sm resize-none"
                         placeholder="Enter your policy content here..."
                       />
-                      <div className="flex justify-between text-xs text-gray-500">
+                      <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Characters: {editedPolicyContent.length}</span>
                         <span>Words: {editedPolicyContent.split(/\s+/).filter(word => word.length > 0).length}</span>
                       </div>
@@ -1169,8 +1169,8 @@ export default function AuditPlannerPage() {
                     
                     {/* Preview */}
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-700">Preview</h4>
-                      <div className="border rounded-lg p-4 bg-white min-h-96 max-h-96 overflow-y-auto">
+                      <h4 className="text-sm font-medium text-foreground">Preview</h4>
+                      <div className="border rounded-lg p-4 bg-background min-h-96 max-h-96 overflow-y-auto">
                         <div className="prose prose-sm max-w-none">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -1184,10 +1184,10 @@ export default function AuditPlannerPage() {
                   </div>
                 </div>
               ) : (
-                <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                <div className="border rounded-lg p-4 bg-muted/30 max-h-96 overflow-y-auto">
                   {showTrackedChanges ? (
                     <div className="space-y-2">
-                      <div className="text-xs text-gray-500 mb-3 flex items-center space-x-4">
+                      <div className="text-xs text-muted-foreground mb-3 flex items-center space-x-4">
                         <div className="flex items-center space-x-1">
                           <div className="w-3 h-3 bg-green-200 rounded"></div>
                           <span>AI Generated Content</span>
@@ -1221,18 +1221,18 @@ export default function AuditPlannerPage() {
 
               {/* Framework Citations */}
               <div className="mt-6">
-                <h4 className="font-medium text-gray-900 mb-3">Framework Citations</h4>
+                <h4 className="font-medium text-foreground mb-3">Framework Citations</h4>
                 <div className="space-y-2">
                   {(currentProject.generated_policy?.citations || []).map((citation, index) => (
-                    <div key={index} className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                    <div key={index} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <Badge>{citation.control_id}</Badge>
                           <span className="font-medium">{citation.control_title}</span>
                         </div>
-                        <ExternalLink className="h-4 w-4 text-gray-400" />
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{citation.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{citation.description}</p>
                       <p className="text-xs text-blue-600 mt-1">
                         Referenced in: {citation.policy_section}
                       </p>
@@ -1249,8 +1249,8 @@ export default function AuditPlannerPage() {
       {activeStep === "export" && currentProject && (
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Policy Generated Successfully!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-semibold text-foreground mb-2">Policy Generated Successfully!</h2>
+            <p className="text-muted-foreground mb-6">
               Your audit-ready policy is complete with framework citations. Choose your export format below.
             </p>
           </div>
@@ -1275,7 +1275,7 @@ export default function AuditPlannerPage() {
                 >
                   <FileText className="h-8 w-8" />
                   <span>Export as Word</span>
-                  <span className="text-xs text-gray-500">For editing & collaboration</span>
+                  <span className="text-xs text-muted-foreground">For editing & collaboration</span>
                 </Button>
 
                 <Button
@@ -1285,7 +1285,7 @@ export default function AuditPlannerPage() {
                 >
                   <FileText className="h-8 w-8" />
                   <span>Export as PDF</span>
-                  <span className="text-xs text-gray-500">For official records</span>
+                  <span className="text-xs text-muted-foreground">For official records</span>
                 </Button>
 
                 <Button
@@ -1295,7 +1295,7 @@ export default function AuditPlannerPage() {
                 >
                   <Copy className="h-8 w-8" />
                   <span>Copy to Clipboard</span>
-                  <span className="text-xs text-gray-500">Raw text content</span>
+                  <span className="text-xs text-muted-foreground">Raw text content</span>
                 </Button>
               </div>
             </CardContent>
@@ -1305,7 +1305,7 @@ export default function AuditPlannerPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-gray-600" />
+                <Clock className="h-5 w-5 text-muted-foreground" />
                 <span>Audit Trail</span>
               </CardTitle>
               <CardDescription>
@@ -1316,15 +1316,15 @@ export default function AuditPlannerPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-600">Project Title:</span>
+                    <span className="font-medium text-muted-foreground">Project Title:</span>
                     <p>{currentProject.title}</p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Framework:</span>
+                    <span className="font-medium text-muted-foreground">Framework:</span>
                     <p>{currentProject.framework}</p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Generation Date:</span>
+                    <span className="font-medium text-muted-foreground">Generation Date:</span>
                     <p>
                       {currentProject.generated_policy?.generated_at 
                         ? new Date(currentProject.generated_policy.generated_at).toLocaleString()
@@ -1333,21 +1333,21 @@ export default function AuditPlannerPage() {
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Document Version:</span>
+                    <span className="font-medium text-muted-foreground">Document Version:</span>
                     <p>v1.0</p>
                   </div>
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Activity Log</h4>
+                  <h4 className="font-medium text-foreground mb-2">Activity Log</h4>
                   <div className="space-y-2">
                     {(currentProject.audit_trail || []).map((entry) => (
                       <div key={entry.id} className="flex items-center justify-between text-sm">
                         <div>
                           <span className="font-medium">{entry.action}</span>
-                          <span className="text-gray-600 ml-2">{entry.details}</span>
+                          <span className="text-muted-foreground ml-2">{entry.details}</span>
                         </div>
-                        <span className="text-gray-500">
+                        <span className="text-muted-foreground">
                           {entry.timestamp 
                             ? new Date(entry.timestamp).toLocaleString()
                             : 'No timestamp'

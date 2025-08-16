@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ChatProvider } from "@/contexts/chat-context"
+import { ThemeProvider } from "@/components/theme-provider"
 import ErrorBoundary from "@/components/error-boundary"
 import SessionExpiryHandler from "@/components/session-expiry-handler"
 import { Toaster } from "sonner"
@@ -36,16 +37,23 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <ErrorBoundary>
-          <AuthProvider>
-            <ChatProvider>
-              <SessionExpiryHandler>
-                {children}
-                <Toaster position="top-right" />
-              </SessionExpiryHandler>
-            </ChatProvider>
-          </AuthProvider>
-        </ErrorBoundary>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ErrorBoundary>
+            <AuthProvider>
+              <ChatProvider>
+                <SessionExpiryHandler>
+                  {children}
+                  <Toaster position="top-right" />
+                </SessionExpiryHandler>
+              </ChatProvider>
+            </AuthProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   )
