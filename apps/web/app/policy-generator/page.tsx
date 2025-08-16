@@ -541,59 +541,63 @@ export default function PolicyGeneratorPage() {
   return (
     <div className="p-4 sm:p-6 w-full max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6 sm:mb-8 text-center">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">Policy Generator</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
           Generate comprehensive compliance policies. Define your requirements, generate content, and export professional documents.
         </p>
       </div>
 
-      {/* Progress Steps */}
+      {/* Progress Steps */}  
       <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-2xl mx-auto space-y-4 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center max-w-4xl mx-auto space-y-4 sm:space-y-0 sm:space-x-8">
           <div className={`flex items-center space-x-2 ${
-            activeStep === "define" ? "text-primary" : 
-            activeStep === "generate" || activeStep === "export" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+            activeStep === "define" ? "text-blue-600" : 
+            activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-muted-foreground"
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              activeStep === "define" ? "bg-primary/10 text-primary" :
-              activeStep === "generate" || activeStep === "export" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted"
+              activeStep === "define" ? "bg-blue-100 text-blue-600" :
+              activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-muted"
             }`}>
               {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
             </div>
             <span className="font-medium text-sm sm:text-base">Define Requirements</span>
           </div>
 
-          <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
-            <div className={`h-full transition-all duration-300 ${
-              activeStep === "generate" || activeStep === "export" ? "bg-emerald-500 w-full" : "bg-border w-0"
-            }`} />
+          <div className="hidden sm:flex items-center">
+            <div className="flex-1 h-0.5 bg-border mx-4">
+              <div className={`h-full transition-all duration-300 ${
+                activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-border w-0"
+              }`} />
+            </div>
           </div>
 
           <div className={`flex items-center space-x-2 ${
-            activeStep === "generate" ? "text-primary" : 
-            activeStep === "export" ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+            activeStep === "generate" ? "text-blue-600" : 
+            activeStep === "export" ? "text-green-600" : "text-muted-foreground"
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              activeStep === "generate" ? "bg-primary/10 text-primary" :
-              activeStep === "export" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-muted"
+              activeStep === "generate" ? "bg-blue-100 text-blue-600" :
+              activeStep === "export" ? "bg-green-100 text-green-600" : "bg-muted"
             }`}>
               {activeStep === "export" ? <CheckCircle className="w-4 w-4" /> : "2"}
             </div>
             <span className="font-medium text-sm sm:text-base">Generate & Review</span>
           </div>
 
-          <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
-            <div className={`h-full transition-all duration-300 ${
-              activeStep === "export" ? "bg-emerald-500 w-full" : "bg-border w-0"
-            }`} />
+          <div className="hidden sm:flex items-center">
+            <div className="flex-1 h-0.5 bg-border mx-4">
+              <div className={`h-full transition-all duration-300 ${
+                activeStep === "export" ? "bg-green-500 w-full" : "bg-border w-0"
+              }`} />
+            </div>
           </div>
 
           <div className={`flex items-center space-x-2 ${
-            activeStep === "export" ? "text-primary" : "text-muted-foreground"
+            activeStep === "export" ? "text-blue-600" : "text-muted-foreground"
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              activeStep === "export" ? "bg-primary/10 text-primary" : "bg-muted"
+              activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-muted"
             }`}>
               3
             </div>

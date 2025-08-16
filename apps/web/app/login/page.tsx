@@ -55,7 +55,7 @@ export default function LoginPage() {
       <div className="max-w-[420px] sm:max-w-md lg:max-w-lg w-full space-y-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <Logo className="w-16 h-16 m:w-20 sm:h-20 md:w-20 md:h-20 lg:w-16 lg:h-16 rounded-full" />
+            <Logo className="w-16 h-16 m:w-20 sm:h-20 md:w-20 md:h-20 lg:w-16 lg:h-16 rounded-lg" />
           </div>
           <div className="space-y-2">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">CompliAI</h2>

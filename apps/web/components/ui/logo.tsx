@@ -8,7 +8,7 @@ interface LogoProps {
 }
 
 export default function Logo({
-  size = 48,
+  size = 30,
   rounded = "none",
   className = "",
 }: LogoProps) {
@@ -21,7 +21,7 @@ export default function Logo({
 
   return (
     <Image
-      src="/CompliAI.png"
+      src="/CompliAI.svg"
       alt="CompliAI Logo"
       width={size}
       height={size}

@@ -268,19 +268,23 @@ const ChatPage = memo(() => {
             {(() => {
               const doc = documents.find(d => d.id === selectedDocument)
               return doc ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                      <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Chatting with: {doc.name}</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    {/* Document info */}
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                        Chatting with: {doc.name}
+                      </p>
                       <p className="text-xs text-blue-600 dark:text-blue-300">
                         {doc.chunks_created} chunks • {doc.controls_identified} controls identified
                       </p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800">
+                  {/* Badge */}
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800"
+                  >
                     Document Mode
                   </Badge>
                 </div>

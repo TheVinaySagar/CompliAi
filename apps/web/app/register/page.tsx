@@ -107,9 +107,9 @@ export default function RegisterPage() {
     
     strength = Object.values(checks).filter(Boolean).length
     
-    if (strength < 2) return { level: 'Weak', color: 'text-red-500', width: '20%' }
-    if (strength < 4) return { level: 'Medium', color: 'text-yellow-500', width: '60%' }
-    return { level: 'Strong', color: 'text-green-500', width: '100%' }
+    if (strength < 2) return { level: 'Weak', color: 'text-destructive', width: '20%' }
+    if (strength < 4) return { level: 'Medium', color: 'text-yellow-600 dark:text-yellow-400', width: '60%' }
+    return { level: 'Strong', color: 'text-green-600 dark:text-green-400', width: '100%' }
   }
 
   const passwordStrength = formData.password ? getPasswordStrength(formData.password) : null
@@ -119,14 +119,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
         <div className="text-center mb-8 sm:mb-12">
           <div className="flex justify-center mb-4">
-            <Logo className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 rounded-full" />
+            <Logo className="h-12 w-12 sm:h-16 sm:w-16 text-primary rounded-lg" />
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Compli<span className="text-gray-900">AI</span></h2>
-          <p className="mt-2 sm:mt-3 text-sm sm:text-base text-gray-600">AI-Powered Compliance, From Policy to Audit</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">Compli<span className="text-foreground">AI</span></h2>
+          <p className="mt-2 sm:mt-3 text-sm sm:text-base text-muted-foreground">AI-Powered Compliance, From Policy to Audit</p>
         </div>
 
         {/* Registration Card */}
@@ -187,9 +187,9 @@ export default function RegisterPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     )}
                   </button>
                 </div>
@@ -197,19 +197,19 @@ export default function RegisterPage() {
                 {formData.password && passwordStrength && (
                   <div className="mt-2">
                     <div className="flex justify-between text-xs sm:text-sm mb-1">
-                      <span className="text-gray-600">Password strength:</span>
+                      <span className="text-muted-foreground">Password strength:</span>
                       <span className={passwordStrength.color}>{passwordStrength.level}</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
+                    <div className="w-full bg-muted rounded-full h-1.5 sm:h-2">
                       <div
                         className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
-                          passwordStrength.level === 'Weak' ? 'bg-red-500' :
-                          passwordStrength.level === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
+                          passwordStrength.level === 'Weak' ? 'bg-destructive' :
+                          passwordStrength.level === 'Medium' ? 'bg-yellow-500 dark:bg-yellow-400' : 'bg-green-500 dark:bg-green-400'
                         }`}
                         style={{ width: passwordStrength.width }}
                       ></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Use 8+ characters with uppercase, lowercase, numbers & symbols
                     </p>
                   </div>
@@ -234,9 +234,9 @@ export default function RegisterPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     )}
                   </button>
                 </div>
@@ -251,11 +251,11 @@ export default function RegisterPage() {
                 />
                 <Label htmlFor="terms" className="text-xs sm:text-sm leading-snug">
                   I agree to the{" "}
-                  <Link href="#" className="text-blue-600 hover:text-blue-500 font-medium">
+                  <Link href="#" className="text-primary hover:text-primary/80 font-medium">
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="#" className="text-blue-600 hover:text-blue-500 font-medium">
+                  <Link href="#" className="text-primary hover:text-primary/80 font-medium">
                     Privacy Policy
                   </Link>
                 </Label>
@@ -274,9 +274,9 @@ export default function RegisterPage() {
             </form>
 
             <div className="mt-4 sm:mt-6 text-center">
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link href="/login" className="font-medium text-primary hover:text-primary/80">
                   Sign in
                 </Link>
               </p>
