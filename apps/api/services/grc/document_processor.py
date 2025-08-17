@@ -167,9 +167,6 @@ class DocumentProcessor:
                 print(f"Warning: Failed to save document metadata to database: {db_error}")
             
             controls = await self._policies(document_id)
-            # print(controls)
-            print(controls["analysis_summary"]["identified_controls_count"])
-            # Update control count in metadata
             self.document_metadata[document_id]["controls_identified"] = controls["analysis_summary"]["identified_controls_count"]
 
             # --- NEW: Multi-framework mapping ---

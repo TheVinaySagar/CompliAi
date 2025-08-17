@@ -22,6 +22,7 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react"
+import { loadProjectInfo } from "next/dist/build/webpack-config"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -33,10 +34,12 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  // const [projects, setProjects] = useState(0)
 
   // Load dashboard statistics
   useEffect(() => {
     loadDocumentStats()
+    loadProjects()
   }, [])
 
   const retryLoadStats = () => {
@@ -44,6 +47,17 @@ export default function DashboardPage() {
     setErrorMessage("")
     loadDocumentStats()
   }
+
+  const loadProjects = async () => {
+      try {
+        const response = await apiClient.getPolicyProjects()
+        if (response.success && response.data) {
+          setActivePolicies(response.data.length)
+        }
+      } catch (error) {
+        console.error("Failed to load projects:", error)
+      }
+      }
 
   const loadDocumentStats = async () => {
     try {
@@ -62,12 +76,6 @@ export default function DashboardPage() {
           return sum + (doc.controls_identified || 0)
         }, 0)
         setControlsCount(totalControls)
-        
-        // Calculate total policies extracted from all documents
-        const totalPolicies = documents.reduce((sum: number, doc: any) => {
-          return sum + (doc.policies_extracted || 0)
-        }, 0)
-        setActivePolicies(totalPolicies)
         
         // Calculate compliance progress (simplified calculation)
         // If we have documents, show progress based on processed vs total
