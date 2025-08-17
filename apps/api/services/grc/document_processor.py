@@ -22,7 +22,8 @@ from utils.exceptions import DocumentNotFoundError, LLMServiceError
 from repositories.document_repository import document_repository    
 from services.grc.knowledge_base import grc_knowledge
 
-MAX_DOCUMENT_CHARS = 10000
+MAX_DOCUMENT_CHARS = 50000  # Increased limit
+MAX_CHUNK_SIZE = 15000  # Size per chunk for processing
 
 
 def extract_json(text):
@@ -100,49 +101,64 @@ class DocumentProcessor:
     ) -> Dict:
         """Upload and process a document for RAG queries"""
         try:
+            print(f"Starting document processing for file: {file_path}")
+            
             # Always generate a unique document ID
             document_id = str(uuid.uuid4())
+            print(f"Generated document ID: {document_id}")
             
             # Use document_name for display, fallback to filename
             display_name = document_name or os.path.basename(file_path)
+            print(f"Document display name: {display_name}")
             
             # Load document based on file type
+            print("Loading document...")
             documents = self._load_document_by_type(file_path)
+            print(f"Loaded {len(documents)} document pages/sections")
             
             # Split into chunks
+            print("Splitting document into chunks...")
             text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=200,
+                chunk_size=3000,
+                chunk_overlap=600,
                 length_function=len,
             )
             chunks = text_splitter.split_documents(documents)
+            print(f"Created {len(chunks)} chunks")
             
             # Create embeddings
+            print("Getting embedding model...")
             embeddings = llm_manager.get_embedding_model()
+            if not embeddings:
+                raise Exception("Failed to get embedding model from LLM manager")
             
             # Create vector store directory
             db_path = f"./vector_stores/{document_id}"
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            print(f"Vector store directory: {db_path}")
             
             # Remove existing vector store if it exists
             if os.path.exists(db_path):
                 shutil.rmtree(db_path)
+                print("Removed existing vector store")
             
             # Create vector store
+            print("Creating vector store...")
             vector_store = Chroma.from_documents(
                 chunks,
                 embeddings,
                 persist_directory=db_path
             )
+            print("Vector store created successfully")
             
             # Store references
             self.vector_stores[document_id] = vector_store
             
-            # print("hi I am here")
-            
             # Create QA chain
+            print("Creating QA chain...")
             qa_chain = self._create_qa_chain(vector_store)
             self.qa_chains[document_id] = qa_chain
+            print("QA chain created successfully")
             
             # Store document metadata (both in memory and database)
             metadata = {
@@ -157,45 +173,93 @@ class DocumentProcessor:
                 "controls_identified": 0  # Will be updated after control identification
             }
             
-            # Store in memory for immediate access
+            # Store in memory for immediate access (including the chunks for policy analysis)
             self.document_metadata[document_id] = metadata
+            # Store the actual chunks for policy analysis - this is key!
+            self.document_metadata[document_id]["original_chunks"] = chunks
             
             # Save to database for persistence
+            print("Saving document metadata to database...")
             try:
                 await document_repository.save_document_metadata(metadata)
+                print("Document metadata saved to database successfully")
             except Exception as db_error:
                 print(f"Warning: Failed to save document metadata to database: {db_error}")
             
-            controls = await self._policies(document_id)
-            self.document_metadata[document_id]["controls_identified"] = controls["analysis_summary"]["identified_controls_count"]
+            # Process controls analysis
+            print("Starting controls analysis...")
+            try:
+                controls = await self._policies(document_id)
+                
+                if controls and "analysis_summary" in controls:
+                    controls_count = controls["analysis_summary"]["identified_controls_count"]
+                    print(f"Controls analysis completed: {controls_count} controls identified")
+                    
+                    self.document_metadata[document_id]["controls_identified"] = controls_count
+                    self.document_metadata[document_id]["framework_mapping"] = controls
+                else:
+                    print("Warning: Controls analysis returned empty or invalid result")
+                    controls = {
+                        "analysis_summary": {"identified_controls_count": 0},
+                        "mapped_controls": [],
+                        "gap_analysis": {}
+                    }
+                    self.document_metadata[document_id]["controls_identified"] = 0
+                    self.document_metadata[document_id]["framework_mapping"] = controls
+                    
+            except Exception as controls_error:
+                print(f"Error during controls analysis: {controls_error}")
+                import traceback
+                traceback.print_exc()
+                
+                # Set default values if controls analysis fails
+                controls = {
+                    "analysis_summary": {"identified_controls_count": 0},
+                    "mapped_controls": [],
+                    "gap_analysis": {}
+                }
+                self.document_metadata[document_id]["controls_identified"] = 0
+                self.document_metadata[document_id]["framework_mapping"] = controls
+                self.document_metadata[document_id]["status"] = "controls_analysis_failed"
 
-            # --- NEW: Multi-framework mapping ---
-            # mapping_results = self._map_controls_to_frameworks(controls)
-            self.document_metadata[document_id]["framework_mapping"] = controls
-            
             # Update database with control count and mapping
+            print("Updating database with controls analysis results...")
             try:
                 await document_repository.update_document_metadata(
                     document_id, 
                     user_id, 
-                    {"controls_identified": controls["analysis_summary"]["identified_controls_count"], "framework_mapping": controls}
+                    {
+                        "controls_identified": self.document_metadata[document_id]["controls_identified"], 
+                        "framework_mapping": controls,
+                        "status": self.document_metadata[document_id].get("status", "processed")
+                    }
                 )
+                print("Database updated successfully with controls analysis")
             except Exception as db_error:
                 print(f"Warning: Failed to update control count in database: {db_error}")
+            
+            print("Document processing completed successfully")
             
             return {
                 "document_id": document_id,
                 "status": "success",
                 "chunks_created": len(chunks),
-                # "controls_identified": len(controls),
-                # "framework_mapping_summary": {fw: {"covered": len(res["covered"]), "missing": len(res["missing"])} for fw, res in mapping_results.items()},
-                "message": f"Document '{display_name}' processed successfully"
+                "controls_identified": self.document_metadata[document_id].get("controls_identified", 0),
+                "processing_status": self.document_metadata[document_id].get("status", "processed"),
+                "character_count": len("\n".join([doc.page_content for doc in documents])) if documents else 0,
+                "message": f"Document '{display_name}' processed successfully with {self.document_metadata[document_id].get('controls_identified', 0)} controls identified"
             }
             
         except Exception as e:
+            error_msg = f"Error processing document: {str(e)}"
+            print(error_msg)
+            import traceback
+            traceback.print_exc()
+            
             return {
                 "status": "error",
-                "message": f"Error processing document: {str(e)}"
+                "message": error_msg,
+                "document_id": document_id if 'document_id' in locals() else None
             }
     
     def _load_document_by_type(self, file_path: str):
@@ -282,16 +346,223 @@ class DocumentProcessor:
 
     async def _policies(self, document_id):
         try:
-            # 1. Retrieve all chunks
-            vector_store = self.vector_stores.get(document_id)
-            all_chunks = vector_store.get()['documents']
-            full_text = "\n".join(all_chunks)
+            print(f"Starting policy analysis for document {document_id}")
+            
+            # Get the original chunks from metadata instead of reconstructing from vector store
+            document_metadata = self.document_metadata.get(document_id)
+            if not document_metadata:
+                print(f"Error: No metadata found for document {document_id}")
+                return {}
+            
+            # Get original chunks
+            original_chunks = document_metadata.get("original_chunks", [])
+            if not original_chunks:
+                print(f"Warning: No original chunks found, falling back to vector store")
+                # Fallback to vector store method
+                vector_store = self.vector_stores.get(document_id)
+                if not vector_store:
+                    print(f"Error: No vector store found for document {document_id}")
+                    return {}
+                all_chunks = vector_store.get()['documents']
+                full_text = "\n".join(all_chunks)
+            else:
+                # Use original chunks - this preserves the proper chunking
+                chunk_texts = [chunk.page_content for chunk in original_chunks]
+                full_text = "\n".join(chunk_texts)
+                print(f"Using {len(original_chunks)} original chunks for analysis")
+            
+            print(f"Full document text length: {len(full_text)} characters")
 
-            # Optional: Trim if too large for model context
-            if len(full_text) > MAX_DOCUMENT_CHARS:
-                print(f"Document too long ({len(full_text)} chars), trimming.")
-                full_text = full_text[:MAX_DOCUMENT_CHARS]
+            # Process each chunk individually for better analysis
+            if len(original_chunks) > 1:
+                print(f"Processing {len(original_chunks)} chunks individually for comprehensive analysis")
+                return await self._process_chunks_individually(original_chunks, document_id)
+            else:
+                # Single chunk processing
+                if len(full_text) > MAX_DOCUMENT_CHARS:
+                    print(f"Document is large ({len(full_text)} chars), processing in sub-chunks")
+                    return await self._process_large_document_in_chunks(full_text)
+                else:
+                    print(f"Processing document as single chunk ({len(full_text)} chars)")
+                    return await self._process_document_chunk(full_text)
 
+        except Exception as e:
+            print(f"Error in _policies method: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
+
+    async def _process_chunks_individually(self, chunks, document_id):
+        """Process each original chunk individually for comprehensive analysis"""
+        try:
+            print(f"Processing {len(chunks)} chunks individually...")
+            
+            all_controls = []
+            all_gap_analysis = {}
+            total_chars = 0
+            
+            for idx, chunk in enumerate(chunks):
+                chunk_text = chunk.page_content
+                total_chars += len(chunk_text)
+                
+                print(f"Processing chunk {idx + 1}/{len(chunks)} ({len(chunk_text)} chars)")
+                
+                # Skip very small chunks that might not contain meaningful content
+                if len(chunk_text.strip()) < 100:
+                    print(f"Skipping chunk {idx + 1} - too small ({len(chunk_text)} chars)")
+                    continue
+                
+                chunk_result = await self._process_document_chunk(chunk_text, chunk_number=idx + 1)
+                
+                if chunk_result and "mapped_controls" in chunk_result:
+                    controls_found = len(chunk_result["mapped_controls"])
+                    if controls_found > 0:
+                        print(f"Chunk {idx + 1} found {controls_found} controls")
+                        all_controls.extend(chunk_result["mapped_controls"])
+                    else:
+                        print(f"Chunk {idx + 1} found no controls")
+                    
+                if chunk_result and "gap_analysis" in chunk_result:
+                    # Merge gap analysis results
+                    for framework, gaps in chunk_result["gap_analysis"].items():
+                        if framework not in all_gap_analysis:
+                            all_gap_analysis[framework] = []
+                        all_gap_analysis[framework].extend(gaps)
+            
+            # Remove duplicate controls based on extracted_statement and ai_control_summary
+            unique_controls = []
+            seen_controls = set()
+            
+            for control in all_controls:
+                # Create a unique identifier from statement and summary
+                statement = control.get("extracted_statement", "").strip()
+                summary = control.get("ai_control_summary", "").strip()
+                control_key = f"{statement[:100]}|{summary[:100]}"  # Use first 100 chars to create key
+                
+                if control_key not in seen_controls and statement:
+                    seen_controls.add(control_key)
+                    unique_controls.append(control)
+            
+            # Remove duplicate gaps
+            for framework in all_gap_analysis:
+                unique_gaps = []
+                seen_control_ids = set()
+                for gap in all_gap_analysis[framework]:
+                    control_id = gap.get("control_id", "")
+                    if control_id not in seen_control_ids:
+                        seen_control_ids.add(control_id)
+                        unique_gaps.append(gap)
+                all_gap_analysis[framework] = unique_gaps
+            
+            print(f"Chunk processing completed:")
+            print(f"  - Total chunks processed: {len(chunks)}")
+            print(f"  - Total characters analyzed: {total_chars}")
+            print(f"  - Total controls found: {len(all_controls)}")
+            print(f"  - Unique controls after deduplication: {len(unique_controls)}")
+            
+            return {
+                "analysis_summary": {
+                    "document_character_count": total_chars,
+                    "identified_controls_count": len(unique_controls),
+                    "frameworks_analyzed": ["ISO 27001", "SOC 2", "NIST"],
+                    "chunks_processed": len(chunks),
+                    "total_raw_controls_found": len(all_controls)
+                },
+                "mapped_controls": unique_controls,
+                "gap_analysis": all_gap_analysis
+            }
+            
+        except Exception as e:
+            print(f"Error processing chunks individually: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
+
+    async def _process_large_document_in_chunks(self, full_text):
+        """Process large documents by splitting into manageable chunks"""
+        try:
+            print("Processing large document in chunks...")
+            
+            # Split document into overlapping chunks
+            chunks = []
+            chunk_size = MAX_CHUNK_SIZE
+            overlap = 1000  # Overlap to maintain context
+            
+            for i in range(0, len(full_text), chunk_size - overlap):
+                chunk = full_text[i:i + chunk_size]
+                if chunk.strip():  # Only add non-empty chunks
+                    chunks.append(chunk)
+            
+            print(f"Split document into {len(chunks)} processing chunks")
+            
+            # Process each chunk
+            all_controls = []
+            all_gap_analysis = {}
+            total_identified_controls = 0
+            
+            for idx, chunk in enumerate(chunks):
+                print(f"Processing chunk {idx + 1}/{len(chunks)} ({len(chunk)} chars)")
+                
+                chunk_result = await self._process_document_chunk(chunk, chunk_number=idx + 1)
+                
+                if chunk_result and "mapped_controls" in chunk_result:
+                    all_controls.extend(chunk_result["mapped_controls"])
+                    
+                if chunk_result and "gap_analysis" in chunk_result:
+                    # Merge gap analysis results
+                    for framework, gaps in chunk_result["gap_analysis"].items():
+                        if framework not in all_gap_analysis:
+                            all_gap_analysis[framework] = []
+                        all_gap_analysis[framework].extend(gaps)
+                
+                if chunk_result and "analysis_summary" in chunk_result:
+                    total_identified_controls += chunk_result["analysis_summary"].get("identified_controls_count", 0)
+            
+            # Remove duplicate controls based on extracted_statement
+            unique_controls = []
+            seen_statements = set()
+            
+            for control in all_controls:
+                statement = control.get("extracted_statement", "")
+                if statement not in seen_statements:
+                    seen_statements.add(statement)
+                    unique_controls.append(control)
+            
+            # Remove duplicate gaps
+            for framework in all_gap_analysis:
+                unique_gaps = []
+                seen_control_ids = set()
+                for gap in all_gap_analysis[framework]:
+                    control_id = gap.get("control_id", "")
+                    if control_id not in seen_control_ids:
+                        seen_control_ids.add(control_id)
+                        unique_gaps.append(gap)
+                all_gap_analysis[framework] = unique_gaps
+            
+            print(f"Final results: {len(unique_controls)} unique controls identified")
+            
+            return {
+                "analysis_summary": {
+                    "document_character_count": len(full_text),
+                    "identified_controls_count": len(unique_controls),
+                    "frameworks_analyzed": ["ISO 27001", "SOC 2", "NIST"],
+                    "processed_in_chunks": len(chunks)
+                },
+                "mapped_controls": unique_controls,
+                "gap_analysis": all_gap_analysis
+            }
+            
+        except Exception as e:
+            print(f"Error processing large document in chunks: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
+
+    async def _process_document_chunk(self, text_content, chunk_number=1):
+        """Process a single document chunk"""
+        try:
+            print(f"Processing text chunk {chunk_number} with {len(text_content)} characters")
+            
             # 2. Construct prompt
             prompt = f"""
             You are CompliAI, a world-class AI assistant specializing in Governance, Risk, and Compliance (GRC). Your task is to perform a detailed, automated control mapping and gap analysis based on the provided document text.
@@ -310,8 +581,8 @@ class DocumentProcessor:
             Format:
             {{
             "analysis_summary": {{
-                "document_character_count": <int>,
-                "identified_controls_count": <int>,
+                "document_character_count": {len(text_content)},
+                "identified_controls_count": 0,
                 "frameworks_analyzed": ["ISO 27001", "SOC 2", "NIST"]
             }},
             "mapped_controls": [
@@ -342,28 +613,40 @@ class DocumentProcessor:
 
             DOCUMENT_TEXT:
             \"\"\"
-            {full_text}
+            {text_content}
             \"\"\"
             """
 
-        # 3. Call LLM
+            # 3. Call LLM
             llm = llm_manager.get_rag_llm()
-            print("Calling LLM...")
+            if not llm:
+                print("Error: Failed to get LLM from manager")
+                return {}
+                
+            print(f"Calling LLM for chunk {chunk_number}...")
             response = llm.invoke(prompt)
-            print("LLM response received.")
+            print(f"LLM response received for chunk {chunk_number}")
 
             # 4. Clean & parse output
             raw_text = getattr(response, "content", str(response))
             result = extract_json(raw_text)
 
             if not result:
-                print("Failed to parse LLM output as valid JSON.")
-                print("Raw output was:\n", raw_text)
+                print(f"Failed to parse LLM output as valid JSON for chunk {chunk_number}")
+                print("Raw output was:\n", raw_text[:500] + "..." if len(raw_text) > 500 else raw_text)
+                return {}
 
+            # Update the identified_controls_count in the result
+            if "mapped_controls" in result and "analysis_summary" in result:
+                result["analysis_summary"]["identified_controls_count"] = len(result["mapped_controls"])
+            
+            print(f"Chunk {chunk_number} processed successfully: {result.get('analysis_summary', {}).get('identified_controls_count', 0)} controls identified")
             return result
 
         except Exception as e:
-            print(f"Error invoking LLM: {e}")
+            print(f"Error processing document chunk {chunk_number}: {e}")
+            import traceback
+            traceback.print_exc()
             return {}
 
     async def query_document(self, document_id: str, query: str) -> Dict:
