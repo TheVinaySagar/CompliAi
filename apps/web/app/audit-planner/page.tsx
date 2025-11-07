@@ -1,33 +1,45 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { 
-  type AuditProject, 
-  type PolicyGenerationRequest, 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  type AuditProject,
+  type PolicyGenerationRequest,
   type ComplianceDashboard,
   type UploadedDocument,
-  type ComplianceFramework
-} from "@/types"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Upload, 
-  FileText, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
-  Download, 
-  Copy, 
+  type ComplianceFramework,
+} from "@/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Download,
+  Copy,
   RefreshCw,
   Target,
   Shield,
@@ -36,42 +48,46 @@ import {
   Edit,
   Sparkles,
   BarChart3,
-  X
-} from "lucide-react"
-import { apiClient } from "@/lib/api-client"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/contexts/auth-context"
+  X,
+} from "lucide-react";
+import { apiClient } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function AuditPlannerPage() {
-  const [activeStep, setActiveStep] = useState<"define" | "generate" | "export">("define")
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState(0)
-  const [generationStatus, setGenerationStatus] = useState("")
-  const [showTrackedChanges, setShowTrackedChanges] = useState(false)
-  const [projects, setProjects] = useState<AuditProject[]>([])
-  const [documents, setDocuments] = useState<UploadedDocument[]>([])
-  const [currentProject, setCurrentProject] = useState<AuditProject | null>(null)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [isEditingPolicy, setIsEditingPolicy] = useState(false)
-  const [editedPolicyContent, setEditedPolicyContent] = useState("")
-  
+  const [activeStep, setActiveStep] = useState<
+    "define" | "generate" | "export"
+  >("define");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState("");
+  const [showTrackedChanges, setShowTrackedChanges] = useState(false);
+  const [projects, setProjects] = useState<AuditProject[]>([]);
+  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [currentProject, setCurrentProject] = useState<AuditProject | null>(
+    null
+  );
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isEditingPolicy, setIsEditingPolicy] = useState(false);
+  const [editedPolicyContent, setEditedPolicyContent] = useState("");
+
   // Form state
-  const [projectTitle, setProjectTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [selectedFramework, setSelectedFramework] = useState("")
-  const [selectedDocument, setSelectedDocument] = useState("")
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  
-  const router = useRouter()
-  const { toast } = useToast()
-  const { user } = useAuth()
+  const [projectTitle, setProjectTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedFramework, setSelectedFramework] = useState("");
+  const [selectedDocument, setSelectedDocument] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const router = useRouter();
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   // Professional markdown components like the chat interface
   const MarkdownComponents = {
     // Custom code block with styling
     code: ({ node, inline, className, children, ...props }: any) => {
-      const match = /language-(\w+)/.exec(className || '')
-      const language = match ? match[1] : 'text'
+      const match = /language-(\w+)/.exec(className || "");
+      const language = match ? match[1] : "text";
 
       if (!inline) {
         return (
@@ -85,31 +101,44 @@ export default function AuditPlannerPage() {
               </pre>
             </div>
           </div>
-        )
+        );
       }
 
       return (
-        <code className="px-2 py-1 text-sm font-mono rounded bg-muted text-foreground" {...props}>
+        <code
+          className="px-2 py-1 text-sm font-mono rounded bg-muted text-foreground"
+          {...props}
+        >
           {children}
         </code>
-      )
+      );
     },
 
     // Custom styling for different elements
     h1: ({ children }: any) => (
-      <h1 className="text-2xl font-bold mt-6 mb-4 text-foreground">{children}</h1>
+      <h1 className="text-2xl font-bold mt-6 mb-4 text-foreground">
+        {children}
+      </h1>
     ),
     h2: ({ children }: any) => (
-      <h2 className="text-xl font-bold mt-6 mb-3 text-foreground border-b border-border pb-2">{children}</h2>
+      <h2 className="text-xl font-bold mt-6 mb-3 text-foreground border-b border-border pb-2">
+        {children}
+      </h2>
     ),
     h3: ({ children }: any) => (
-      <h3 className="text-lg font-semibold mt-4 mb-2 text-foreground">{children}</h3>
+      <h3 className="text-lg font-semibold mt-4 mb-2 text-foreground">
+        {children}
+      </h3>
     ),
     h4: ({ children }: any) => (
-      <h4 className="text-base font-semibold mt-3 mb-2 text-foreground">{children}</h4>
+      <h4 className="text-base font-semibold mt-3 mb-2 text-foreground">
+        {children}
+      </h4>
     ),
     p: ({ children }: any) => (
-      <p className="leading-relaxed text-base mb-3 text-foreground">{children}</p>
+      <p className="leading-relaxed text-base mb-3 text-foreground">
+        {children}
+      </p>
     ),
     ul: ({ children }: any) => (
       <ul className="space-y-1 ml-4 mb-4 list-disc">{children}</ul>
@@ -117,9 +146,7 @@ export default function AuditPlannerPage() {
     ol: ({ children }: any) => (
       <ol className="space-y-1 ml-4 mb-4 list-decimal">{children}</ol>
     ),
-    li: ({ children }: any) => (
-      <li className="leading-relaxed">{children}</li>
-    ),
+    li: ({ children }: any) => <li className="leading-relaxed">{children}</li>,
     a: ({ href, children }: any) => (
       <a
         href={href}
@@ -135,19 +162,22 @@ export default function AuditPlannerPage() {
         {children}
       </blockquote>
     ),
-    hr: () => (
-      <hr className="my-4 border-t border-border" />
-    ),
+    hr: () => <hr className="my-4 border-t border-border" />,
     strong: ({ children }: any) => {
       // Special handling for Framework Alignment
-      if (typeof children === 'string' && children.includes('Framework Alignment:')) {
+      if (
+        typeof children === "string" &&
+        children.includes("Framework Alignment:")
+      ) {
         return (
           <span className="inline-block bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded text-blue-800 dark:text-blue-200 text-sm font-medium my-1">
             {children}
           </span>
-        )
+        );
       }
-      return <strong className="font-semibold text-foreground">{children}</strong>
+      return (
+        <strong className="font-semibold text-foreground">{children}</strong>
+      );
     },
     em: ({ children }: any) => (
       <em className="italic text-muted-foreground">{children}</em>
@@ -160,462 +190,495 @@ export default function AuditPlannerPage() {
     thead: ({ children }: any) => (
       <thead className="bg-muted">{children}</thead>
     ),
-    tbody: ({ children }: any) => (
-      <tbody>{children}</tbody>
-    ),
+    tbody: ({ children }: any) => <tbody>{children}</tbody>,
     tr: ({ children }: any) => (
       <tr className="border-b border-border">{children}</tr>
     ),
     th: ({ children }: any) => (
-      <th className="px-4 py-2 text-left font-semibold text-foreground">{children}</th>
+      <th className="px-4 py-2 text-left font-semibold text-foreground">
+        {children}
+      </th>
     ),
     td: ({ children }: any) => (
       <td className="px-4 py-2 text-foreground">{children}</td>
     ),
-  }
+  };
 
   // Available frameworks
   const frameworks = [
-    { id: "ISO27001", name: "ISO 27001", description: "Information Security Management" },
+    {
+      id: "ISO27001",
+      name: "ISO 27001",
+      description: "Information Security Management",
+    },
     { id: "SOC2", name: "SOC 2", description: "Service Organization Controls" },
-    { id: "NIST_CSF", name: "NIST CSF", description: "Cybersecurity Framework" },
+    {
+      id: "NIST_CSF",
+      name: "NIST CSF",
+      description: "Cybersecurity Framework",
+    },
     { id: "PCI_DSS", name: "PCI DSS", description: "Payment Card Industry" },
-    { id: "GDPR", name: "GDPR", description: "General Data Protection Regulation" },
-    { id: "HIPAA", name: "HIPAA", description: "Healthcare Information Security" }
-  ]
+    {
+      id: "GDPR",
+      name: "GDPR",
+      description: "General Data Protection Regulation",
+    },
+    {
+      id: "HIPAA",
+      name: "HIPAA",
+      description: "Healthcare Information Security",
+    },
+  ];
 
   useEffect(() => {
-    loadDocuments()
-    loadProjects()
-  }, [])
+    loadDocuments();
+    loadProjects();
+  }, []);
 
   const loadDocuments = async () => {
     try {
-      const response = await apiClient.getDocuments()
+      const response = await apiClient.getDocuments();
       if (response.success && response.data) {
-        setDocuments(response.data)
+        setDocuments(response.data);
       }
     } catch (error) {
-      console.error("Failed to load documents:", error)
+      console.error("Failed to load documents:", error);
     }
-  }
+  };
 
   const loadProjects = async () => {
     try {
-      const response = await apiClient.getAuditProjects()
+      const response = await apiClient.getAuditProjects();
       if (response.success && response.data) {
-        setProjects(response.data)
+        setProjects(response.data);
       }
     } catch (error) {
-      console.error("Failed to load projects:", error)
+      console.error("Failed to load projects:", error);
     }
-  }
+  };
 
   const handleFileUpload = async (file: File) => {
     try {
-      console.log("Starting file upload:", file.name, file.type, file.size)
-      
+      console.log("Starting file upload:", file.name, file.type, file.size);
+
       // Check authentication
       if (!user) {
         toast({
           title: "Authentication required",
           description: "Please log in to upload documents.",
-          variant: "destructive"
-        })
-        router.push('/login')
-        return
+          variant: "destructive",
+        });
+        router.push("/login");
+        return;
       }
-      
-      setIsGenerating(true)
-      
+
+      setIsGenerating(true);
+
       // Validate file
       if (!file) {
-        throw new Error("No file selected")
+        throw new Error("No file selected");
       }
-      
+
       const validTypes = [
-        'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/msword'
-      ]
-      
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword",
+      ];
+
       if (!validTypes.includes(file.type)) {
-        throw new Error("Please upload a PDF or Word document (.pdf, .docx, .doc)")
+        throw new Error(
+          "Please upload a PDF or Word document (.pdf, .docx, .doc)"
+        );
       }
-      
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        throw new Error("File size must be less than 50MB")
+
+      if (file.size > 50 * 1024 * 1024) {
+        // 50MB limit
+        throw new Error("File size must be less than 50MB");
       }
-      
-      const response = await apiClient.uploadDocument(file, file.name)
-      console.log("Upload response:", response)
-      
+
+      const response = await apiClient.uploadDocument(file, file.name);
+      console.log("Upload response:", response);
+
       if (response.success && response.data) {
         toast({
           title: "Document uploaded successfully",
-          description: "Document is being processed for analysis."
-        })
-        
+          description: "Document is being processed for analysis.",
+        });
+
         // Reload documents
-        await loadDocuments()
-        
+        await loadDocuments();
+
         // Auto-select the uploaded document
-        setSelectedDocument(response.data.document_id)
+        setSelectedDocument(response.data.document_id);
       } else {
-        console.error("Upload failed with response:", response)
-        const errorMessage = response.error || "Upload failed"
-        
+        console.error("Upload failed with response:", response);
+        const errorMessage = response.error || "Upload failed";
+
         // Provide specific error messages for common issues
         if (response.status === 401) {
-          throw new Error("Authentication failed. Please log in again.")
+          throw new Error("Authentication failed. Please log in again.");
         } else if (response.status === 413) {
-          throw new Error("File too large. Please choose a smaller file.")
+          throw new Error("File too large. Please choose a smaller file.");
         } else if (response.status === 415) {
-          throw new Error("Unsupported file type. Please upload a PDF or Word document.")
+          throw new Error(
+            "Unsupported file type. Please upload a PDF or Word document."
+          );
         } else if (response.status === 0) {
-          throw new Error("Network error. Please check your connection.")
+          throw new Error("Network error. Please check your connection.");
         } else {
-          throw new Error(errorMessage)
+          throw new Error(errorMessage);
         }
       }
     } catch (error) {
-      console.error("Upload error:", error)
-      
-      let errorMessage = "Unknown error"
+      console.error("Upload error:", error);
+
+      let errorMessage = "Unknown error";
       if (error instanceof Error) {
-        errorMessage = error.message
-      } else if (typeof error === 'string') {
-        errorMessage = error
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
       }
-      
+
       toast({
         title: "Upload failed",
         description: errorMessage,
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-    
-    const files = e.dataTransfer.files
-    console.log("Files dropped:", files.length)
-    
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    console.log("Files dropped:", files.length);
+
     if (files && files.length > 0) {
-      const file = files[0]
-      console.log("Processing dropped file:", file.name, file.type)
-      handleFileUpload(file)
+      const file = files[0];
+      console.log("Processing dropped file:", file.name, file.type);
+      handleFileUpload(file);
     } else {
       toast({
         title: "No file detected",
         description: "Please try again or use the browse button.",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    console.log("Files selected:", files?.length)
-    
+    const files = e.target.files;
+    console.log("Files selected:", files?.length);
+
     if (files && files.length > 0) {
-      const file = files[0]
-      console.log("Processing selected file:", file.name, file.type)
-      handleFileUpload(file)
-      
+      const file = files[0];
+      console.log("Processing selected file:", file.name, file.type);
+      handleFileUpload(file);
+
       // Reset input so same file can be selected again
-      e.target.value = ''
+      e.target.value = "";
     }
-  }
+  };
 
   const pollForCompletion = async (projectId: string) => {
-    const maxAttempts = 120 // 10 minutes max (5 second intervals)
-    let attempts = 0
-    
-    setGenerationStatus("Starting policy generation...")
-    setGenerationProgress(10)
-    
+    const maxAttempts = 120; // 10 minutes max (5 second intervals)
+    let attempts = 0;
+
+    setGenerationStatus("Starting policy generation...");
+    setGenerationProgress(10);
+
     while (attempts < maxAttempts) {
       try {
         // Use the new status endpoint for more accurate progress tracking
-        const statusResponse = await apiClient.getAuditProjectStatus(projectId)
-        
+        const statusResponse = await apiClient.getAuditProjectStatus(projectId);
+
         if (statusResponse.success && statusResponse.data) {
-          const status = statusResponse.data
-          
-          console.log(`Poll attempt ${attempts + 1}: Status=${status.status}, Progress=${status.progress}%`)
-          
+          const status = statusResponse.data;
+
+          console.log(
+            `Poll attempt ${attempts + 1}: Status=${status.status}, Progress=${
+              status.progress
+            }%`
+          );
+
           // Update progress with real backend progress
-          setGenerationProgress(status.progress || 0)
-          setGenerationStatus(status.latest_action || status.latest_details || "Processing...")
-          
+          setGenerationProgress(status.progress || 0);
+          setGenerationStatus(
+            status.latest_action || status.latest_details || "Processing..."
+          );
+
           if (status.status === "COMPLETED") {
-            setGenerationProgress(100)
-            setGenerationStatus("Policy generation completed!")
-            
-            console.log("Project completed, fetching full project data...")
-            
+            setGenerationProgress(100);
+            setGenerationStatus("Policy generation completed!");
+
+            console.log("Project completed, fetching full project data...");
+
             // Add a small delay to ensure database is fully updated
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
             // Now get the full project data with retries
-            let projectResponse = null
-            let retryCount = 0
-            const maxRetries = 3
-            
+            let projectResponse = null;
+            let retryCount = 0;
+            const maxRetries = 3;
+
             while (retryCount < maxRetries && !projectResponse?.success) {
-              console.log(`Fetching project data, attempt ${retryCount + 1}`)
-              projectResponse = await apiClient.getAuditProject(projectId)
-              
+              console.log(`Fetching project data, attempt ${retryCount + 1}`);
+              projectResponse = await apiClient.getAuditProject(projectId);
+
               if (!projectResponse?.success) {
-                console.log(`Failed to fetch project, retrying in 1 second...`)
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                retryCount++
+                console.log(`Failed to fetch project, retrying in 1 second...`);
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                retryCount++;
               }
             }
-            
+
             if (projectResponse?.success && projectResponse.data) {
-              const project = projectResponse.data as AuditProject
-              console.log("Successfully retrieved completed project:", project)
-              
-              setCurrentProject(project)
-              setProjects(prev => {
+              const project = projectResponse.data as AuditProject;
+              console.log("Successfully retrieved completed project:", project);
+
+              setCurrentProject(project);
+              setProjects((prev) => {
                 // Remove any existing project with same ID and add the updated one
-                const filtered = prev.filter(p => p.id !== projectId)
-                return [project, ...filtered]
-              })
-              setActiveStep("generate")
-              return // Success - exit polling loop
-              
+                const filtered = prev.filter((p) => p.id !== projectId);
+                return [project, ...filtered];
+              });
+              setActiveStep("generate");
+              return; // Success - exit polling loop
             } else {
-              console.error("Failed to retrieve completed project after retries")
-              throw new Error("Failed to retrieve completed project data")
+              console.error(
+                "Failed to retrieve completed project after retries"
+              );
+              throw new Error("Failed to retrieve completed project data");
             }
-            
           } else if (status.status === "FAILED") {
-            throw new Error(status.latest_details || "Policy generation failed")
+            throw new Error(
+              status.latest_details || "Policy generation failed"
+            );
           }
-          
+
           // Still generating, wait and try again
-          await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
-          attempts++
-          
+          await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 seconds
+          attempts++;
         } else {
-          console.error("Status endpoint failed, trying fallback...")
-          throw new Error("Failed to check project status")
+          console.error("Status endpoint failed, trying fallback...");
+          throw new Error("Failed to check project status");
         }
-        
       } catch (error) {
-        console.error("Polling error:", error)
-        
+        console.error("Polling error:", error);
+
         // If status endpoint fails, fall back to regular project endpoint
         try {
-          console.log("Trying fallback project endpoint...")
-          const response = await apiClient.getAuditProject(projectId)
-          
+          console.log("Trying fallback project endpoint...");
+          const response = await apiClient.getAuditProject(projectId);
+
           if (response.success && response.data) {
-            const project = response.data as AuditProject
-            console.log(`Fallback: Project status=${project.status}`)
-            
+            const project = response.data as AuditProject;
+            console.log(`Fallback: Project status=${project.status}`);
+
             if (project.status === "Completed") {
-              setGenerationProgress(100)
-              setGenerationStatus("Policy generation completed!")
-              setCurrentProject(project)
-              setProjects(prev => {
-                const filtered = prev.filter(p => p.id !== projectId)
-                return [project, ...filtered]
-              })
-              setActiveStep("generate")
-              return // Success - exit polling loop
-              
+              setGenerationProgress(100);
+              setGenerationStatus("Policy generation completed!");
+              setCurrentProject(project);
+              setProjects((prev) => {
+                const filtered = prev.filter((p) => p.id !== projectId);
+                return [project, ...filtered];
+              });
+              setActiveStep("generate");
+              return; // Success - exit polling loop
             } else if (project.status === "Failed") {
-              throw new Error("Policy generation failed")
+              throw new Error("Policy generation failed");
             }
-            
+
             // Update progress with basic time-based estimation
-            const timeBasedProgress = Math.min(20 + (attempts * 2), 90)
-            setGenerationProgress(timeBasedProgress)
-            setGenerationStatus("Generating policy content...")
+            const timeBasedProgress = Math.min(20 + attempts * 2, 90);
+            setGenerationProgress(timeBasedProgress);
+            setGenerationStatus("Generating policy content...");
           }
         } catch (fallbackError) {
-          console.error("Fallback polling error:", fallbackError)
+          console.error("Fallback polling error:", fallbackError);
         }
-        
-        attempts++
+
+        attempts++;
         if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
       }
     }
-    
-    throw new Error("Policy generation timed out after 10 minutes")
-  }
+
+    throw new Error("Policy generation timed out after 10 minutes");
+  };
 
   const generatePolicy = async () => {
     if (!projectTitle || !selectedFramework || !selectedDocument) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
-        variant: "destructive"
-      })
-      return
+        variant: "destructive",
+      });
+      return;
     }
 
     try {
-      setIsGenerating(true)
-      
+      setIsGenerating(true);
+
       const request: PolicyGenerationRequest = {
         projectTitle,
         sourceDocumentId: selectedDocument,
         targetFramework: selectedFramework,
-        description
-      }
+        description,
+      };
 
       // Call the actual API for policy generation
       const response = await apiClient.generatePolicy({
         project_title: projectTitle,
         source_document_id: selectedDocument,
         target_framework: selectedFramework,
-        description
-      })
+        description,
+      });
 
       if (response.success && response.data) {
         // Start polling for completion
-        const projectId = response.data.project_id
-        await pollForCompletion(projectId)
+        const projectId = response.data.project_id;
+        await pollForCompletion(projectId);
       } else {
-        throw new Error(response.error || "Failed to generate policy")
+        throw new Error(response.error || "Failed to generate policy");
       }
 
       toast({
         title: "Policy generated successfully",
-        description: "Your audit-ready policy has been created."
-      })
-
+        description: "Your audit-ready policy has been created.",
+      });
     } catch (error) {
       toast({
         title: "Generation failed",
         description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const exportToPDF = async () => {
-    if (!currentProject) return
-    
+    if (!currentProject) return;
+
     try {
       toast({
         title: "Exporting to PDF",
-        description: "Your policy document is being prepared for download."
-      })
-      
-      const response = await apiClient.exportPolicy(currentProject.id, 'pdf', {
+        description: "Your policy document is being prepared for download.",
+      });
+
+      const response = await apiClient.exportPolicy(currentProject.id, "pdf", {
         include_citations: true,
-        include_audit_trail: true
-      })
-      
+        include_audit_trail: true,
+      });
+
       if (response.success && response.data) {
         // Handle file download
-        const blob = response.data as Blob
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${currentProject.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.pdf`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-        
+        const blob = response.data as Blob;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentProject.title.replace(
+          /[^a-zA-Z0-9]/g,
+          "_"
+        )}_policy.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
         toast({
           title: "Export completed",
-          description: "PDF downloaded successfully."
-        })
+          description: "PDF downloaded successfully.",
+        });
       } else {
-        throw new Error(response.error || "Export failed")
+        throw new Error(response.error || "Export failed");
       }
     } catch (error) {
       toast({
         title: "Export failed",
         description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const exportToWord = async () => {
-    if (!currentProject) return
-    
+    if (!currentProject) return;
+
     try {
       toast({
         title: "Exporting to Word",
-        description: "Your policy document is being prepared for download."
-      })
-      
-      const response = await apiClient.exportPolicy(currentProject.id, 'docx', {
+        description: "Your policy document is being prepared for download.",
+      });
+
+      const response = await apiClient.exportPolicy(currentProject.id, "docx", {
         include_citations: true,
-        include_audit_trail: true
-      })
-      
+        include_audit_trail: true,
+      });
+
       if (response.success && response.data) {
         // Handle file download
-        const blob = response.data as Blob
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${currentProject.title.replace(/[^a-zA-Z0-9]/g, '_')}_policy.docx`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-        
+        const blob = response.data as Blob;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentProject.title.replace(
+          /[^a-zA-Z0-9]/g,
+          "_"
+        )}_policy.docx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
         toast({
           title: "Export completed",
-          description: "Word document downloaded successfully."
-        })
+          description: "Word document downloaded successfully.",
+        });
       } else {
-        throw new Error(response.error || "Export failed")
+        throw new Error(response.error || "Export failed");
       }
     } catch (error) {
       toast({
         title: "Export failed",
         description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   const copyToClipboard = () => {
-    const contentToCopy = isEditingPolicy ? editedPolicyContent : currentProject?.generated_policy?.content
+    const contentToCopy = isEditingPolicy
+      ? editedPolicyContent
+      : currentProject?.generated_policy?.content;
     if (contentToCopy) {
-      navigator.clipboard.writeText(contentToCopy)
+      navigator.clipboard.writeText(contentToCopy);
       toast({
         title: "Copied to clipboard",
-        description: "Policy content has been copied to your clipboard."
-      })
+        description: "Policy content has been copied to your clipboard.",
+      });
     }
-  }
+  };
 
   const startEditingPolicy = () => {
     if (currentProject?.generated_policy?.content) {
-      setEditedPolicyContent(currentProject.generated_policy.content)
-      setIsEditingPolicy(true)
+      setEditedPolicyContent(currentProject.generated_policy.content);
+      setIsEditingPolicy(true);
     }
-  }
+  };
 
   const saveEditedPolicy = async () => {
     if (currentProject && editedPolicyContent) {
       try {
         // Update the project in the database
         const response = await apiClient.updateAuditProject(currentProject.id, {
-          policy_content: editedPolicyContent
-        })
+          policy_content: editedPolicyContent,
+        });
 
         if (response.success) {
           // Update the current project locally
@@ -624,115 +687,169 @@ export default function AuditPlannerPage() {
             generated_policy: {
               ...currentProject.generated_policy!,
               content: editedPolicyContent,
-              word_count: editedPolicyContent.split(/\s+/).length
-            }
-          }
-          setCurrentProject(updatedProject)
-          
+              word_count: editedPolicyContent.split(/\s+/).length,
+            },
+          };
+          setCurrentProject(updatedProject);
+
           // Also update in the projects list
-          setProjects(prev => 
-            prev.map(p => p.id === currentProject.id ? updatedProject : p)
-          )
-          
-          setIsEditingPolicy(false)
-          
+          setProjects((prev) =>
+            prev.map((p) => (p.id === currentProject.id ? updatedProject : p))
+          );
+
+          setIsEditingPolicy(false);
+
           toast({
             title: "Policy updated successfully",
-            description: "Your changes have been saved to the database."
-          })
+            description: "Your changes have been saved to the database.",
+          });
         } else {
-          throw new Error(response.error || "Failed to update policy")
+          throw new Error(response.error || "Failed to update policy");
         }
       } catch (error) {
-        console.error("Error saving policy:", error)
+        console.error("Error saving policy:", error);
         toast({
           title: "Save failed",
-          description: error instanceof Error ? error.message : "Failed to save policy changes",
-          variant: "destructive"
-        })
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to save policy changes",
+          variant: "destructive",
+        });
       }
     }
-  }
+  };
 
   const cancelEditingPolicy = () => {
-    setIsEditingPolicy(false)
-    setEditedPolicyContent("")
-  }
+    setIsEditingPolicy(false);
+    setEditedPolicyContent("");
+  };
 
   const resetForm = () => {
-    setProjectTitle("")
-    setDescription("")
-    setSelectedFramework("")
-    setSelectedDocument("")
-    setCurrentProject(null)
-    setActiveStep("define")
-    setIsGenerating(false)
-    setGenerationProgress(0)
-    setGenerationStatus("")
-    setIsEditingPolicy(false)
-    setEditedPolicyContent("")
-  }
+    setProjectTitle("");
+    setDescription("");
+    setSelectedFramework("");
+    setSelectedDocument("");
+    setCurrentProject(null);
+    setActiveStep("define");
+    setIsGenerating(false);
+    setGenerationProgress(0);
+    setGenerationStatus("");
+    setIsEditingPolicy(false);
+    setEditedPolicyContent("");
+  };
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">Audit Planner</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+          Audit Planner
+        </h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-2">
-          Transform your existing policies into audit-ready, framework-compliant documents with AI-powered analysis and citations.
+          Transform your existing policies into audit-ready, framework-compliant
+          documents with AI-powered analysis and citations.
         </p>
       </div>
 
       {/* Progress Steps */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-2xl mx-auto space-y-4 sm:space-y-0">
-          <div className={`flex items-center space-x-2 ${
-            activeStep === "define" ? "text-blue-600" : 
-            activeStep === "generate" || activeStep === "export" ? "text-green-600" : "text-muted-foreground"
-          }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              activeStep === "define" ? "bg-blue-100 text-blue-600" :
-              activeStep === "generate" || activeStep === "export" ? "bg-green-100 text-green-600" : "bg-muted"
-            }`}>
-              {activeStep === "generate" || activeStep === "export" ? <CheckCircle className="w-4 h-4" /> : "1"}
+          <div
+            className={`flex items-center space-x-2 ${
+              activeStep === "define"
+                ? "text-blue-600"
+                : activeStep === "generate" || activeStep === "export"
+                ? "text-green-600"
+                : "text-muted-foreground"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                activeStep === "define"
+                  ? "bg-blue-100 text-blue-600"
+                  : activeStep === "generate" || activeStep === "export"
+                  ? "bg-green-100 text-green-600"
+                  : "bg-muted"
+              }`}
+            >
+              {activeStep === "generate" || activeStep === "export" ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                "1"
+              )}
             </div>
-            <span className="font-medium text-sm sm:text-base">Define Project</span>
+            <span className="font-medium text-sm sm:text-base">
+              Define Project
+            </span>
           </div>
 
           <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
-            <div className={`h-full transition-all duration-300 ${
-              activeStep === "generate" || activeStep === "export" ? "bg-green-500 w-full" : "bg-border w-0"
-            }`} />
+            <div
+              className={`h-full transition-all duration-300 ${
+                activeStep === "generate" || activeStep === "export"
+                  ? "bg-green-500 w-full"
+                  : "bg-border w-0"
+              }`}
+            />
           </div>
 
-          <div className={`flex items-center space-x-2 ${
-            activeStep === "generate" ? "text-blue-600" : 
-            activeStep === "export" ? "text-green-600" : "text-muted-foreground"
-          }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              activeStep === "generate" ? "bg-blue-100 text-blue-600" :
-              activeStep === "export" ? "bg-green-100 text-green-600" : "bg-muted"
-            }`}>
-              {activeStep === "export" ? <CheckCircle className="w-4 w-4" /> : "2"}
+          <div
+            className={`flex items-center space-x-2 ${
+              activeStep === "generate"
+                ? "text-blue-600"
+                : activeStep === "export"
+                ? "text-green-600"
+                : "text-muted-foreground"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                activeStep === "generate"
+                  ? "bg-blue-100 text-blue-600"
+                  : activeStep === "export"
+                  ? "bg-green-100 text-green-600"
+                  : "bg-muted"
+              }`}
+            >
+              {activeStep === "export" ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                "2"
+              )}
             </div>
             <span className="font-medium">Generate & Review</span>
           </div>
 
           <div className="hidden sm:flex flex-1 h-0.5 bg-border mx-4">
-            <div className={`h-full transition-all duration-300 ${
-              activeStep === "export" ? "bg-green-500 w-full" : "bg-border w-0"
-            }`} />
+            <div
+              className={`h-full transition-all duration-300 ${
+                activeStep === "export"
+                  ? "bg-green-500 w-full"
+                  : "bg-border w-0"
+              }`}
+            />
           </div>
 
-          <div className={`flex items-center space-x-2 ${
-            activeStep === "export" ? "text-blue-600" : "text-muted-foreground"
-          }`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              activeStep === "export" ? "bg-blue-100 text-blue-600" : "bg-muted"
-            }`}>
+          <div
+            className={`flex items-center space-x-2 ${
+              activeStep === "export"
+                ? "text-blue-600"
+                : "text-muted-foreground"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                activeStep === "export"
+                  ? "bg-blue-100 text-blue-600"
+                  : "bg-muted"
+              }`}
+            >
               3
             </div>
-            <span className="font-medium text-sm sm:text-base">Export & Implement</span>
+            <span className="font-medium text-sm sm:text-base">
+              Export & Implement
+            </span>
           </div>
         </div>
       </div>
@@ -747,7 +864,8 @@ export default function AuditPlannerPage() {
                 <span>Step 1: Define Your Audit Project</span>
               </CardTitle>
               <CardDescription>
-                Provide the basic information for your compliance project and upload your source document.
+                Provide the basic information for your compliance project and
+                upload your source document.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -777,7 +895,10 @@ export default function AuditPlannerPage() {
               {/* Framework Selector */}
               <div className="space-y-2">
                 <Label htmlFor="framework">Target Compliance Framework *</Label>
-                <Select value={selectedFramework} onValueChange={setSelectedFramework}>
+                <Select
+                  value={selectedFramework}
+                  onValueChange={setSelectedFramework}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select the framework for your audit" />
                   </SelectTrigger>
@@ -786,7 +907,9 @@ export default function AuditPlannerPage() {
                       <SelectItem key={framework.id} value={framework.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{framework.name}</span>
-                          <span className="text-sm text-muted-foreground">{framework.description}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {framework.description}
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -797,15 +920,17 @@ export default function AuditPlannerPage() {
               {/* Document Upload/Selection */}
               <div className="space-y-4">
                 <Label>Source Document *</Label>
-                
+
                 {/* Upload New Document */}
                 <div
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                    isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-300"
+                    isDragOver
+                      ? "border-blue-400 bg-blue-50"
+                      : "border-gray-300"
                   } ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}
                   onDragOver={(e) => {
-                    e.preventDefault()
-                    setIsDragOver(true)
+                    e.preventDefault();
+                    setIsDragOver(true);
                   }}
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={handleDrop}
@@ -815,7 +940,8 @@ export default function AuditPlannerPage() {
                     Upload Your Current Policy
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Drag and drop your existing policy document (PDF, DOCX) or click to browse
+                    Drag and drop your existing policy document (PDF, DOCX) or
+                    click to browse
                   </p>
                   <input
                     type="file"
@@ -825,10 +951,12 @@ export default function AuditPlannerPage() {
                     id="fileInput"
                     disabled={isGenerating}
                   />
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     disabled={isGenerating}
-                    onClick={() => document.getElementById('fileInput')?.click()}
+                    onClick={() =>
+                      document.getElementById("fileInput")?.click()
+                    }
                   >
                     {isGenerating ? (
                       <>
@@ -847,14 +975,22 @@ export default function AuditPlannerPage() {
                 {/* Or Select Existing Document */}
                 {documents.length > 0 ? (
                   <div className="space-y-2">
-                    <Label htmlFor="existingDoc">Or select from uploaded documents:</Label>
-                    <Select value={selectedDocument} onValueChange={setSelectedDocument}>
+                    <Label htmlFor="existingDoc">
+                      Or select from uploaded documents:
+                    </Label>
+                    <Select
+                      value={selectedDocument}
+                      onValueChange={setSelectedDocument}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Choose an existing document" />
                       </SelectTrigger>
                       <SelectContent>
                         {documents.map((doc, index) => (
-                          <SelectItem key={doc.id || `doc-${index}`} value={doc.id || `doc-${index}`}>
+                          <SelectItem
+                            key={doc.id || `doc-${index}`}
+                            value={doc.id || `doc-${index}`}
+                          >
                             <div className="flex items-center space-x-2">
                               <FileText className="h-4 w-4" />
                               <span>{doc.name}</span>
@@ -870,7 +1006,8 @@ export default function AuditPlannerPage() {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-sm text-muted-foreground">
-                      No documents uploaded yet. Upload your first document above to get started.
+                      No documents uploaded yet. Upload your first document
+                      above to get started.
                     </p>
                   </div>
                 )}
@@ -879,16 +1016,21 @@ export default function AuditPlannerPage() {
               {/* Action Buttons */}
               <div className="pt-4 border-t">
                 <div className="flex justify-end space-x-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={resetForm}
                     disabled={isGenerating}
                   >
                     Reset Form
                   </Button>
-                  <Button 
+                  <Button
                     onClick={generatePolicy}
-                    disabled={!projectTitle || !selectedFramework || !selectedDocument || isGenerating}
+                    disabled={
+                      !projectTitle ||
+                      !selectedFramework ||
+                      !selectedDocument ||
+                      isGenerating
+                    }
                     className="min-w-[140px]"
                   >
                     {isGenerating ? (
@@ -904,17 +1046,22 @@ export default function AuditPlannerPage() {
                     )}
                   </Button>
                 </div>
-                
+
                 {/* Generation Progress */}
                 {isGenerating && (
                   <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border mt-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{generationStatus}</span>
-                      <span className="text-muted-foreground">{generationProgress}%</span>
+                      <span className="text-muted-foreground">
+                        {generationStatus}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {generationProgress}%
+                      </span>
                     </div>
                     <Progress value={generationProgress} className="h-3" />
                     <p className="text-xs text-muted-foreground text-center">
-                      This may take 2-3 minutes for comprehensive analysis and policy generation.
+                      This may take 2-3 minutes for comprehensive analysis and
+                      policy generation.
                     </p>
                   </div>
                 )}
@@ -937,30 +1084,41 @@ export default function AuditPlannerPage() {
               <CardContent>
                 <div className="space-y-3">
                   {projects.slice(0, 3).map((project) => (
-                    <div 
-                      key={project.id} 
+                    <div
+                      key={project.id}
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                       onClick={() => {
-                        setCurrentProject(project)
-                        setActiveStep("generate")
+                        setCurrentProject(project);
+                        setActiveStep("generate");
                       }}
                     >
                       <div className="flex-1">
-                        <h4 className="font-medium text-foreground">{project.title}</h4>
+                        <h4 className="font-medium text-foreground">
+                          {project.title}
+                        </h4>
                         <div className="flex items-center space-x-3 text-sm text-muted-foreground mt-1">
                           <span>{project.framework}</span>
                           <span>•</span>
                           <span>
-                            {project.updated_at 
-                              ? new Date(project.updated_at).toLocaleDateString()
-                              : new Date(project.created_at).toLocaleDateString()
-                            }
+                            {project.updated_at
+                              ? new Date(
+                                  project.updated_at
+                                ).toLocaleDateString()
+                              : new Date(
+                                  project.created_at
+                                ).toLocaleDateString()}
                           </span>
-                          <Badge variant={
-                            project.status === "Completed" ? "default" :
-                            project.status === "Failed" ? "destructive" :
-                            project.status === "Generating" ? "secondary" : "outline"
-                          }>
+                          <Badge
+                            variant={
+                              project.status === "Completed"
+                                ? "default"
+                                : project.status === "Failed"
+                                ? "destructive"
+                                : project.status === "Generating"
+                                ? "secondary"
+                                : "outline"
+                            }
+                          >
                             {project.status}
                           </Badge>
                         </div>
@@ -968,7 +1126,7 @@ export default function AuditPlannerPage() {
                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
                     </div>
                   ))}
-                  
+
                   {projects.length > 3 && (
                     <Button variant="outline" size="sm" className="w-full mt-2">
                       View All Projects ({projects.length})
@@ -986,84 +1144,105 @@ export default function AuditPlannerPage() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground">{currentProject.title}</h2>
-              <p className="text-sm text-muted-foreground">Framework: {currentProject.framework}</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+                {currentProject.title}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Framework: {currentProject.framework}
+              </p>
             </div>
-            <Button variant="outline" onClick={resetForm} className="self-start sm:self-auto">
+            <Button
+              variant="outline"
+              onClick={resetForm}
+              className="self-start sm:self-auto"
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Start New Audit
             </Button>
           </div>
 
           {/* Compliance Dashboard */}
-          <div className="overflow-x-auto pb-4">
-            <div className="flex space-x-4 min-w-max md:grid md:grid-cols-3 md:gap-6">
-              <Card className="min-w-72 md:min-w-0 flex-shrink-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5 text-blue-600" />
-                    <span>Compliance Score</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {currentProject.compliance_score}%
-                  </div>
-                  <Progress value={currentProject.compliance_score} className="h-2" />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Based on framework requirements analysis
-                  </p>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  <span>Compliance Score</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  {currentProject.compliance_score}%
+                </div>
+                <Progress
+                  value={currentProject.compliance_score}
+                  className="h-2"
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  Based on framework requirements analysis
+                </p>
+              </CardContent>
+            </Card>
 
-              <Card className="min-w-72 md:min-w-0 flex-shrink-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <Shield className="h-5 w-5 text-green-600" />
-                    <span>Covered Controls</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {currentProject.covered_controls?.length || 0}
-                  </div>
-                  <div className="space-y-1">
-                    {(currentProject.covered_controls || []).slice(0, 3).map((control, index) => (
-                      <Badge key={`covered-${index}-${control}`} variant="outline" className="mr-1">
+            <Card className="min-w-72 md:min-w-0 flex-shrink-0">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-green-600" />
+                  <span>Covered Controls</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-600 mb-2">
+                  {currentProject.covered_controls?.length || 0}
+                </div>
+                <div className="space-y-1">
+                  {(currentProject.covered_controls || [])
+                    .slice(0, 3)
+                    .map((control, index) => (
+                      <Badge
+                        key={`covered-${index}-${control}`}
+                        variant="outline"
+                        className="mr-1"
+                      >
                         {control}
                       </Badge>
                     ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Controls identified in your document
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Controls identified in your document
+                </p>
+              </CardContent>
+            </Card>
 
-              <Card className="min-w-72 md:min-w-0 flex-shrink-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-amber-600" />
-                    <span>Missing Controls</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-amber-600 mb-2">
-                    {currentProject.missing_controls?.length || 0}
-                  </div>
-                  <div className="space-y-1">
-                    {(currentProject.missing_controls || []).slice(0, 3).map((control, index) => (
-                      <Badge key={`missing-${index}-${control}`} variant="destructive" className="mr-1">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  <span>Missing Controls</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-amber-600 mb-2">
+                  {currentProject.missing_controls?.length || 0}
+                </div>
+                <div className="space-y-1">
+                  {(currentProject.missing_controls || [])
+                    .slice(0, 3)
+                    .map((control, index) => (
+                      <Badge
+                        key={`missing-${index}-${control}`}
+                        variant="destructive"
+                        className="mr-1"
+                      >
                         {control}
                       </Badge>
                     ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Gaps addressed in generated policy
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Gaps addressed in generated policy
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Policy Editor */}
@@ -1076,10 +1255,9 @@ export default function AuditPlannerPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="text-xs">
-                    {isEditingPolicy 
+                    {isEditingPolicy
                       ? `${editedPolicyContent.split(/\s+/).length} words`
-                      : `${currentProject.generated_policy?.word_count} words`
-                    }
+                      : `${currentProject.generated_policy?.word_count} words`}
                   </Badge>
                   {!isEditingPolicy ? (
                     <>
@@ -1095,7 +1273,9 @@ export default function AuditPlannerPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowTrackedChanges(!showTrackedChanges)}
+                        onClick={() =>
+                          setShowTrackedChanges(!showTrackedChanges)
+                        }
                         className="text-xs"
                       >
                         <Edit className="h-3 w-3 mr-1" />
@@ -1135,58 +1315,123 @@ export default function AuditPlannerPage() {
                 </div>
               </CardTitle>
               <CardDescription>
-                {isEditingPolicy 
+                {isEditingPolicy
                   ? "Edit your policy content below. Markdown formatting is supported."
-                  : "Your audit-ready policy with framework citations. Click 'Edit Policy' to make changes."
-                }
+                  : "Your audit-ready policy with framework citations. Click 'Edit Policy' to make changes."}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isEditingPolicy ? (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                    <p className="font-medium mb-1">Markdown Formatting Tips:</p>
+                    <p className="font-medium mb-1">
+                      Markdown Formatting Tips:
+                    </p>
                     <ul className="text-xs space-y-1">
-                      <li>• Use # for main headings, ## for subheadings, ### for sub-subheadings</li>
+                      <li>
+                        • Use # for main headings, ## for subheadings, ### for
+                        sub-subheadings
+                      </li>
                       <li>• Use **text** for bold formatting</li>
                       <li>• Use *text* for italic formatting</li>
                       <li>• Use - or * for bullet points</li>
                       <li>• Use 1. 2. 3. for numbered lists</li>
                       <li>• Use `code` for inline code formatting</li>
-                      <li>• Leave blank lines between sections for proper spacing</li>
-                      <li>• **Framework Alignment:** will be highlighted automatically</li>
+                      <li>
+                        • Leave blank lines between sections for proper spacing
+                      </li>
+                      <li>
+                        • **Framework Alignment:** will be highlighted
+                        automatically
+                      </li>
                     </ul>
                   </div>
-                  
-                  <div className="overflow-x-auto pb-4">
-                    <div className="flex space-x-4 min-w-max lg:grid lg:grid-cols-2 lg:gap-4 lg:min-w-0">
-                      {/* Editor */}
-                      <div className="min-w-96 lg:min-w-0 flex-shrink-0 space-y-2">
-                        <h4 className="text-sm font-medium text-foreground">Edit Content</h4>
+
+                  {/* Mobile: Use Tabs, Desktop: Side by Side */}
+                  <div className="lg:hidden">
+                    <Tabs defaultValue="edit" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="edit">Edit Content</TabsTrigger>
+                        <TabsTrigger value="preview">Preview</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="edit" className="space-y-2 mt-4">
                         <Textarea
                           value={editedPolicyContent}
-                          onChange={(e) => setEditedPolicyContent(e.target.value)}
+                          onChange={(e) =>
+                            setEditedPolicyContent(e.target.value)
+                          }
                           className="min-h-96 font-mono text-sm resize-none"
                           placeholder="Enter your policy content here..."
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Characters: {editedPolicyContent.length}</span>
-                          <span>Words: {editedPolicyContent.split(/\s+/).filter(word => word.length > 0).length}</span>
+                          <span>
+                            Words:{" "}
+                            {
+                              editedPolicyContent
+                                .split(/\s+/)
+                                .filter((word) => word.length > 0).length
+                            }
+                          </span>
                         </div>
-                      </div>
-                      
-                      {/* Preview */}
-                      <div className="min-w-96 lg:min-w-0 flex-shrink-0 space-y-2">
-                        <h4 className="text-sm font-medium text-foreground">Preview</h4>
+                      </TabsContent>
+
+                      <TabsContent value="preview" className="mt-4">
                         <div className="border rounded-lg p-4 bg-background min-h-96 max-h-96 overflow-y-auto">
                           <div className="prose prose-sm max-w-none">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               components={MarkdownComponents}
                             >
-                              {editedPolicyContent || "Start typing to see the preview..."}
+                              {editedPolicyContent ||
+                                "Start typing to see the preview..."}
                             </ReactMarkdown>
                           </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+
+                  {/* Desktop: Side by Side */}
+                  <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4">
+                    {/* Editor */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-foreground">
+                        Edit Content
+                      </h4>
+                      <Textarea
+                        value={editedPolicyContent}
+                        onChange={(e) => setEditedPolicyContent(e.target.value)}
+                        className="min-h-96 font-mono text-sm resize-none"
+                        placeholder="Enter your policy content here..."
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Characters: {editedPolicyContent.length}</span>
+                        <span>
+                          Words:{" "}
+                          {
+                            editedPolicyContent
+                              .split(/\s+/)
+                              .filter((word) => word.length > 0).length
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-foreground">
+                        Preview
+                      </h4>
+                      <div className="border rounded-lg p-4 bg-background min-h-96 max-h-96 overflow-y-auto">
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={MarkdownComponents}
+                          >
+                            {editedPolicyContent ||
+                              "Start typing to see the preview..."}
+                          </ReactMarkdown>
                         </div>
                       </div>
                     </div>
@@ -1206,12 +1451,20 @@ export default function AuditPlannerPage() {
                           <span>Framework Citations</span>
                         </div>
                       </div>
-                      <div 
+                      <div
                         className="whitespace-pre-wrap font-mono text-sm"
                         dangerouslySetInnerHTML={{
-                          __html: (currentProject.generated_policy?.content || '')
-                            .replace(/\*\*Framework Alignment:\*\*/g, '<span class="bg-blue-200 px-1 rounded"><strong>Framework Alignment:</strong></span>')
-                            .replace(/(## \d+\. [A-Z\s]+)/g, '<span class="bg-green-200 px-1 rounded font-semibold">$1</span>')
+                          __html: (
+                            currentProject.generated_policy?.content || ""
+                          )
+                            .replace(
+                              /\*\*Framework Alignment:\*\*/g,
+                              '<span class="bg-blue-200 px-1 rounded"><strong>Framework Alignment:</strong></span>'
+                            )
+                            .replace(
+                              /(## \d+\. [A-Z\s]+)/g,
+                              '<span class="bg-green-200 px-1 rounded font-semibold">$1</span>'
+                            ),
                         }}
                       />
                     </div>
@@ -1221,7 +1474,8 @@ export default function AuditPlannerPage() {
                         remarkPlugins={[remarkGfm]}
                         components={MarkdownComponents}
                       >
-                        {currentProject.generated_policy?.content || "No policy content available."}
+                        {currentProject.generated_policy?.content ||
+                          "No policy content available."}
                       </ReactMarkdown>
                     </div>
                   )}
@@ -1230,25 +1484,36 @@ export default function AuditPlannerPage() {
 
               {/* Framework Citations */}
               <div className="mt-6">
-                <h4 className="font-medium text-foreground mb-3">Framework Citations</h4>
-                <div className="overflow-x-auto pb-2">
-                  <div className="flex space-x-3 lg:flex-col lg:space-x-0 lg:space-y-2 min-w-max lg:min-w-0">
-                    {(currentProject.generated_policy?.citations || []).map((citation, index) => (
-                      <div key={index} className="min-w-80 lg:min-w-0 flex-shrink-0 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
+                <h4 className="font-medium text-foreground mb-3">
+                  Framework Citations
+                </h4>
+                <div className="space-y-3">
+                  {(currentProject.generated_policy?.citations || []).map(
+                    (citation, index) => (
+                      <div
+                        key={index}
+                        className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400"
+                      >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                           <div className="flex items-center space-x-2">
-                            <Badge className="flex-shrink-0">{citation.control_id}</Badge>
-                            <span className="font-medium text-sm">{citation.control_title}</span>
+                            <Badge className="flex-shrink-0">
+                              {citation.control_id}
+                            </Badge>
+                            <span className="font-medium text-sm">
+                              {citation.control_title}
+                            </span>
                           </div>
                           <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">{citation.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {citation.description}
+                        </p>
                         <p className="text-xs text-blue-600 mt-1">
                           Referenced in: {citation.policy_section}
                         </p>
                       </div>
-                    ))}
-                  </div>
+                    )
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -1260,9 +1525,12 @@ export default function AuditPlannerPage() {
       {activeStep === "export" && currentProject && (
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-foreground mb-2">Policy Generated Successfully!</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-2">
+              Policy Generated Successfully!
+            </h2>
             <p className="text-muted-foreground mb-6">
-              Your audit-ready policy is complete with framework citations. Choose your export format below.
+              Your audit-ready policy is complete with framework citations.
+              Choose your export format below.
             </p>
           </div>
 
@@ -1274,42 +1542,47 @@ export default function AuditPlannerPage() {
                 <span>Export Options</span>
               </CardTitle>
               <CardDescription>
-                Download your policy in various formats for distribution and implementation.
+                Download your policy in various formats for distribution and
+                implementation.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto pb-4">
-                <div className="flex space-x-4 min-w-max md:grid md:grid-cols-3 md:gap-4 md:min-w-0">
-                  <Button
-                    onClick={exportToWord}
-                    className="min-w-48 md:min-w-0 flex-shrink-0 h-24 flex flex-col items-center justify-center space-y-2"
-                    variant="outline"
-                  >
-                    <FileText className="h-8 w-8" />
-                    <span>Export as Word</span>
-                    <span className="text-xs text-muted-foreground">For editing & collaboration</span>
-                  </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <Button
+                  onClick={exportToWord}
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  variant="outline"
+                >
+                  <FileText className="h-8 w-8" />
+                  <span>Export as Word</span>
+                  <span className="text-xs text-muted-foreground">
+                    For editing & collaboration
+                  </span>
+                </Button>
 
-                  <Button
-                    onClick={exportToPDF}
-                    className="min-w-48 md:min-w-0 flex-shrink-0 h-24 flex flex-col items-center justify-center space-y-2"
-                    variant="outline"
-                  >
-                    <FileText className="h-8 w-8" />
-                    <span>Export as PDF</span>
-                    <span className="text-xs text-muted-foreground">For official records</span>
-                  </Button>
+                <Button
+                  onClick={exportToPDF}
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  variant="outline"
+                >
+                  <FileText className="h-8 w-8" />
+                  <span>Export as PDF</span>
+                  <span className="text-xs text-muted-foreground">
+                    For official records
+                  </span>
+                </Button>
 
-                  <Button
-                    onClick={copyToClipboard}
-                    className="min-w-48 md:min-w-0 flex-shrink-0 h-24 flex flex-col items-center justify-center space-y-2"
-                    variant="outline"
-                  >
-                    <Copy className="h-8 w-8" />
-                    <span>Copy to Clipboard</span>
-                    <span className="text-xs text-muted-foreground">Raw text content</span>
-                  </Button>
-                </div>
+                <Button
+                  onClick={copyToClipboard}
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
+                  variant="outline"
+                >
+                  <Copy className="h-8 w-8" />
+                  <span>Copy to Clipboard</span>
+                  <span className="text-xs text-muted-foreground">
+                    Raw text content
+                  </span>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -1329,42 +1602,57 @@ export default function AuditPlannerPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-muted-foreground">Project Title:</span>
+                    <span className="font-medium text-muted-foreground">
+                      Project Title:
+                    </span>
                     <p>{currentProject.title}</p>
                   </div>
                   <div>
-                    <span className="font-medium text-muted-foreground">Framework:</span>
+                    <span className="font-medium text-muted-foreground">
+                      Framework:
+                    </span>
                     <p>{currentProject.framework}</p>
                   </div>
                   <div>
-                    <span className="font-medium text-muted-foreground">Generation Date:</span>
+                    <span className="font-medium text-muted-foreground">
+                      Generation Date:
+                    </span>
                     <p>
-                      {currentProject.generated_policy?.generated_at 
-                        ? new Date(currentProject.generated_policy.generated_at).toLocaleString()
-                        : 'Not generated yet'
-                      }
+                      {currentProject.generated_policy?.generated_at
+                        ? new Date(
+                            currentProject.generated_policy.generated_at
+                          ).toLocaleString()
+                        : "Not generated yet"}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-muted-foreground">Document Version:</span>
+                    <span className="font-medium text-muted-foreground">
+                      Document Version:
+                    </span>
                     <p>v1.0</p>
                   </div>
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-foreground mb-2">Activity Log</h4>
+                  <h4 className="font-medium text-foreground mb-2">
+                    Activity Log
+                  </h4>
                   <div className="space-y-2">
                     {(currentProject.audit_trail || []).map((entry) => (
-                      <div key={entry.id} className="flex items-center justify-between text-sm">
+                      <div
+                        key={entry.id}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <div>
                           <span className="font-medium">{entry.action}</span>
-                          <span className="text-muted-foreground ml-2">{entry.details}</span>
+                          <span className="text-muted-foreground ml-2">
+                            {entry.details}
+                          </span>
                         </div>
                         <span className="text-muted-foreground">
-                          {entry.timestamp 
+                          {entry.timestamp
                             ? new Date(entry.timestamp).toLocaleString()
-                            : 'No timestamp'
-                          }
+                            : "No timestamp"}
                         </span>
                       </div>
                     ))}
@@ -1376,10 +1664,17 @@ export default function AuditPlannerPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={resetForm}
+              className="w-full sm:w-auto"
+            >
               Create Another Audit
             </Button>
-            <Button onClick={() => setActiveStep("generate")} className="w-full sm:w-auto">
+            <Button
+              onClick={() => setActiveStep("generate")}
+              className="w-full sm:w-auto"
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit This Policy
             </Button>
@@ -1387,5 +1682,5 @@ export default function AuditPlannerPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

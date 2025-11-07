@@ -1,166 +1,184 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/auth-context"
-import { apiClient } from "@/lib/api-client"
-import { useToast } from "@/hooks/use-toast"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { 
-  FileText, 
-  Target, 
-  BarChart3, 
-  CheckCircle, 
-  Upload, 
-  MessageCircle, 
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/auth-context";
+import { apiClient } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  FileText,
+  Target,
+  BarChart3,
+  CheckCircle,
+  Upload,
+  MessageCircle,
   Map,
   TrendingUp,
   Clock,
-  AlertCircle
-} from "lucide-react"
-import { loadProjectInfo } from "next/dist/build/webpack-config"
+  AlertCircle,
+} from "lucide-react";
+import { loadProjectInfo } from "next/dist/build/webpack-config";
 
 export default function DashboardPage() {
-  const { user } = useAuth()
-  const { toast } = useToast()
-  const [documentsCount, setDocumentsCount] = useState(0)
-  const [controlsCount, setControlsCount] = useState(0)
-  const [complianceProgress, setComplianceProgress] = useState(0)
-  const [activePolicies, setActivePolicies] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("")
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [documentsCount, setDocumentsCount] = useState(0);
+  const [controlsCount, setControlsCount] = useState(0);
+  const [complianceProgress, setComplianceProgress] = useState(0);
+  const [activePolicies, setActivePolicies] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   // const [projects, setProjects] = useState(0)
 
   // Load dashboard statistics
   useEffect(() => {
-    loadDocumentStats()
-    loadProjects()
-  }, [])
+    loadDocumentStats();
+    loadProjects();
+  }, []);
 
   const retryLoadStats = () => {
-    setHasError(false)
-    setErrorMessage("")
-    loadDocumentStats()
-  }
+    setHasError(false);
+    setErrorMessage("");
+    loadDocumentStats();
+  };
 
   const loadProjects = async () => {
-      try {
-        const response = await apiClient.getPolicyProjects()
-        if (response.success && response.data) {
-          setActivePolicies(response.data.length)
-        }
-      } catch (error) {
-        console.error("Failed to load projects:", error)
+    try {
+      const response = await apiClient.getPolicyProjects();
+      if (response.success && response.data) {
+        setActivePolicies(response.data.length);
       }
-      }
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+    }
+  };
 
   const loadDocumentStats = async () => {
     try {
-      setIsLoading(true)
-      setHasError(false)
-      setErrorMessage("")
-      
-      const response = await apiClient.getDocuments()
-      
+      setIsLoading(true);
+      setHasError(false);
+      setErrorMessage("");
+
+      const response = await apiClient.getDocuments();
+
       if (response.success && response.data) {
-        const documents = response.data
-        setDocumentsCount(documents.length)
-        
+        const documents = response.data;
+        setDocumentsCount(documents.length);
+
         // Calculate total controls mapped from all documents
         const totalControls = documents.reduce((sum: number, doc: any) => {
-          return sum + (doc.controls_identified || 0)
-        }, 0)
-        setControlsCount(totalControls)
-        
+          return sum + (doc.controls_identified || 0);
+        }, 0);
+        setControlsCount(totalControls);
+
         // Calculate compliance progress (simplified calculation)
         // If we have documents, show progress based on processed vs total
-        const processedDocs = documents.filter((doc: any) => doc.status === "processed" || doc.status === "success").length
-        const progress = documents.length > 0 ? Math.round((processedDocs / documents.length) * 100) : 0
-        setComplianceProgress(progress)
-        
+        const processedDocs = documents.filter(
+          (doc: any) => doc.status === "processed" || doc.status === "success"
+        ).length;
+        const progress =
+          documents.length > 0
+            ? Math.round((processedDocs / documents.length) * 100)
+            : 0;
+        setComplianceProgress(progress);
       } else {
         // Handle API response errors
-        const errorMsg = response.error || "Unknown error occurred"
-        setHasError(true)
-        setErrorMessage(errorMsg)
-        
+        const errorMsg = response.error || "Unknown error occurred";
+        setHasError(true);
+        setErrorMessage(errorMsg);
+
         // Show user-friendly error toast
         if (response.status === 401) {
           toast({
             title: "Authentication Error",
             description: "Please log in again to access your dashboard.",
-            variant: "destructive"
-          })
-        } else if (response.status === 0 || errorMsg.includes("NetworkError") || errorMsg.includes("fetch")) {
+            variant: "destructive",
+          });
+        } else if (
+          response.status === 0 ||
+          errorMsg.includes("NetworkError") ||
+          errorMsg.includes("fetch")
+        ) {
           toast({
             title: "Connection Error",
-            description: "Unable to connect to the CompliAI server. Please ensure the backend is running.",
-            variant: "destructive"
-          })
-          setErrorMessage("Unable to connect to the CompliAI server")
+            description:
+              "Unable to connect to the CompliAI server. Please ensure the backend is running.",
+            variant: "destructive",
+          });
+          setErrorMessage("Unable to connect to the CompliAI server");
         } else if (response.status >= 500) {
           toast({
             title: "Server Error",
-            description: "The server is experiencing issues. Please try again later.",
-            variant: "destructive"
-          })
-          setErrorMessage("Server is experiencing issues")
+            description:
+              "The server is experiencing issues. Please try again later.",
+            variant: "destructive",
+          });
+          setErrorMessage("Server is experiencing issues");
         } else {
           toast({
             title: "Error Loading Dashboard",
-            description: "Failed to load dashboard data. Please try refreshing the page.",
-            variant: "destructive"
-          })
+            description:
+              "Failed to load dashboard data. Please try refreshing the page.",
+            variant: "destructive",
+          });
         }
-        
+
         // Reset stats to safe defaults
-        setDocumentsCount(0)
-        setControlsCount(0)
-        setActivePolicies(0)
-        setComplianceProgress(0)
+        setDocumentsCount(0);
+        setControlsCount(0);
+        setActivePolicies(0);
+        setComplianceProgress(0);
       }
     } catch (error) {
-      console.error("Error loading document stats:", error)
-      setHasError(true)
-      
+      console.error("Error loading document stats:", error);
+      setHasError(true);
+
       // Handle different types of errors
       if (error instanceof TypeError && error.message.includes("fetch")) {
-        setErrorMessage("CompliAI backend server is not responding")
+        setErrorMessage("CompliAI backend server is not responding");
         toast({
           title: "Backend Server Offline",
-          description: "The CompliAI backend server appears to be offline. Please ensure it's running on port 8000.",
-          variant: "destructive"
-        })
+          description:
+            "The CompliAI backend server appears to be offline. Please ensure it's running on port 8000.",
+          variant: "destructive",
+        });
       } else if (error instanceof Error) {
-        setErrorMessage(error.message)
+        setErrorMessage(error.message);
         toast({
           title: "Unexpected Error",
           description: error.message,
-          variant: "destructive"
-        })
+          variant: "destructive",
+        });
       } else {
-        setErrorMessage("An unexpected error occurred")
+        setErrorMessage("An unexpected error occurred");
         toast({
           title: "Unexpected Error",
           description: "Something went wrong while loading the dashboard.",
-          variant: "destructive"
-        })
+          variant: "destructive",
+        });
       }
-      
+
       // Reset stats to safe defaults
-      setDocumentsCount(0)
-      setControlsCount(0)
-      setActivePolicies(0)
-      setComplianceProgress(0)
+      setDocumentsCount(0);
+      setControlsCount(0);
+      setActivePolicies(0);
+      setComplianceProgress(0);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Loading component for skeleton state
   const StatCardSkeleton = () => (
@@ -174,22 +192,25 @@ export default function DashboardPage() {
         <Skeleton className="h-3 w-24" />
       </CardContent>
     </Card>
-  )
+  );
 
   return (
-    <div className="min-h-full bg-background p-4 sm:p-6 space-y-6 sm:space-y-8">
+    <div className="h-full bg-white dark:bg-neutral-800 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 overflow-y-auto">
       {/* Header Section */}
       <div className="flex flex-col space-y-3 sm:space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              Welcome back, {user?.name?.split(' ')[0] || 'User'}!
+              Welcome back, {user?.name?.split(" ")[0] || "User"}!
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base md:text-base">
               Here's your compliance overview for today
             </p>
           </div>
-          <Badge variant="outline" className="self-start sm:self-center flex items-center gap-1 px-3 py-1 text-xs">
+          <Badge
+            variant="outline"
+            className="self-start sm:self-center flex items-center gap-1 px-3 py-1 text-xs"
+          >
             <Clock className="h-3 w-3" />
             <span className="hidden sm:inline">Last updated:</span> Just now
           </Badge>
@@ -202,11 +223,11 @@ export default function DashboardPage() {
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertTitle className="text-red-800">Connection Error</AlertTitle>
           <AlertDescription className="text-red-700">
-            {errorMessage}. 
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-2 h-7 px-3 text-xs border-red-300 text-red-700 hover:bg-red-100" 
+            {errorMessage}.
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2 h-7 px-3 text-xs border-red-300 text-red-700 hover:bg-red-100"
               onClick={retryLoadStats}
             >
               Try Again
@@ -238,7 +259,9 @@ export default function DashboardPage() {
                   {documentsCount}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {documentsCount === 0 ? "Upload your first document" : `${documentsCount} processed`}
+                  {documentsCount === 0
+                    ? "Upload your first document"
+                    : `${documentsCount} processed`}
                 </p>
               </CardContent>
             </Card>
@@ -255,7 +278,9 @@ export default function DashboardPage() {
                   {controlsCount}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {controlsCount === 0 ? "Ready to map controls" : `${controlsCount} identified`}
+                  {controlsCount === 0
+                    ? "Ready to map controls"
+                    : `${controlsCount} identified`}
                 </p>
               </CardContent>
             </Card>
@@ -273,7 +298,9 @@ export default function DashboardPage() {
                 </div>
                 <Progress value={complianceProgress} className="mt-2 h-2" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {complianceProgress === 100 ? "Fully compliant" : "Improvement needed"}
+                  {complianceProgress === 100
+                    ? "Fully compliant"
+                    : "Improvement needed"}
                 </p>
               </CardContent>
             </Card>
@@ -290,7 +317,9 @@ export default function DashboardPage() {
                   {activePolicies}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {activePolicies === 0 ? "No policies yet" : `${activePolicies} extracted`}
+                  {activePolicies === 0
+                    ? "No policies yet"
+                    : `${activePolicies} extracted`}
                 </p>
               </CardContent>
             </Card>
@@ -312,24 +341,30 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto flex-col p-6 hover:bg-primary/5 hover:border-primary/20 transition-all duration-200 min-h-[120px]"
-              onClick={() => window.location.href = '/upload'}
+              onClick={() => (window.location.href = "/upload")}
             >
               <Upload className="h-8 w-8 text-primary mb-2" />
-              <span className="font-medium text-center text-sm">Upload Document</span>
-              <span className="text-xs text-muted-foreground mt-1 text-center break-words">Add new compliance docs</span>
+              <span className="font-medium text-center text-sm">
+                Upload Document
+              </span>
+              <span className="text-xs text-muted-foreground mt-1 text-center break-words">
+                Add new compliance docs
+              </span>
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="h-auto flex-col p-6 hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/10 dark:hover:border-green-800/20 transition-all duration-200 min-h-[120px]"
-              onClick={() => window.location.href = '/chat'}
+              onClick={() => (window.location.href = "/chat")}
             >
               <MessageCircle className="h-8 w-8 text-green-600 dark:text-green-400 mb-2" />
               <span className="font-medium text-center text-sm">Ask AI</span>
-              <span className="text-xs text-muted-foreground mt-1 text-center break-words">Get compliance answers</span>
+              <span className="text-xs text-muted-foreground mt-1 text-center break-words">
+                Get compliance answers
+              </span>
             </Button>
           </CardContent>
         </Card>
@@ -351,23 +386,28 @@ export default function DashboardPage() {
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">No activity yet</p>
-                <p className="text-xs text-muted-foreground">Upload your first document to get started</p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  No activity yet
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Upload your first document to get started
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                   <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <p className="text-sm font-medium text-foreground break-words">
                       Documents Processed
                     </p>
-                    <p className="text-xs text-muted-foreground break-words">
-                      {documentsCount} document{documentsCount === 1 ? '' : 's'} successfully uploaded
+                    <p className="text-xs text-muted-foreground break-words truncate">
+                      {documentsCount} document{documentsCount === 1 ? "" : "s"}{" "}
+                      successfully uploaded
                     </p>
                   </div>
                 </div>
-                
+
                 {controlsCount > 0 && (
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                     <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
@@ -376,12 +416,13 @@ export default function DashboardPage() {
                         Controls Identified
                       </p>
                       <p className="text-xs text-muted-foreground break-words">
-                        {controlsCount} control{controlsCount === 1 ? '' : 's'} mapped successfully
+                        {controlsCount} control{controlsCount === 1 ? "" : "s"}{" "}
+                        mapped successfully
                       </p>
                     </div>
                   </div>
                 )}
-                
+
                 {activePolicies > 0 && (
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                     <div className="w-2 h-2 bg-purple-500 dark:bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
@@ -390,7 +431,9 @@ export default function DashboardPage() {
                         Policies Extracted
                       </p>
                       <p className="text-xs text-muted-foreground break-words">
-                        {activePolicies} polic{activePolicies === 1 ? 'y' : 'ies'} extracted from documents
+                        {activePolicies} polic
+                        {activePolicies === 1 ? "y" : "ies"} extracted from
+                        documents
                       </p>
                     </div>
                   </div>
@@ -401,5 +444,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
