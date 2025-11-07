@@ -70,9 +70,10 @@ export const BackgroundBeamsWithCollision = ({
     <div
       ref={parentRef}
       className={cn(
-        // make the wrapper transparent so the page-level background (e.g. `bg-background`)
-        // from pages like `page.tsx` shows through for the entire viewport
-        "min-h-screen bg-transparent relative flex items-center w-full justify-center overflow-hidden",
+        // Use the page background gradient here so pages that use this
+        // wrapper (like the signup/register page) get a consistent gradient
+        // behind the animated beams.
+        "min-h-screen bg-gradient-to-br from-background to-secondary/20 relative flex items-center w-full justify-center overflow-hidden",
         className
       )}
     >
