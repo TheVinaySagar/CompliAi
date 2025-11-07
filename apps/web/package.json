@@ -49,6 +49,7 @@
     "html2pdf.js": "^0.10.3",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
+    "motion": "^12.23.24",
     "next": "15.2.4",
     "next-themes": "latest",
     "react": "^19",
@@ -62,7 +63,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sonner": "latest",
-    "tailwind-merge": "^2.5.5",
+    "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",
     "zod": "^3.24.1"
