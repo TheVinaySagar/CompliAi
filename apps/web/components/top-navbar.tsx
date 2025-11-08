@@ -80,7 +80,7 @@ export function TopNavbar() {
   ];
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[100] flex items-center justify-center pt-6 pointer-events-none">
+    <div className="fixed inset-x-0 top-0 z-[100] hidden md:flex items-center justify-center pt-6 pointer-events-none">
       <div className="pointer-events-auto relative">
         <FloatingDock items={links} />
 
