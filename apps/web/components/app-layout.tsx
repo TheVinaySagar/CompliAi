@@ -55,12 +55,12 @@ const AppLayout = memo(
                   sidebarOpen={sidebarOpen}
                   setSidebarOpen={setSidebarOpen}
                 >
-                  <div className="flex h-full w-full flex-1 flex-col overflow-hidden bg-white dark:bg-neutral-800 pt-24">
+                  <div className="flex h-full w-full flex-1 flex-col overflow-hidden bg-white dark:bg-neutral-800 pt-16 md:pt-24">
                     <main className="flex-1 overflow-y-auto">{children}</main>
                   </div>
                 </SidebarDemo>
               ) : (
-                <div className="flex h-full w-full flex-1 flex-col overflow-hidden pt-24">
+                <div className="flex h-full w-full flex-1 flex-col overflow-hidden pt-16 md:pt-24">
                   <main className="flex-1 overflow-y-auto bg-white dark:bg-neutral-800">
                     {children}
                   </main>
