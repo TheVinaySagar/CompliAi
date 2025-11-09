@@ -670,9 +670,3 @@ This project is licensed under MIT. See LICENSE for details.
 ## 🤝 Contributions
 
 We're building CompliAI in public to help teams comply and pass audits. Pull requests are welcome!
-
-## 📬 Contact
-
-For inquiries, early access, or compliance support: [hello@clancodelabs.org]
-
-**Clancode Labs Pvt Ltd**
