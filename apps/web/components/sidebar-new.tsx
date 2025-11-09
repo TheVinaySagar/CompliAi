@@ -120,7 +120,7 @@ export default function SidebarDemo({
   return (
     <div className={cn("flex w-full flex-1 overflow-hidden relative")}>
       {/* Mobile Header with Hamburger and Logo */}
-      <div className="fixed top-0 left-0 right-0 z-50 md:hidden flex items-center justify-center px-4 py-3 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="fixed top-0 left-0 right-0 z-50 md:hidden flex items-center justify-center px-4 py-4 mb-2 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 shadow-sm">
         {/* Hamburger Toggle Button - Left */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -135,7 +135,7 @@ export default function SidebarDemo({
         </button>
 
         {/* Logo - Center */}
-        <div className="flex items-center gap-3">
+        <a href="/" className="flex items-center gap-3">
           <CompliAILogo size={32} rounded="lg" />
           <div className="flex flex-col">
             <span
@@ -145,7 +145,7 @@ export default function SidebarDemo({
               CompliAI
             </span>
           </div>
-        </div>
+        </a>
 
         {/* Theme Toggle Button - Right */}
         <button

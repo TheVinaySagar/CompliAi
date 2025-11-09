@@ -9,6 +9,7 @@ import {
   Sun,
   User as UserIcon,
   Home,
+  LayoutDashboard,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -51,8 +52,19 @@ export function TopNavbar() {
       icon: (
         <Home className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "/dashboard",
+      href: "/",
     },
+    ...(user
+      ? [
+          {
+            title: "Dashboard",
+            icon: (
+              <LayoutDashboard className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+            ),
+            href: "/dashboard",
+          },
+        ]
+      : []),
     {
       title: theme === "dark" ? "Light Mode" : "Dark Mode",
       icon:
