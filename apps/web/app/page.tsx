@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { WavyBackground } from "@/components/ui/wavy-background";
+import { BackgroundBeams } from "@/components/ui/background-beams";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import CompliAILogo from "@/components/ui/logo";
 import { LandingFooter } from "@/components/landing-footer";
+import { motion } from "framer-motion";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function HomePage() {
   const { user, logout } = useAuth();
@@ -30,222 +32,140 @@ export default function HomePage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden max-w-screen">
-      {/* Navbar */}
-      <nav className="absolute top-0 left-0 right-0 z-50 px-4 md:px-6 py-6 md:py-6 mb-12 md:mb-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <CompliAILogo size={32} rounded="lg" />
-            <span
-              className="text-white font-[900] text-xl"
-              style={{ fontFamily: "var(--font-montserrat)" }}
-            >
-              CompliAI
-            </span>
-          </div>
+    <div className="relative min-h-screen w-full bg-white dark:bg-neutral-950 overflow-hidden transition-colors duration-300">
+      <div className="absolute inset-0 z-0 opacity-20 dark:opacity-100 pointer-events-none">
+        <BackgroundBeams />
+      </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <a
-              href="#home"
-              className="text-white/90 hover:text-white transition-colors font-medium"
-            >
-              Home
-            </a>
-            <a
-              href="#about"
-              className="text-white/90 hover:text-white transition-colors font-medium"
-            >
-              About
-            </a>
-            {user && (
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="text-white/90 hover:text-white transition-colors font-medium"
-              >
-                Dashboard
-              </button>
-            )}
-            {user ? (
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => router.push("/settings")}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white transition-all"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
-                    {getInitials(user.name)}
-                  </div>
-                  <span>{user.name}</span>
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-all"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => router.push("/login")}
-                className="px-6 py-2 rounded-lg bg-white text-neutral-900 font-medium hover:bg-white/90 transition-all shadow-lg"
-              >
-                Login
-              </button>
-            )}
-          </div>
+      <div className="relative z-10 w-full overflow-x-hidden">
+        {/* Navbar */}
+        <nav className="fixed top-6 inset-x-0 mx-auto max-w-2xl z-50 px-4">
+          <div className="relative flex items-center justify-between bg-white/80 dark:bg-zinc-900/50 backdrop-blur-md rounded-full px-6 py-3 border border-neutral-200 dark:border-white/5 shadow-xl dark:shadow-2xl">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <CompliAILogo size={24} rounded="md" />
+              <span className="text-neutral-900 dark:text-white font-bold text-lg tracking-tight">
+                CompliAI
+              </span>
+            </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-white hover:bg-white/10"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 p-4 rounded-lg bg-white/10 backdrop-blur-lg border border-white/20">
-            <div className="flex flex-col gap-4">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
               <a
                 href="#home"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-white/90 hover:text-white transition-colors py-2 font-medium"
+                className="text-neutral-600 dark:text-white/60 hover:text-neutral-900 dark:hover:text-white transition-colors text-sm"
               >
                 Home
               </a>
               <a
-                href="#about"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-white/90 hover:text-white transition-colors py-2 font-medium"
+                href="/about"
+                className="text-neutral-600 dark:text-white/60 hover:text-neutral-900 dark:hover:text-white transition-colors text-sm"
               >
                 About
               </a>
-              {user && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    router.push("/dashboard");
-                  }}
-                  className="text-white/90 hover:text-white transition-colors py-2 font-medium text-left"
+              {!user && (
+                <a
+                  href="/login"
+                  className="text-neutral-600 dark:text-white/60 hover:text-neutral-900 dark:hover:text-white transition-colors text-sm"
                 >
-                  Dashboard
-                </button>
+                  Sign in
+                </a>
               )}
-              {user ? (
-                <>
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      router.push("/settings");
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
-                      {getInitials(user.name)}
-                    </div>
-                    <span>{user.name}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-all"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    router.push("/login");
-                  }}
-                  className="px-6 py-2 rounded-lg bg-white text-neutral-900 font-medium hover:bg-white/90 transition-all"
-                >
-                  Login
-                </button>
-              )}
+              <button
+                onClick={() => router.push(user ? "/dashboard" : "/register")}
+                className="px-4 py-1.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-black font-medium text-sm hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+              >
+                {user ? "Dashboard" : "Get Started"}
+              </button>
+              <ModeToggle />
             </div>
-          </div>
-        )}
-      </nav>
 
-      {/* Hero Section with Wavy Background */}
-      <WavyBackground className="max-w-7xl mx-auto pb-40">
-        <div className="flex flex-col items-center justify-center min-h-screen px-4">
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl text-white font-[900] text-center mb-6"
-            style={{ fontFamily: "var(--font-montserrat)" }}
-          >
-            Maximize human productivity
-          </h1>
-          <p className="text-lg md:text-xl text-white/80 font-normal text-center max-w-2xl mb-8">
-            Replace all your software. Every app, AI agent, and human in one
-            place.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 items-center mb-4">
+            {/* Mobile Menu Button */}
             <button
-              onClick={() => router.push(user ? "/dashboard" : "/register")}
-              className="px-8 py-3 rounded-lg bg-neutral-900 text-white font-semibold text-lg hover:bg-neutral-800 transition-all shadow-lg"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-1 rounded-lg text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-white/10"
             >
-              {user ? "Go to Dashboard" : "Get started. It's FREE!"}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
-          <p className="text-white/60 text-sm">Free forever. No credit card.</p>
+          {/* Mobile Navigation */}
+          {mobileMenuOpen && (
+            <div className="md:hidden absolute top-full left-0 right-0 mt-2 p-4 rounded-2xl bg-white dark:bg-zinc-900/90 backdrop-blur-xl border border-neutral-200 dark:border-white/5 shadow-2xl">
+              <div className="flex flex-col gap-4">
+                <a href="#home" onClick={() => setMobileMenuOpen(false)} className="text-neutral-900 dark:text-white/80 hover:text-neutral-600 dark:hover:text-white font-medium">Home</a>
+                <a href="/about" onClick={() => setMobileMenuOpen(false)} className="text-neutral-900 dark:text-white/80 hover:text-neutral-600 dark:hover:text-white font-medium">About</a>
+                <button onClick={() => { setMobileMenuOpen(false); router.push(user ? "/dashboard" : "/register"); }} className="w-full py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-black font-medium text-center">
+                  {user ? "Dashboard" : "Get Started"}
+                </button>
+              </div>
+            </div>
+          )}
+        </nav>
 
-          {/* Feature Tags */}
-          <div className="mt-16 text-center mb-6">
-            <p className="text-white/70 text-sm uppercase tracking-wider mb-4">
-              GET 400% MORE DONE • CUSTOMIZE YOUR WORKSPACE
+        {/* Hero Section */}
+        <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <h1
+              className="text-5xl md:text-8xl font-bold tracking-tighter text-neutral-900 dark:text-white mb-8"
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              Automate your <br />
+              compliance.
+            </h1>
+            <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+              Replace manual audits, policy application, and compliance checks with a single AI-powered platform.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-3 justify-center max-w-4xl">
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Projects
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Chat
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              AI Agents
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Time Tracking
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Calendar
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Dashboards
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Compliance Management
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Policy Generator
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Audit Planner
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Automations
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm border border-white/20 hover:bg-white/20 transition-all cursor-pointer">
-              Scheduling
-            </span>
-          </div>
-        </div>
-      </WavyBackground>
 
-      {/* Footer */}
-      <LandingFooter />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+              <button
+                onClick={() => router.push(user ? "/dashboard" : "/register")}
+                className="h-12 px-8 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-black font-semibold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                Start Verification
+              </button>
+              <div className="text-neutral-500 text-sm">
+                Free forever • No credit card
+              </div>
+            </div>
+
+          </motion.div>
+
+          {/* Feature Tags (Minimal) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="w-full max-w-5xl"
+          >
+            <div className="flex flex-wrap gap-x-8 gap-y-4 justify-center text-sm text-neutral-500 font-medium">
+              {[
+                "Projects", "Chat", "AI Agents", "Time Tracking", "Calendar",
+                "Dashboards", "Compliance", "Policy Generator", "Audit Planner",
+                "Automations", "Scheduling"
+              ].map((feature, idx) => (
+                <span key={idx} className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-default">
+                  {feature}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* Footer */}
+        <div className="relative z-20 border-t border-neutral-200 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
+          <LandingFooter />
+        </div>
+      </div>
     </div>
   );
 }
